@@ -15,8 +15,8 @@
   --success: #287a50;
   --warning: #9a6700;
   --radius: 0.7rem;
-  --page-space: clamp(1rem, 4vw, 1.5rem);
-  --content-width: 64rem;
+  --page-space: clamp(0.75rem, 3vw, 1.25rem);
+  --content-width: 68rem;
   --mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", sans-serif;
 }
@@ -66,7 +66,7 @@ a {
 
 .app-header__inner {
   display: flex;
-  min-height: 3.5rem;
+  min-height: 3.15rem;
   gap: 1rem;
   align-items: center;
   justify-content: space-between;
@@ -108,7 +108,7 @@ input:focus-visible {
 }
 
 .hero {
-  padding-block: clamp(2rem, 6vw, 3.5rem) clamp(1.5rem, 4vw, 2.5rem);
+  padding-block: clamp(1.25rem, 3vw, 2rem) clamp(0.9rem, 2vw, 1.35rem);
 }
 
 h1,
@@ -120,21 +120,21 @@ p {
 
 h1 {
   margin: 0;
-  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
   line-height: 1.35;
   letter-spacing: -0.025em;
 }
 
 .hero__description {
   max-width: 42rem;
-  margin: 0.7rem 0 0;
+  margin: 0.35rem 0 0;
   color: var(--muted);
-  font-size: 0.95rem;
+  font-size: 0.88rem;
 }
 
 .panel {
-  margin-bottom: 0.85rem;
-  padding: clamp(1rem, 3vw, 1.5rem);
+  margin-bottom: 0.65rem;
+  padding: clamp(0.8rem, 2vw, 1.1rem);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
@@ -145,11 +145,11 @@ h1 {
   gap: 1rem;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 0.65rem;
 }
 
 .panel-kicker {
-  margin: 0 0 0.2rem;
+  margin: 0 0 0.1rem;
   color: var(--muted);
   font-size: 0.66rem;
   font-weight: 700;
@@ -159,7 +159,7 @@ h1 {
 
 h2 {
   margin: 0;
-  font-size: 1.12rem;
+  font-size: 1rem;
   line-height: 1.4;
 }
 
@@ -175,12 +175,12 @@ h2 {
 .number-grid,
 .metric-grid {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.55rem;
 }
 
 .control-card {
   --control-color: var(--accent);
-  padding: 1rem;
+  padding: 0.7rem 0.8rem;
   border: 1px solid var(--border);
   border-radius: 0.6rem;
   background: var(--surface-soft);
@@ -213,7 +213,7 @@ h2 {
 input[type="range"] {
   width: 100%;
   height: 2.75rem;
-  margin: 0.35rem 0 0;
+  margin: 0.15rem 0 0;
   appearance: none;
   background: transparent;
   cursor: pointer;
@@ -266,13 +266,13 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .control-hint {
-  margin: 0.2rem 0 0;
+  margin: 0.05rem 0 0;
   color: var(--muted);
   font-size: 0.75rem;
 }
 
 .number-grid {
-  margin-top: 0.75rem;
+  margin-top: 0.55rem;
 }
 
 .number-field {
@@ -318,8 +318,8 @@ input[type="range"]::-moz-range-thumb {
 .control-footer {
   display: grid;
   gap: 0.8rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
   border-top: 1px solid var(--border);
 }
 
@@ -387,7 +387,7 @@ input[type="range"]::-moz-range-thumb {
 
 .metric-card {
   --metric-color: var(--muted);
-  padding: 0.95rem;
+  padding: 0.7rem 0.75rem;
   border: 1px solid var(--border);
   border-left: 3px solid var(--metric-color);
   border-radius: 0.55rem;
@@ -452,12 +452,12 @@ h3 {
 .metric-card dl {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-  margin: 0.8rem 0 0;
+  gap: 0.35rem 0.5rem;
+  margin: 0.5rem 0 0;
 }
 
 .metric-card dl div {
-  padding-top: 0.5rem;
+  padding-top: 0.3rem;
   border-top: 1px solid var(--border);
 }
 
@@ -520,7 +520,7 @@ h3 {
 #histogram {
   display: block;
   width: 100%;
-  height: 18rem;
+  height: 15rem;
 }
 
 .formula-note {
@@ -528,8 +528,8 @@ h3 {
   grid-template-columns: auto 1fr;
   gap: 0.8rem;
   align-items: start;
-  margin: 0.85rem 0 2.5rem;
-  padding: 1rem;
+  margin: 0.65rem 0 1.5rem;
+  padding: 0.7rem 0.8rem;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
@@ -559,7 +559,7 @@ h3 {
 .app-footer .shell {
   display: grid;
   gap: 0.15rem;
-  padding-block: 1rem;
+  padding-block: 0.7rem;
 }
 
 .app-footer p {
@@ -599,7 +599,7 @@ h3 {
   }
 
   #histogram {
-    height: 22rem;
+    height: 18rem;
   }
 
   .app-footer .shell {
@@ -634,4 +634,3 @@ h3 {
     transition-duration: 0.01ms !important;
   }
 }
-
