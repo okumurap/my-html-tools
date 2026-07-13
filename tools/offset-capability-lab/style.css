@@ -275,6 +275,17 @@ input[type="range"]::-moz-range-thumb {
   margin-top: 0.55rem;
 }
 
+.advanced-settings summary {
+  display: none;
+}
+
+.advanced-settings__summary-values {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  font-weight: 500;
+}
+
 .number-field {
   display: grid;
   gap: 0.35rem;
@@ -609,6 +620,42 @@ h3 {
 }
 
 @media (max-width: 41.99rem) {
+  main.shell {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .hero {
+    order: 1;
+    padding-block: 0.65rem 0.5rem;
+  }
+
+  .hero__description {
+    display: none;
+  }
+
+  .control-panel {
+    order: 2;
+    padding: 0.55rem;
+  }
+
+  .chart-panel {
+    order: 3;
+    padding: 0.55rem;
+  }
+
+  .metrics-panel {
+    order: 4;
+  }
+
+  .formula-note {
+    order: 5;
+  }
+
+  .control-panel > .panel-heading {
+    display: none;
+  }
+
   .panel-heading,
   .chart-heading {
     display: grid;
@@ -624,6 +671,105 @@ h3 {
 
   .chart-legend {
     margin-top: 0.1rem;
+  }
+
+  .slider-grid {
+    gap: 0.35rem;
+  }
+
+  .control-card {
+    padding: 0.4rem 0.65rem;
+  }
+
+  .control-card__heading label {
+    font-size: 0.76rem;
+  }
+
+  .control-card output {
+    font-size: 0.9rem;
+  }
+
+  input[type="range"] {
+    height: 2.5rem;
+    margin: 0;
+  }
+
+  .range-scale,
+  .control-hint {
+    display: none;
+  }
+
+  .advanced-settings {
+    margin-top: 0.35rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .advanced-settings summary {
+    display: flex;
+    min-height: 2.75rem;
+    gap: 0.75rem;
+    align-items: center;
+    justify-content: space-between;
+    padding-inline: 0.25rem;
+    color: var(--text);
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .advanced-settings summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .advanced-settings summary::after {
+    color: var(--accent);
+    content: "+";
+    font-family: var(--mono);
+    font-size: 1rem;
+  }
+
+  .advanced-settings[open] summary::after {
+    content: "−";
+  }
+
+  .advanced-settings summary:focus-visible {
+    border-radius: 0.35rem;
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .advanced-settings__summary-values {
+    margin-left: auto;
+  }
+
+  .advanced-settings__content {
+    padding-top: 0.15rem;
+  }
+
+  .chart-panel .panel-heading {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.35rem;
+  }
+
+  .chart-panel .panel-kicker {
+    display: none;
+  }
+
+  .chart-panel h2 {
+    font-size: 0.9rem;
+  }
+
+  .chart-legend {
+    gap: 0.45rem;
+    margin-left: auto;
+    font-size: 0.58rem;
+  }
+
+  #histogram {
+    height: 13rem;
   }
 }
 

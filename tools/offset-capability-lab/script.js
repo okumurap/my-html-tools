@@ -22,6 +22,7 @@
     validation: document.getElementById("validationMessage"),
     resampleButton: document.getElementById("resampleButton"),
     resetButton: document.getElementById("resetButton"),
+    advancedSettings: document.getElementById("advancedSettings"),
     summaryMean: document.getElementById("summaryMean"),
     summaryUsl: document.getElementById("summaryUsl"),
     summaryLsl: document.getElementById("summaryLsl"),
@@ -44,6 +45,7 @@
   let latestResult = null;
   let updateFrame = 0;
   let chartFrame = 0;
+  const mobileLayoutQuery = window.matchMedia("(max-width: 41.99rem)");
 
   function format(value, digits = 3) {
     return Number.isFinite(value) ? value.toFixed(digits) : "—";
@@ -411,11 +413,22 @@
     scheduleUpdate();
   }
 
+  function syncAdvancedSettings() {
+    ui.advancedSettings.open = !mobileLayoutQuery.matches;
+    scheduleChartDraw();
+  }
+
   [ui.offset, ui.stddev, ui.mean, ui.usl, ui.lsl].forEach((element) => {
     element.addEventListener("input", scheduleUpdate);
   });
   ui.resampleButton.addEventListener("click", scheduleUpdate);
   ui.resetButton.addEventListener("click", reset);
+
+  if (typeof mobileLayoutQuery.addEventListener === "function") {
+    mobileLayoutQuery.addEventListener("change", syncAdvancedSettings);
+  } else {
+    mobileLayoutQuery.addListener(syncAdvancedSettings);
+  }
 
   if ("ResizeObserver" in window) {
     const observer = new ResizeObserver(scheduleChartDraw);
@@ -431,5 +444,6 @@
     return;
   }
 
+  syncAdvancedSettings();
   update();
 })();
