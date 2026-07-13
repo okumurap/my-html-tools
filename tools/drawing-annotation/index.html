@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="画像や図面にペン、矢印、図形、連番ラベルを書き込み、PNGで保存できるブラウザツールです。">
+  <title>図面注釈ツール | My HTML Tools</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header id="toolbar" class="toolbar">
+    <div class="toolbar-heading">
+      <a class="back-link" href="../../index.html" aria-label="ツール一覧へ戻る">
+        <span aria-hidden="true">←</span>
+        <span class="back-link__label">ツール一覧</span>
+      </a>
+      <div class="app-name">
+        <strong>図面注釈ツール</strong>
+        <span>MY HTML TOOLS / 002</span>
+      </div>
+      <button class="btn btn--primary" type="button" id="btn-open">画像を開く</button>
+      <details class="help">
+        <summary class="btn">使い方</summary>
+        <div class="help-panel">
+          <p><strong>画像を開く</strong>からPNG/JPEGを選び、ツール・色・太さを選んで図面上を操作します。</p>
+          <ul>
+            <li>選択ツールで注釈を移動・変形。Delete / Backspaceで削除</li>
+            <li>画像の貼り付け、PCでのドラッグ＆ドロップにも対応</li>
+            <li>0〜9、Q〜T、N・K・H、Esc、Ctrl/⌘+Zがショートカット</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+
+    <div class="toolbar-controls" aria-label="描画操作">
+      <fieldset class="control-group" id="tool-select">
+        <legend>ツール</legend>
+        <div class="control-group__items">
+          <button class="btn" type="button" data-tool="select">選択 (0)</button>
+          <button class="btn" type="button" data-tool="pen">ペン (1)</button>
+          <button class="btn" type="button" data-tool="eraser">消しゴム (2)</button>
+          <button class="btn" type="button" data-tool="line">直線 (3)</button>
+          <button class="btn" type="button" data-tool="arrow">矢印 (4)</button>
+          <button class="btn" type="button" data-tool="rect">四角 (5)</button>
+          <button class="btn" type="button" data-tool="ellipse">楕円 (6)</button>
+          <button class="btn" type="button" data-tool="text">番号 (7)</button>
+        </div>
+      </fieldset>
+
+      <fieldset class="control-group" id="color-select">
+        <legend>色</legend>
+        <div class="control-group__items">
+          <button class="swatch" type="button" data-color="red" aria-label="赤（Q）" title="赤（Q）" style="--swatch:#ff2d2d"></button>
+          <button class="swatch" type="button" data-color="blue" aria-label="青（W）" title="青（W）" style="--swatch:#2d66ff"></button>
+          <button class="swatch" type="button" data-color="green" aria-label="緑（E）" title="緑（E）" style="--swatch:#1fbf48"></button>
+          <button class="swatch swatch--yellow" type="button" data-color="yellow" aria-label="半透明の黄（R）" title="半透明の黄（R）" style="--swatch:rgba(255,212,0,.5)"></button>
+          <button class="swatch" type="button" data-color="black" aria-label="黒（T）" title="黒（T）" style="--swatch:#000"></button>
+        </div>
+      </fieldset>
+
+      <fieldset class="control-group" id="size-select">
+        <legend>太さ</legend>
+        <div class="control-group__items">
+          <button class="btn" type="button" data-size="0">細 3px (8)</button>
+          <button class="btn" type="button" data-size="1">太 7px (9)</button>
+        </div>
+      </fieldset>
+
+      <fieldset class="control-group action-group">
+        <legend>ファイル・履歴</legend>
+        <div class="control-group__items">
+          <input id="fileInput" type="file" accept="image/png,image/jpeg" hidden>
+          <button class="btn" type="button" id="btn-undo">元に戻す</button>
+          <button class="btn" type="button" id="btn-redo">やり直す</button>
+          <button class="btn" type="button" id="btn-copy">PNGコピー</button>
+          <button class="btn" type="button" id="btn-save">PNG保存</button>
+          <button class="btn" type="button" id="btn-reset">全体表示</button>
+        </div>
+      </fieldset>
+    </div>
+  </header>
+
+  <nav id="hud" class="hud" aria-label="表示と補助設定">
+    <button class="pill" type="button" id="btn-zoom-out" aria-label="縮小">−</button>
+    <button class="pill" type="button" id="btn-zoom-in" aria-label="拡大">＋</button>
+    <button class="pill" type="button" id="hudAuto">自動番号: ON（N）</button>
+    <button class="pill" type="button" id="hudLabel">ラベル枠: ON（K）</button>
+    <button class="pill" type="button" id="hudPen">ペン拡張: ON（H）</button>
+    <span class="pill pill--note">ズーム: ホイール / ↑↓</span>
+  </nav>
+
+  <main id="scroll" aria-label="図面編集エリア">
+    <div class="canvas-wrap">
+      <div id="stage">
+        <canvas id="bgCanvas" width="1280" height="720" aria-hidden="true"></canvas>
+        <canvas id="fgCanvas" width="1280" height="720" tabindex="0" aria-label="図面注釈キャンバス。画像を読み込み、選択したツールで描画します。">
+          このブラウザはCanvasに対応していません。
+        </canvas>
+        <label class="visually-hidden" for="textInput">図面に追加する番号</label>
+        <input id="textInput" type="text" inputmode="numeric" pattern="[0-9]+" autocomplete="off" placeholder="番号">
+      </div>
+    </div>
+  </main>
+
+  <div id="message" class="message" role="status" aria-live="polite" hidden></div>
+
+  <footer id="status" class="status" aria-label="現在の編集状態">
+    <span id="st-tool">ツール: -</span>
+    <span id="st-color">色: -</span>
+    <span id="st-size">太さ: -</span>
+    <span id="st-frame">画像: -</span>
+    <span id="st-canvas">表示: -</span>
+    <span id="st-dpr">描画倍率: -</span>
+    <span id="st-scroll">位置: -</span>
+  </footer>
+
+  <script src="./script.js" defer></script>
+</body>
+</html>

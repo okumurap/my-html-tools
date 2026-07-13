@@ -10,9 +10,21 @@ GitHubリポジトリの **Settings → Pages → Source** は、`GitHub Actions
 
 ## アプリ一覧
 
-現在、公開中のアプリはありません。
+### 001 Offset Capability Lab
 
-アプリを追加したときは、この一覧とルートの `index.html` を同時に更新します。
+オフセットと標準偏差を調整し、2つの分布のヒストグラムと工程能力指数（Cp・Cpk）を比較するシミュレーターです。
+
+- [アプリを開く](./tools/offset-capability-lab/)
+- PC・スマートフォン対応
+- Canvas描画、外部通信なし
+
+### 002 図面注釈ツール
+
+PNGまたはJPEGの画像・図面へ、ペン、矢印、図形、連番ラベルを書き込み、PNGとしてコピーまたは保存するツールです。
+
+- [アプリを開く](./tools/drawing-annotation/)
+- PC・スマートフォン・ペン入力対応
+- Canvas描画、外部通信なし
 
 ## ローカルでの開き方
 

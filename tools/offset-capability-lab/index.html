@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="オフセットと標準偏差を調整し、ヒストグラムと工程能力指数の変化を比較するシミュレーターです。">
+  <title>Offset Capability Lab | My HTML Tools</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="ambient ambient--one" aria-hidden="true"></div>
+  <div class="ambient ambient--two" aria-hidden="true"></div>
+
+  <header class="app-header">
+    <div class="shell app-header__inner">
+      <a class="back-link" href="../../index.html">
+        <span aria-hidden="true">←</span>
+        <span>ツール一覧</span>
+      </a>
+      <span class="app-index">MY HTML TOOLS / 001</span>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Process capability simulator</p>
+        <h1 id="page-title"><span>OFFSET</span> CAPABILITY LAB</h1>
+        <p class="hero__description">
+          10,000個の正規分布データを正負にオフセットし、分布のズレが工程能力へ与える影響をリアルタイムに可視化します。
+        </p>
+      </div>
+      <div class="status-badge">
+        <span class="status-badge__dot" aria-hidden="true"></span>
+        Local processing
+      </div>
+    </section>
+
+    <section class="panel control-panel" aria-labelledby="controls-title">
+      <div class="panel-heading">
+        <div>
+          <p class="panel-kicker">01 / Parameters</p>
+          <h2 id="controls-title">シミュレーション設定</h2>
+        </div>
+        <p class="panel-note">値を変更すると自動で再計算します</p>
+      </div>
+
+      <div class="slider-grid">
+        <div class="control-card control-card--cyan">
+          <div class="control-card__heading">
+            <label for="offset">Offset Value</label>
+            <output id="offsetValue" for="offset">5.0</output>
+          </div>
+          <input id="offset" type="range" min="0" max="20" step="0.5" value="5" aria-describedby="offsetHint">
+          <div class="range-scale" aria-hidden="true"><span>0</span><span>20</span></div>
+          <p id="offsetHint" class="control-hint">基準分布へ加減する移動量</p>
+        </div>
+
+        <div class="control-card control-card--amber">
+          <div class="control-card__heading">
+            <label for="stddev">Standard Deviation</label>
+            <output id="stddevValue" for="stddev">2.3</output>
+          </div>
+          <input id="stddev" type="range" min="0.1" max="20" step="0.1" value="2.3" aria-describedby="stddevHint">
+          <div class="range-scale" aria-hidden="true"><span>0.1</span><span>20</span></div>
+          <p id="stddevHint" class="control-hint">元データの母標準偏差 σ</p>
+        </div>
+      </div>
+
+      <div class="number-grid">
+        <label class="number-field" for="meanInput">
+          <span class="number-field__label">Mean <span>μ</span></span>
+          <input id="meanInput" type="number" step="0.1" value="-5.5" inputmode="decimal">
+        </label>
+        <label class="number-field" for="uslInput">
+          <span class="number-field__label">Upper spec <span>USL</span></span>
+          <input id="uslInput" type="number" step="0.1" value="19.5" inputmode="decimal">
+        </label>
+        <label class="number-field" for="lslInput">
+          <span class="number-field__label">Lower spec <span>LSL</span></span>
+          <input id="lslInput" type="number" step="0.1" value="-30.5" inputmode="decimal">
+        </label>
+      </div>
+
+      <p id="validationMessage" class="validation-message" role="alert" hidden></p>
+
+      <div class="control-footer">
+        <p><strong>N = 10,000</strong><span>母標準偏差（ddof = 0）</span></p>
+        <div class="button-group">
+          <button id="resampleButton" class="button button--primary" type="button">再サンプリング</button>
+          <button id="resetButton" class="button button--secondary" type="button">初期値に戻す</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel metrics-panel" aria-labelledby="metrics-title">
+      <div class="panel-heading">
+        <div>
+          <p class="panel-kicker">02 / Live metrics</p>
+          <h2 id="metrics-title">工程能力指数</h2>
+        </div>
+        <div class="summary-values" aria-label="入力値の概要">
+          <span>μ <strong id="summaryMean">-5.500</strong></span>
+          <span>USL <strong id="summaryUsl">19.500</strong></span>
+          <span>LSL <strong id="summaryLsl">-30.500</strong></span>
+        </div>
+      </div>
+
+      <div class="metric-grid">
+        <article class="metric-card metric-card--plus" id="plusCard">
+          <div class="metric-card__heading">
+            <div><span class="legend-dot"></span><h3>Offset +</h3></div>
+            <span id="plusState" class="metric-state">計算中</span>
+          </div>
+          <dl>
+            <div><dt>Cp</dt><dd id="plusCp">—</dd></div>
+            <div><dt>Cpk</dt><dd id="plusCpk">—</dd></div>
+            <div><dt>Mean</dt><dd id="plusMean">—</dd></div>
+            <div><dt>Sigma</dt><dd id="plusSigma">—</dd></div>
+          </dl>
+        </article>
+
+        <article class="metric-card metric-card--minus" id="minusCard">
+          <div class="metric-card__heading">
+            <div><span class="legend-dot"></span><h3>Offset −</h3></div>
+            <span id="minusState" class="metric-state">計算中</span>
+          </div>
+          <dl>
+            <div><dt>Cp</dt><dd id="minusCp">—</dd></div>
+            <div><dt>Cpk</dt><dd id="minusCpk">—</dd></div>
+            <div><dt>Mean</dt><dd id="minusMean">—</dd></div>
+            <div><dt>Sigma</dt><dd id="minusSigma">—</dd></div>
+          </dl>
+        </article>
+
+        <article class="metric-card metric-card--all" id="allCard">
+          <div class="metric-card__heading">
+            <div><span class="legend-dot"></span><h3>Combined</h3></div>
+            <span id="allState" class="metric-state">計算中</span>
+          </div>
+          <dl>
+            <div><dt>Cp</dt><dd id="allCp">—</dd></div>
+            <div><dt>Cpk</dt><dd id="allCpk">—</dd></div>
+            <div><dt>Mean</dt><dd id="allMean">—</dd></div>
+            <div><dt>Sigma</dt><dd id="allSigma">—</dd></div>
+          </dl>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel chart-panel" aria-labelledby="chart-title">
+      <div class="panel-heading chart-heading">
+        <div>
+          <p class="panel-kicker">03 / Distribution</p>
+          <h2 id="chart-title">オフセット分布</h2>
+        </div>
+        <div class="chart-legend" aria-label="グラフの凡例">
+          <span class="chart-legend__plus"><i></i>Offset +</span>
+          <span class="chart-legend__minus"><i></i>Offset −</span>
+          <span class="chart-legend__spec"><i></i>USL / LSL</span>
+        </div>
+      </div>
+      <div class="canvas-frame">
+        <canvas id="histogram" aria-describedby="chartDescription">
+          このブラウザはCanvas表示に対応していません。
+        </canvas>
+      </div>
+      <p id="chartDescription" class="visually-hidden"></p>
+    </section>
+
+    <aside class="formula-note" aria-label="計算式の説明">
+      <span class="formula-note__index">NOTE</span>
+      <p><strong>Cp = (USL − LSL) / 6σ</strong><br>Cpkは平均から近い側の規格限界までの距離を3σで割って算出します。</p>
+    </aside>
+  </main>
+
+  <footer class="app-footer">
+    <div class="shell">
+      <p>001 / Offset Capability Lab</p>
+      <p>計算はすべてブラウザ内で実行され、データは送信されません。</p>
+    </div>
+  </footer>
+
+  <script src="./script.js"></script>
+</body>
+</html>
+
