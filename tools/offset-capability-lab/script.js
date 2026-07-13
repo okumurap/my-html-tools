@@ -219,7 +219,7 @@
   function drawEmptyChart(message) {
     const { width, height } = resizeCanvas();
     context.clearRect(0, 0, width, height);
-    context.fillStyle = "#8fa0af";
+    context.fillStyle = "#66707b";
     context.font = "12px SFMono-Regular, Consolas, monospace";
     context.textAlign = "center";
     context.fillText(message, width / 2, height / 2);
@@ -257,8 +257,8 @@
     context.lineWidth = 1;
     context.font = `${compact ? 9 : 10}px SFMono-Regular, Consolas, monospace`;
 
-    context.strokeStyle = "#1b2834";
-    context.fillStyle = "#6f8292";
+    context.strokeStyle = "#e3e7eb";
+    context.fillStyle = "#66707b";
     const horizontalLines = 4;
     for (let index = 0; index <= horizontalLines; index += 1) {
       const ratio = index / horizontalLines;
@@ -301,14 +301,14 @@
       }
     };
 
-    drawBars(plusHistogram, "rgb(77 232 255 / 66%)");
-    drawBars(minusHistogram, "rgb(255 184 77 / 50%)");
+    drawBars(plusHistogram, "rgb(37 99 169 / 58%)");
+    drawBars(minusHistogram, "rgb(217 119 6 / 44%)");
 
     const drawSpecLine = (value, label) => {
       const x = xToPixel(value);
       context.save();
-      context.strokeStyle = "#ff6178";
-      context.fillStyle = "#ff8799";
+      context.strokeStyle = "#dc2626";
+      context.fillStyle = "#b91c1c";
       context.lineWidth = 1.5;
       context.setLineDash([6, 5]);
       context.beginPath();
@@ -324,7 +324,7 @@
     drawSpecLine(result.settings.lsl, "LSL");
     drawSpecLine(result.settings.usl, "USL");
 
-    context.strokeStyle = "#526678";
+    context.strokeStyle = "#94a3b8";
     context.lineWidth = 1;
     context.beginPath();
     context.moveTo(margin.left, margin.top);
@@ -332,7 +332,7 @@
     context.lineTo(margin.left + plotWidth, margin.top + plotHeight);
     context.stroke();
 
-    context.fillStyle = "#8fa0af";
+    context.fillStyle = "#66707b";
     context.textAlign = "center";
     context.fillText("VALUE", margin.left + plotWidth / 2, height - 3);
     context.save();
@@ -433,4 +433,3 @@
 
   update();
 })();
-
