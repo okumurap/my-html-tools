@@ -291,6 +291,30 @@ h2 {
   font-size: 0.72rem;
 }
 
+.conversion-note {
+  display: flex;
+  gap: 0.35rem 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0.75rem 0 0;
+  padding: 0.55rem 0.7rem;
+  border-left: 3px solid var(--accent);
+  color: var(--muted);
+  background: var(--accent-soft);
+  font-size: 0.72rem;
+}
+
+.conversion-note strong,
+.conversion-status output {
+  color: var(--accent);
+}
+
+.conversion-status {
+  margin-left: auto;
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+
 .result-grid {
   display: grid;
   gap: 0.7rem;
@@ -469,7 +493,7 @@ h2 {
 
 @media (min-width: 48rem) {
   .input-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .result-grid {
@@ -497,6 +521,11 @@ h2 {
   .input-control span {
     padding-right: 0.4rem;
     font-size: 0.58rem;
+  }
+
+  .conversion-status {
+    width: 100%;
+    margin-left: 0;
   }
 
   .result-card__header {
