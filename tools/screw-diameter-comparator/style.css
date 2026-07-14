@@ -336,11 +336,14 @@ input[type="range"] {
 
 @media (max-width: 850px) {
   .compare {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 36px minmax(0, 1fr);
+    gap: 8px;
   }
 
   .versus {
-    min-height: 36px;
+    min-height: 150px;
+    font-size: 14px;
+    text-align: center;
   }
 
   .summary,
@@ -352,16 +355,58 @@ input[type="range"] {
 @media (max-width: 520px) {
   .header-inner,
   main {
-    padding-inline: 12px;
+    padding-inline: 8px;
   }
 
-  .side,
+  main {
+    gap: 12px;
+  }
+
+  .compare {
+    grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .side {
+    padding: 8px;
+    border-radius: 10px;
+    box-shadow: 0 5px 14px rgb(30 50 80 / 8%);
+  }
+
   .card {
     padding: 14px;
   }
 
+  .side-a,
+  .side-b {
+    border-top-width: 5px;
+  }
+
+  .title {
+    gap: 4px;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+
+  .badge {
+    padding: 2px 4px;
+    font-size: 8px;
+  }
+
+  .versus {
+    min-height: 110px;
+    font-size: 10px;
+    line-height: 1.2;
+  }
+
+  .field {
+    margin: 10px 0;
+  }
+
   .metrics {
     grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    margin-top: 8px;
   }
 
   .metric.wide {
@@ -371,14 +416,63 @@ input[type="range"] {
   .field-head {
     align-items: flex-start;
     flex-direction: column;
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+
+  label {
+    font-size: 10px;
+    line-height: 1.4;
+  }
+
+  .field-head > b {
+    font-size: 11px;
+  }
+
+  .number-wrap {
+    width: 100%;
+    gap: 3px;
   }
 
   .number-wrap input {
-    width: 130px;
+    flex: 1;
+    width: 0;
+    min-width: 0;
+    padding: 5px;
+    font-size: 12px;
+  }
+
+  .unit {
+    min-width: 30px;
+    font-size: 9px;
+  }
+
+  .diam-labels {
+    font-size: 7px;
   }
 
   .circle-area {
-    height: 160px;
+    height: 110px;
+  }
+
+  .circle {
+    max-width: 92px;
+    max-height: 92px;
+    font-size: 15px;
+  }
+
+  .metric {
+    padding: 7px;
+  }
+
+  .metric span {
+    font-size: 9px;
+  }
+
+  .metric b,
+  .metric output {
+    font-size: 12px;
+    line-height: 1.35;
   }
 }
 
