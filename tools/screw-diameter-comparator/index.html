@@ -3,201 +3,70 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="射出成形機のスクリュ径A/Bによる流量、充填体積、必要ストロークの違いを比較するツールです。">
-  <title>スクリュ径A/B比較ツール | My HTML Tools</title>
+  <meta name="description" content="射出成形機のスクリュ径A/Bについて、射出速度、回転数、概算移動量、射出体積を比較・換算するツールです。">
+  <title>射出成形機｜スクリュ径 A/B比較</title>
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <header class="app-header">
-    <div class="shell app-header__inner">
-      <a class="back-link" href="../../index.html">
-        <span aria-hidden="true">←</span>
-        <span>ツール一覧</span>
-      </a>
-      <span class="app-index">MY HTML TOOLS / 003</span>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="back-link" href="../../index.html">← ツール一覧</a>
+      <h1>射出成形機｜スクリュ径 A/B比較</h1>
+      <p>スライダー入力・整数表示・概算移動量と射出体積を双方向連動</p>
     </div>
   </header>
 
-  <main class="shell">
-    <section class="hero" aria-labelledby="page-title">
-      <p class="eyebrow">Injection molding calculator</p>
-      <h1 id="page-title">スクリュ径A/B比較ツール</h1>
-      <p class="hero__description">
-        2つのスクリュ径から、射出・回転時の理論値と径変更による差を比較します。
-      </p>
+  <main>
+    <section class="compare" aria-label="条件Aと条件Bの比較">
+      <article class="side side-a" id="sideA">
+        <h2 class="title">条件 A <span class="badge">入力可能</span></h2>
+        <div id="bodyA"></div>
+      </article>
+
+      <div class="versus" aria-hidden="true">A ⇄ B</div>
+
+      <article class="side side-b" id="sideB">
+        <h2 class="title">条件 B <span class="badge">入力可能</span></h2>
+        <div id="bodyB"></div>
+      </article>
     </section>
 
-    <section class="panel input-panel" aria-labelledby="input-title">
-      <div class="section-heading">
-        <div>
-          <p class="section-index">01 / Conditions</p>
-          <h2 id="input-title">入力条件</h2>
+    <section class="card" aria-labelledby="volume-title">
+      <h2 id="volume-title">共通の射出体積</h2>
+      <div class="volume-box">
+        <div class="field-head">
+          <label for="volumeNumber">射出体積</label>
+          <div class="number-wrap">
+            <input id="volumeNumber" type="number" min="0" step="1" inputmode="numeric">
+            <span class="unit">mm³</span>
+          </div>
         </div>
-        <button id="resetButton" class="reset-button" type="button">初期値に戻す</button>
+        <input id="volumeRange" type="range" min="0" step="1" aria-label="射出体積">
+        <div class="limits"><span>0 mm³</span><span id="volumeMaxLabel">―</span></div>
       </div>
 
-      <div class="input-grid">
-        <label class="input-field input-field--a" for="diameterA">
-          <span class="input-field__label"><strong>A</strong> スクリュ径</span>
-          <span class="input-control">
-            <input id="diameterA" type="number" min="0.1" step="0.1" value="36" inputmode="decimal">
-            <span>mm</span>
-          </span>
-        </label>
-
-        <label class="input-field input-field--b" for="diameterB">
-          <span class="input-field__label"><strong>B</strong> スクリュ径</span>
-          <span class="input-control">
-            <input id="diameterB" type="number" min="0.1" step="0.1" value="45" inputmode="decimal">
-            <span>mm</span>
-          </span>
-        </label>
-
-        <label class="input-field input-field--a" for="injectionSpeedA">
-          <span class="input-field__label"><strong>A</strong> 射出速度</span>
-          <span class="input-control">
-            <input id="injectionSpeedA" type="number" min="0.01" step="0.01" value="10" inputmode="decimal" aria-describedby="conversionNote">
-            <span>mm/s</span>
-          </span>
-        </label>
-
-        <label class="input-field input-field--b" for="injectionSpeedB">
-          <span class="input-field__label"><strong>B</strong> 射出速度</span>
-          <span class="input-control">
-            <input id="injectionSpeedB" type="number" min="0.01" step="0.01" value="6.40" inputmode="decimal" aria-describedby="conversionNote">
-            <span>mm/s</span>
-          </span>
-        </label>
-
-        <label class="input-field input-field--a" for="strokeA">
-          <span class="input-field__label"><strong>A</strong> スクリュ移動量</span>
-          <span class="input-control">
-            <input id="strokeA" type="number" min="0.01" step="0.01" value="100" inputmode="decimal" aria-describedby="conversionNote">
-            <span>mm</span>
-          </span>
-        </label>
-
-        <label class="input-field input-field--b" for="strokeB">
-          <span class="input-field__label"><strong>B</strong> スクリュ移動量</span>
-          <span class="input-control">
-            <input id="strokeB" type="number" min="0.01" step="0.01" value="64.00" inputmode="decimal" aria-describedby="conversionNote">
-            <span>mm</span>
-          </span>
-        </label>
-
-        <label class="input-field" for="rotationSpeed">
-          <span class="input-field__label">スクリュ回転速度</span>
-          <span class="input-control">
-            <input id="rotationSpeed" type="number" min="0.1" step="1" value="100" inputmode="decimal">
-            <span>rpm</span>
-          </span>
-        </label>
-
-        <label class="input-field" for="targetVolume">
-          <span class="input-field__label">目標充填体積</span>
-          <span class="input-control">
-            <input id="targetVolume" type="number" min="1" step="1" value="100000" inputmode="numeric">
-            <span>mm³</span>
-          </span>
-        </label>
+      <div class="summary">
+        <div class="metric"><span>cm³換算</span><b id="volumeCm3">―</b></div>
+        <div class="metric"><span>B/A 断面積比</span><b id="areaRatio">―</b></div>
+        <div class="metric"><span>移動量差 B−A</span><b id="strokeDiff">―</b></div>
       </div>
-
-      <p id="validationMessage" class="validation-message" role="alert" hidden></p>
-      <p id="conversionNote" class="conversion-note">
-        <strong>自動換算</strong>
-        <span>最後に編集した側を基準に、反対側を同じ体積流量・充填体積へ換算します。</span>
-        <span class="conversion-status" aria-live="polite">
-          射出速度: <output id="injectionSpeedSource">A基準</output>
-          <span aria-hidden="true">/</span>
-          ストローク: <output id="strokeSource">A基準</output>
-        </span>
-      </p>
-      <p class="calculation-note">計算内部では小数を保持し、実値は表示時に整数へ四捨五入します。</p>
+      <p class="note">射出体積を変更するとA・B両側の概算移動量を更新します。概算移動量を変更すると、射出体積と反対側の移動量を更新します。</p>
     </section>
 
-    <section class="results-section" aria-labelledby="results-title">
-      <div class="section-heading section-heading--plain">
-        <div>
-          <p class="section-index">02 / Results</p>
-          <h2 id="results-title">計算結果</h2>
-        </div>
-      </div>
-
-      <div class="result-grid" aria-live="polite">
-        <article class="result-card result-card--a">
-          <header class="result-card__header">
-            <span class="screw-label">SCREW A</span>
-            <output id="diameterDisplayA" class="diameter-display" data-output>φ36 mm</output>
-          </header>
-          <dl class="metric-list">
-            <div><dt>断面積</dt><dd><output id="areaA" data-output>1,018 mm²</output></dd></div>
-            <div><dt>外周長</dt><dd><output id="circumferenceA" data-output>113 mm</output></dd></div>
-            <div><dt>最大周速</dt><dd><output id="peripheralSpeedA" data-output>188 mm/s</output></dd></div>
-            <div><dt>理論体積流量</dt><dd><output id="flowRateA" data-output>10,179 mm³/s</output></dd></div>
-            <div><dt id="shotVolumeLabelA">100 mm移動時の体積</dt><dd><output id="shotVolumeA" data-output>101,788 mm³</output></dd></div>
-            <div><dt id="requiredStrokeLabelA">100,000 mm³に必要なストローク</dt><dd><output id="requiredStrokeA" data-output>98 mm</output></dd></div>
-            <div><dt>ストローク径比</dt><dd><output id="strokeRatioA" data-output>2.78D</output></dd></div>
-          </dl>
-        </article>
-
-        <article class="result-card result-card--b">
-          <header class="result-card__header">
-            <span class="screw-label">SCREW B</span>
-            <output id="diameterDisplayB" class="diameter-display" data-output>φ45 mm</output>
-          </header>
-          <dl class="metric-list">
-            <div><dt>断面積</dt><dd><output id="areaB" data-output>1,590 mm²</output></dd></div>
-            <div><dt>外周長</dt><dd><output id="circumferenceB" data-output>141 mm</output></dd></div>
-            <div><dt>最大周速</dt><dd><output id="peripheralSpeedB" data-output>236 mm/s</output></dd></div>
-            <div><dt>理論体積流量</dt><dd><output id="flowRateB" data-output>10,179 mm³/s</output></dd></div>
-            <div><dt id="shotVolumeLabelB">64 mm移動時の体積</dt><dd><output id="shotVolumeB" data-output>101,788 mm³</output></dd></div>
-            <div><dt id="requiredStrokeLabelB">100,000 mm³に必要なストローク</dt><dd><output id="requiredStrokeB" data-output>63 mm</output></dd></div>
-            <div><dt>ストローク径比</dt><dd><output id="strokeRatioB" data-output>1.42D</output></dd></div>
-          </dl>
-        </article>
+    <section class="card driver-card" aria-label="現在の換算基準">
+      <div class="status" aria-live="polite">
+        <div>射出速度の基準：<b id="speedDriver">A側</b></div>
+        <div>回転数の基準：<b id="rpmDriver">A側</b></div>
+        <div>移動量の基準：<b id="strokeDriver">A側</b></div>
       </div>
     </section>
 
-    <section class="panel comparison-section" aria-labelledby="comparison-title">
-      <div class="section-heading">
-        <div>
-          <p class="section-index">03 / Comparison</p>
-          <h2 id="comparison-title">A/B比較</h2>
-        </div>
-        <p class="comparison-note">BをAに対して比較</p>
-      </div>
-
-      <div class="comparison-table-wrap">
-        <table class="comparison-table">
-          <thead>
-            <tr><th scope="col">項目</th><th scope="col">A</th><th scope="col">B</th><th scope="col">B/A</th><th scope="col">増減率</th></tr>
-          </thead>
-          <tbody>
-            <tr><th scope="row">スクリュ径</th><td id="compareDiameterA" data-label="A" data-output>36 mm</td><td id="compareDiameterB" data-label="B" data-output>45 mm</td><td id="compareDiameterRatio" class="ratio-cell" data-label="B/A" data-output>1.25倍</td><td id="compareDiameterChange" class="change-cell" data-label="増減率" data-output>+25.0%</td></tr>
-            <tr><th scope="row">断面積</th><td id="compareAreaA" data-label="A" data-output>1,018 mm²</td><td id="compareAreaB" data-label="B" data-output>1,590 mm²</td><td id="compareAreaRatio" class="ratio-cell" data-label="B/A" data-output>1.56倍</td><td id="compareAreaChange" class="change-cell" data-label="増減率" data-output>+56.3%</td></tr>
-            <tr><th scope="row">外周長</th><td id="compareCircumferenceA" data-label="A" data-output>113 mm</td><td id="compareCircumferenceB" data-label="B" data-output>141 mm</td><td id="compareCircumferenceRatio" class="ratio-cell" data-label="B/A" data-output>1.25倍</td><td id="compareCircumferenceChange" class="change-cell" data-label="増減率" data-output>+25.0%</td></tr>
-            <tr><th scope="row">最大周速</th><td id="comparePeripheralSpeedA" data-label="A" data-output>188 mm/s</td><td id="comparePeripheralSpeedB" data-label="B" data-output>236 mm/s</td><td id="comparePeripheralSpeedRatio" class="ratio-cell" data-label="B/A" data-output>1.25倍</td><td id="comparePeripheralSpeedChange" class="change-cell" data-label="増減率" data-output>+25.0%</td></tr>
-            <tr><th scope="row">理論体積流量</th><td id="compareFlowRateA" data-label="A" data-output>10,179 mm³/s</td><td id="compareFlowRateB" data-label="B" data-output>10,179 mm³/s</td><td id="compareFlowRateRatio" class="ratio-cell" data-label="B/A" data-output>1.00倍</td><td id="compareFlowRateChange" class="change-cell" data-label="増減率" data-output>0.0%</td></tr>
-            <tr><th scope="row">理論充填体積</th><td id="compareShotVolumeA" data-label="A" data-output>101,788 mm³</td><td id="compareShotVolumeB" data-label="B" data-output>101,788 mm³</td><td id="compareShotVolumeRatio" class="ratio-cell" data-label="B/A" data-output>1.00倍</td><td id="compareShotVolumeChange" class="change-cell" data-label="増減率" data-output>0.0%</td></tr>
-            <tr><th scope="row">必要ストローク</th><td id="compareRequiredStrokeA" data-label="A" data-output>98 mm</td><td id="compareRequiredStrokeB" data-label="B" data-output>63 mm</td><td id="compareRequiredStrokeRatio" class="ratio-cell" data-label="B/A" data-output>0.64倍</td><td id="compareRequiredStrokeChange" class="change-cell" data-label="増減率" data-output>-36.0%</td></tr>
-            <tr><th scope="row">ストローク径比</th><td id="compareStrokeRatioA" data-label="A" data-output>2.78D</td><td id="compareStrokeRatioB" data-label="B" data-output>1.42D</td><td id="compareStrokeRatioRatio" class="ratio-cell" data-label="B/A" data-output>0.51倍</td><td id="compareStrokeRatioChange" class="change-cell" data-label="増減率" data-output>-48.8%</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <aside class="formula-note" aria-label="計算上の注意">
-      <strong>NOTE</strong>
-      <p>表示値は理論計算値です。実機の樹脂圧縮性、逆流、漏れ、機械効率などは含みません。</p>
+    <aside class="warning">
+      <b>注意：</b>概算移動量は幾何学的な理論値です。樹脂の圧縮、逆流、防止リングの挙動、速度応答、保圧切替位置、材料密度などは含みません。
     </aside>
-  </main>
 
-  <footer class="app-footer">
-    <div class="shell">
-      <p>003 / Screw Diameter Comparator</p>
-      <p>計算はすべてブラウザ内で実行されます。</p>
-    </div>
-  </footer>
+    <footer class="footer">ブラウザー単体で動作します。入力値は外部へ送信されません。</footer>
+  </main>
 
   <script src="./script.js"></script>
 </body>

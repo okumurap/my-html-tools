@@ -1,345 +1,234 @@
 (() => {
   "use strict";
 
-  const DEFAULT_VALUES = {
-    diameterA: "36",
-    diameterB: "45",
-    injectionSpeedA: "10",
-    injectionSpeedB: "6.40",
-    strokeA: "100",
-    strokeB: "64.00",
-    rotationSpeed: "100",
-    targetVolume: "100000",
+  const DIAMETERS = [24, 28, 32, 36, 45];
+  const CONTROL_MIN = 0;
+  const CONTROL_MAX = 200;
+  const SIDES = ["A", "B"];
+  const LINKED_KEYS = ["speed", "rpm", "stroke"];
+
+  const getElement = (id) => document.getElementById(id);
+  const calculateArea = (diameter) => Math.PI * diameter ** 2 / 4;
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+  const formatInteger = (value) => Number.isFinite(value)
+    ? Math.round(value).toLocaleString("ja-JP")
+    : "―";
+
+  const formatOneDecimal = (value) => Number.isFinite(value)
+    ? value.toLocaleString("ja-JP", { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+    : "―";
+
+  const formatTwoDecimals = (value) => Number.isFinite(value)
+    ? value.toLocaleString("ja-JP", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : "―";
+
+  const state = {
+    dA: 28,
+    dB: 32,
+    speedA: 50,
+    speedB: 38,
+    rpmA: 150,
+    rpmB: 131,
+    volume: Math.round(calculateArea(28) * 50),
+    speedDriver: "A",
+    rpmDriver: "A",
+    strokeDriver: "A",
   };
 
-  const inputs = Object.fromEntries(
-    Object.keys(DEFAULT_VALUES).map((key) => [key, document.getElementById(key)]),
-  );
-
-  const validationMessage = document.getElementById("validationMessage");
-  const resetButton = document.getElementById("resetButton");
-  const sourceElements = {
-    injectionSpeed: document.getElementById("injectionSpeedSource"),
-    stroke: document.getElementById("strokeSource"),
-  };
-  const linkedSources = {
-    injectionSpeed: "A",
-    stroke: "A",
-  };
-  let updateFrame = 0;
-
-  const resultElements = {
-    A: {
-      diameter: document.getElementById("diameterDisplayA"),
-      area: document.getElementById("areaA"),
-      circumference: document.getElementById("circumferenceA"),
-      peripheralSpeed: document.getElementById("peripheralSpeedA"),
-      flowRate: document.getElementById("flowRateA"),
-      shotVolume: document.getElementById("shotVolumeA"),
-      requiredStroke: document.getElementById("requiredStrokeA"),
-      strokeRatio: document.getElementById("strokeRatioA"),
-    },
-    B: {
-      diameter: document.getElementById("diameterDisplayB"),
-      area: document.getElementById("areaB"),
-      circumference: document.getElementById("circumferenceB"),
-      peripheralSpeed: document.getElementById("peripheralSpeedB"),
-      flowRate: document.getElementById("flowRateB"),
-      shotVolume: document.getElementById("shotVolumeB"),
-      requiredStroke: document.getElementById("requiredStrokeB"),
-      strokeRatio: document.getElementById("strokeRatioB"),
-    },
-  };
-
-  const comparisonRows = {
-    diameter: comparisonElements("Diameter"),
-    area: comparisonElements("Area"),
-    circumference: comparisonElements("Circumference"),
-    peripheralSpeed: comparisonElements("PeripheralSpeed"),
-    flowRate: comparisonElements("FlowRate"),
-    shotVolume: comparisonElements("ShotVolume"),
-    requiredStroke: comparisonElements("RequiredStroke"),
-    strokeRatio: comparisonElements("StrokeRatio"),
-  };
-
-  function comparisonElements(name) {
-    return {
-      A: document.getElementById(`compare${name}A`),
-      B: document.getElementById(`compare${name}B`),
-      ratio: document.getElementById(`compare${name}Ratio`),
-      change: document.getElementById(`compare${name}Change`),
-    };
+  function rangeField(label, key, side, unit) {
+    const inputLabel = `${label}（条件${side}）`;
+    return `
+      <div class="field">
+        <div class="field-head">
+          <label for="${key}Range${side}">${label}</label>
+          <div class="number-wrap">
+            <input
+              id="${key}Number${side}"
+              type="number"
+              min="${CONTROL_MIN}"
+              max="${CONTROL_MAX}"
+              step="1"
+              inputmode="numeric"
+              aria-label="${inputLabel}の数値入力"
+            >
+            <span class="unit">${unit}</span>
+          </div>
+        </div>
+        <input
+          id="${key}Range${side}"
+          type="range"
+          min="${CONTROL_MIN}"
+          max="${CONTROL_MAX}"
+          step="1"
+          aria-label="${inputLabel}"
+        >
+        <div class="limits"><span>${CONTROL_MIN}</span><span id="${key}Max${side}">${CONTROL_MAX}</span></div>
+      </div>`;
   }
 
-  function calculateArea(diameterMm) {
-    return Math.PI * diameterMm ** 2 / 4;
+  function sideMarkup(side) {
+    return `
+      <div class="field">
+        <div class="field-head">
+          <label for="d${side}">スクリュ径</label>
+          <b id="dValue${side}">―</b>
+        </div>
+        <input id="d${side}" type="range" min="0" max="4" step="1" aria-label="条件${side}のスクリュ径">
+        <div class="diam-labels">
+          ${DIAMETERS.map((diameter) => `<span>Φ${diameter}</span>`).join("")}
+        </div>
+      </div>
+      <div class="circle-area" aria-hidden="true"><div id="circle${side}" class="circle"></div></div>
+      <div class="metrics">
+        <div class="metric"><span>スクリュ断面積</span><output id="area${side}">―</output></div>
+        <div class="metric"><span>射出体積</span><output id="volume${side}">―</output></div>
+      </div>
+      ${rangeField("射出速度（整数）", "speed", side, "mm/s")}
+      ${rangeField("回転数（整数）", "rpm", side, "rpm")}
+      ${rangeField("計量完からクッションまでの概算移動量（整数）", "stroke", side, "mm")}
+      <div class="metrics">
+        <div class="metric"><span>体積流量</span><output id="flow${side}">―</output></div>
+        <div class="metric"><span>スクリュ周速</span><output id="surface${side}">―</output></div>
+        <div class="metric wide"><span>概算射出時間</span><output id="time${side}">―</output></div>
+      </div>`;
   }
 
-  function calculateCircumference(diameterMm) {
-    return Math.PI * diameterMm;
+  getElement("bodyA").innerHTML = sideMarkup("A");
+  getElement("bodyB").innerHTML = sideMarkup("B");
+
+  function setInputPair(key, side, value) {
+    const inputMax = Math.max(CONTROL_MAX, Math.ceil(value));
+    const numberInput = getElement(`${key}Number${side}`);
+    const rangeInput = getElement(`${key}Range${side}`);
+    numberInput.max = inputMax;
+    rangeInput.max = inputMax;
+    numberInput.value = value;
+    rangeInput.value = value;
+    getElement(`${key}Max${side}`).textContent = formatInteger(inputMax);
   }
 
-  function calculatePeripheralSpeed(diameterMm, rpm) {
-    return Math.PI * diameterMm * rpm / 60;
+  function renderSide(side, values) {
+    getElement(`d${side}`).value = DIAMETERS.indexOf(values.diameter);
+    getElement(`dValue${side}`).textContent = `Φ${values.diameter} mm`;
+
+    const circleSize = 52 + ((values.diameter - 24) / (45 - 24)) * 96;
+    const circle = getElement(`circle${side}`);
+    circle.style.width = `${circleSize}px`;
+    circle.style.height = `${circleSize}px`;
+    circle.textContent = `Φ${values.diameter}`;
+
+    getElement(`area${side}`).textContent = `${formatOneDecimal(values.area)} mm²`;
+    getElement(`volume${side}`).textContent = `${formatInteger(state.volume)} mm³`;
+    setInputPair("speed", side, values.speed);
+    setInputPair("rpm", side, values.rpm);
+    setInputPair("stroke", side, values.stroke);
+    getElement(`flow${side}`).textContent = `${formatInteger(values.area * values.speed)} mm³/s`;
+    getElement(`surface${side}`).textContent = `${formatInteger(Math.PI * values.diameter * values.rpm)} mm/min`;
+    getElement(`time${side}`).textContent = values.speed > 0
+      ? `${formatTwoDecimals(values.stroke / values.speed)} s`
+      : "―";
   }
 
-  function calculateFlowRate(areaMm2, injectionSpeedMmPerSec) {
-    return areaMm2 * injectionSpeedMmPerSec;
-  }
+  function render() {
+    const areaA = calculateArea(state.dA);
+    const areaB = calculateArea(state.dB);
+    const volumeMax = Math.max(1, Math.floor(Math.min(areaA, areaB) * CONTROL_MAX));
+    state.volume = clamp(Math.round(state.volume), 0, volumeMax);
 
-  function calculateShotVolume(areaMm2, strokeMm) {
-    return areaMm2 * strokeMm;
-  }
-
-  function calculateRequiredStroke(areaMm2, targetVolumeMm3) {
-    return targetVolumeMm3 / areaMm2;
-  }
-
-  function calculateScrew(diameter, injectionSpeed, stroke, conditions) {
-    const area = calculateArea(diameter);
-    return {
-      diameter,
-      area,
-      circumference: calculateCircumference(diameter),
-      peripheralSpeed: calculatePeripheralSpeed(diameter, conditions.rotationSpeed),
-      flowRate: calculateFlowRate(area, injectionSpeed),
-      shotVolume: calculateShotVolume(area, stroke),
-      requiredStroke: calculateRequiredStroke(area, conditions.targetVolume),
-      strokeRatio: stroke / diameter,
-    };
-  }
-
-  function formatInteger(value) {
-    if (!Number.isFinite(value)) return "－";
-    return Math.round(value).toLocaleString("ja-JP");
-  }
-
-  function formatWithUnit(value, unit) {
-    return `${formatInteger(value)} ${unit}`;
-  }
-
-  function formatStrokeRatio(value) {
-    return Number.isFinite(value) ? `${value.toFixed(2)}D` : "－";
-  }
-
-  function formatMultiplier(value) {
-    return Number.isFinite(value) ? `${value.toFixed(2)}倍` : "－";
-  }
-
-  function formatChange(value) {
-    if (!Number.isFinite(value)) return "－";
-    const sign = value > 0 ? "+" : "";
-    return `${sign}${value.toFixed(1)}%`;
-  }
-
-  function readPositiveNumber(input, label) {
-    const value = input.valueAsNumber;
-    if (!Number.isFinite(value) || value <= 0) {
-      throw new Error(`${label}には0より大きい数値を入力してください。`);
-    }
-    return value;
-  }
-
-  function calculateEquivalentValue(value, sourceDiameter, targetDiameter) {
-    return value * calculateArea(sourceDiameter) / calculateArea(targetDiameter);
-  }
-
-  function readLinkedPair(field, label, diameters) {
-    const source = linkedSources[field];
-    const target = source === "A" ? "B" : "A";
-    const sourceValue = readPositiveNumber(inputs[`${field}${source}`], `${label}${source}`);
-    const targetValue = calculateEquivalentValue(
-      sourceValue,
-      diameters[source],
-      diameters[target],
-    );
-
-    return source === "A"
-      ? { A: sourceValue, B: targetValue }
-      : { A: targetValue, B: sourceValue };
-  }
-
-  function readConditions() {
-    const diameters = {
-      A: readPositiveNumber(inputs.diameterA, "スクリュ径A"),
-      B: readPositiveNumber(inputs.diameterB, "スクリュ径B"),
-    };
-    const injectionSpeeds = readLinkedPair("injectionSpeed", "射出速度", diameters);
-    const strokes = readLinkedPair("stroke", "スクリュ移動量", diameters);
-
-    return {
-      diameterA: diameters.A,
-      diameterB: diameters.B,
-      injectionSpeedA: injectionSpeeds.A,
-      injectionSpeedB: injectionSpeeds.B,
-      strokeA: strokes.A,
-      strokeB: strokes.B,
-      rotationSpeed: readPositiveNumber(inputs.rotationSpeed, "スクリュ回転速度"),
-      targetVolume: readPositiveNumber(inputs.targetVolume, "目標充填体積"),
-    };
-  }
-
-  function renderResult(key, result) {
-    const elements = resultElements[key];
-    elements.diameter.textContent = `φ${formatInteger(result.diameter)} mm`;
-    elements.area.textContent = formatWithUnit(result.area, "mm²");
-    elements.circumference.textContent = formatWithUnit(result.circumference, "mm");
-    elements.peripheralSpeed.textContent = formatWithUnit(result.peripheralSpeed, "mm/s");
-    elements.flowRate.textContent = formatWithUnit(result.flowRate, "mm³/s");
-    elements.shotVolume.textContent = formatWithUnit(result.shotVolume, "mm³");
-    elements.requiredStroke.textContent = formatWithUnit(result.requiredStroke, "mm");
-    elements.strokeRatio.textContent = formatStrokeRatio(result.strokeRatio);
-  }
-
-  function renderComparison(key, valueA, valueB, formatter) {
-    const elements = comparisonRows[key];
-    const multiplier = valueB / valueA;
-    const change = (multiplier - 1) * 100;
-    elements.A.textContent = formatter(valueA);
-    elements.B.textContent = formatter(valueB);
-    elements.ratio.textContent = formatMultiplier(multiplier);
-    elements.change.textContent = formatChange(change);
-    elements.change.dataset.direction = change > 0
-      ? "positive"
-      : change < 0 ? "negative" : "neutral";
-  }
-
-  function renderDynamicLabels(conditions) {
-    const targetVolume = formatInteger(conditions.targetVolume);
-    ["A", "B"].forEach((key) => {
-      const stroke = formatInteger(conditions[`stroke${key}`]);
-      document.getElementById(`shotVolumeLabel${key}`).textContent = `${stroke} mm移動時の体積`;
-      document.getElementById(`requiredStrokeLabel${key}`).textContent = `${targetVolume} mm³に必要なストローク`;
-    });
-  }
-
-  function renderAll(conditions, resultA, resultB) {
-    renderResult("A", resultA);
-    renderResult("B", resultB);
-    renderDynamicLabels(conditions);
-
-    const integerFormatters = {
-      diameter: (value) => formatWithUnit(value, "mm"),
-      area: (value) => formatWithUnit(value, "mm²"),
-      circumference: (value) => formatWithUnit(value, "mm"),
-      peripheralSpeed: (value) => formatWithUnit(value, "mm/s"),
-      flowRate: (value) => formatWithUnit(value, "mm³/s"),
-      shotVolume: (value) => formatWithUnit(value, "mm³"),
-      requiredStroke: (value) => formatWithUnit(value, "mm"),
-      strokeRatio: formatStrokeRatio,
-    };
-
-    Object.keys(comparisonRows).forEach((key) => {
-      renderComparison(key, resultA[key], resultB[key], integerFormatters[key]);
-    });
-  }
-
-  function clearOutputs(message) {
-    validationMessage.textContent = message;
-    validationMessage.hidden = false;
-    document.querySelectorAll("[data-output]").forEach((element) => {
-      element.textContent = "－";
-    });
-    document.querySelectorAll(".change-cell").forEach((element) => {
-      element.dataset.direction = "neutral";
-    });
-  }
-
-  function update() {
-    try {
-      const conditions = readConditions();
-      const resultA = calculateScrew(
-        conditions.diameterA,
-        conditions.injectionSpeedA,
-        conditions.strokeA,
-        conditions,
-      );
-      const resultB = calculateScrew(
-        conditions.diameterB,
-        conditions.injectionSpeedB,
-        conditions.strokeB,
-        conditions,
-      );
-      validationMessage.hidden = true;
-      validationMessage.textContent = "";
-      renderAll(conditions, resultA, resultB);
-    } catch (error) {
-      clearOutputs(error.message);
-    }
-  }
-
-  function scheduleUpdate() {
-    window.cancelAnimationFrame(updateFrame);
-    updateFrame = window.requestAnimationFrame(update);
-  }
-
-  function syncLinkedPair(field) {
-    const source = linkedSources[field];
-    const target = source === "A" ? "B" : "A";
-    const sourceValue = inputs[`${field}${source}`].valueAsNumber;
-    const sourceDiameter = inputs[`diameter${source}`].valueAsNumber;
-    const targetDiameter = inputs[`diameter${target}`].valueAsNumber;
-
-    if (
-      !Number.isFinite(sourceValue)
-      || sourceValue <= 0
-      || !Number.isFinite(sourceDiameter)
-      || sourceDiameter <= 0
-      || !Number.isFinite(targetDiameter)
-      || targetDiameter <= 0
-    ) {
-      return;
+    if (state.speedDriver === "A") {
+      state.speedB = Math.round(state.speedA * areaA / areaB);
+    } else {
+      state.speedA = Math.round(state.speedB * areaB / areaA);
     }
 
-    const convertedValue = calculateEquivalentValue(
-      sourceValue,
-      sourceDiameter,
-      targetDiameter,
-    );
-    inputs[`${field}${target}`].value = convertedValue.toFixed(2);
-  }
-
-  function syncAllLinkedPairs() {
-    syncLinkedPair("injectionSpeed");
-    syncLinkedPair("stroke");
-  }
-
-  function updateSourceStatus() {
-    Object.keys(linkedSources).forEach((field) => {
-      sourceElements[field].textContent = `${linkedSources[field]}基準`;
-    });
-  }
-
-  function handleInput(event) {
-    const { id } = event.currentTarget;
-    const linkedField = ["injectionSpeed", "stroke"].find((field) => id.startsWith(field));
-
-    if (linkedField) {
-      linkedSources[linkedField] = id.endsWith("A") ? "A" : "B";
-      syncLinkedPair(linkedField);
-      updateSourceStatus();
-    } else if (id === "diameterA" || id === "diameterB") {
-      syncAllLinkedPairs();
+    if (state.rpmDriver === "A") {
+      state.rpmB = Math.round(state.rpmA * state.dA / state.dB);
+    } else {
+      state.rpmA = Math.round(state.rpmB * state.dB / state.dA);
     }
 
-    scheduleUpdate();
-  }
+    const strokeA = Math.round(state.volume / areaA);
+    const strokeB = Math.round(state.volume / areaB);
 
-  function reset() {
-    Object.entries(DEFAULT_VALUES).forEach(([key, value]) => {
-      inputs[key].value = value;
+    renderSide("A", {
+      diameter: state.dA,
+      area: areaA,
+      speed: state.speedA,
+      rpm: state.rpmA,
+      stroke: strokeA,
     });
-    linkedSources.injectionSpeed = "A";
-    linkedSources.stroke = "A";
-    syncAllLinkedPairs();
-    updateSourceStatus();
-    scheduleUpdate();
+    renderSide("B", {
+      diameter: state.dB,
+      area: areaB,
+      speed: state.speedB,
+      rpm: state.rpmB,
+      stroke: strokeB,
+    });
+
+    getElement("volumeNumber").max = volumeMax;
+    getElement("volumeRange").max = volumeMax;
+    getElement("volumeNumber").value = state.volume;
+    getElement("volumeRange").value = state.volume;
+    getElement("volumeMaxLabel").textContent = `${formatInteger(volumeMax)} mm³`;
+    getElement("volumeCm3").textContent = `${formatTwoDecimals(state.volume / 1000)} cm³`;
+    getElement("areaRatio").textContent = `${formatTwoDecimals(areaB / areaA)} 倍`;
+
+    const strokeDifference = strokeB - strokeA;
+    const strokeSign = strokeDifference > 0 ? "+" : "";
+    getElement("strokeDiff").textContent = `${strokeSign}${formatInteger(strokeDifference)} mm`;
+    getElement("speedDriver").textContent = `${state.speedDriver}側`;
+    getElement("rpmDriver").textContent = `${state.rpmDriver}側`;
+    getElement("strokeDriver").textContent = state.strokeDriver.includes("体積")
+      ? state.strokeDriver
+      : `${state.strokeDriver}側`;
   }
 
-  Object.values(inputs).forEach((input) => {
-    input.addEventListener("input", handleInput);
+  function readIntegerInput(input) {
+    const number = Number(input.value);
+    const maximum = Number(input.max) || CONTROL_MAX;
+    return clamp(Number.isFinite(number) ? Math.round(number) : 0, CONTROL_MIN, maximum);
+  }
+
+  SIDES.forEach((side) => {
+    getElement(`d${side}`).addEventListener("input", (event) => {
+      state[`d${side}`] = DIAMETERS[Number(event.target.value)];
+      render();
+    });
+
+    LINKED_KEYS.forEach((key) => {
+      ["Range", "Number"].forEach((kind) => {
+        getElement(`${key}${kind}${side}`).addEventListener("input", (event) => {
+          const value = readIntegerInput(event.target);
+          const areaA = calculateArea(state.dA);
+          const areaB = calculateArea(state.dB);
+
+          if (key === "speed") {
+            state.speedDriver = side;
+            state[`speed${side}`] = value;
+          } else if (key === "rpm") {
+            state.rpmDriver = side;
+            state[`rpm${side}`] = value;
+          } else {
+            state.strokeDriver = side;
+            state.volume = Math.round(value * (side === "A" ? areaA : areaB));
+          }
+
+          render();
+        });
+      });
+    });
   });
-  resetButton.addEventListener("click", reset);
 
-  update();
+  ["volumeNumber", "volumeRange"].forEach((id) => {
+    getElement(id).addEventListener("input", (event) => {
+      const volumeMax = Number(getElement("volumeRange").max);
+      const volume = Number(event.target.value);
+      state.volume = clamp(Number.isFinite(volume) ? Math.round(volume) : 0, 0, volumeMax);
+      state.strokeDriver = id === "volumeRange" ? "体積スライダー" : "体積入力";
+      render();
+    });
+  });
+
+  render();
 })();
