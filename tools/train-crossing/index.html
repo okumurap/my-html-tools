@@ -2,78 +2,38 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="ブラウザで踏切の遮断機・警報灯・列車通過を操作できるミニ踏切アプリです。">
-  <title>踏切アプリ | My HTML Tools</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="画面をタップして、駅から踏切とトンネルを越えて電車を走らせるミニゲームです。">
+  <meta name="theme-color" content="#8edcff">
+  <title>でんしゃを走らせよう！ | My HTML Tools</title>
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <main class="app-shell">
-    <nav class="breadcrumb" aria-label="パンくずリスト">
-      <a href="../../index.html">ツール一覧へ戻る</a>
-    </nav>
+  <canvas id="game" aria-label="タップして電車を走らせるゲーム"></canvas>
 
-    <section class="hero" aria-labelledby="app-title">
-      <p class="eyebrow">Train Crossing</p>
-      <h1 id="app-title">踏切アプリ</h1>
-      <p class="lead">
-        警報灯、遮断機、列車の通過をブラウザ上で動かせる、シンプルな踏切シミュレーターです。
-      </p>
-    </section>
+  <header class="topbar">
+    <a class="back-link" href="../../index.html" aria-label="ツール一覧へ戻る">←</a>
+    <p class="title">🚆 でんしゃゲーム</p>
+    <div class="buttons">
+      <button type="button" id="soundButton" aria-label="音を切る" title="音を切る">🔊</button>
+      <button type="button" id="fullscreenButton" aria-label="全画面で表示" title="全画面で表示">⛶</button>
+    </div>
+  </header>
 
-    <section class="crossing-card" aria-label="踏切シミュレーター">
-      <div class="sky" aria-hidden="true">
-        <span class="cloud cloud-one"></span>
-        <span class="cloud cloud-two"></span>
-      </div>
+  <div class="progress" aria-label="えき、ふみきり、トンネル、とうちゃくの進行状況">
+    <span class="dot is-current" aria-label="えき"></span>
+    <span class="dot" aria-label="ふみきり"></span>
+    <span class="dot" aria-label="トンネル"></span>
+    <span class="dot" aria-label="とうちゃく"></span>
+  </div>
 
-      <div class="scene" id="scene">
-        <div class="warning-sign" aria-hidden="true">
-          <span class="sign-bar sign-bar-a"></span>
-          <span class="sign-bar sign-bar-b"></span>
-        </div>
+  <div id="tapCard" class="tap-card">
+    <span id="cardTitle" class="tap-card__title">タップで しゅっぱつ！</span>
+    <span id="cardText" class="tap-card__text">えき → ふみきり → トンネル</span>
+  </div>
 
-        <div class="signal" aria-label="警報灯">
-          <span class="lamp lamp-left"></span>
-          <span class="lamp lamp-right"></span>
-        </div>
-
-        <div class="gate gate-left" aria-hidden="true">
-          <span class="gate-arm"></span>
-        </div>
-        <div class="gate gate-right" aria-hidden="true">
-          <span class="gate-arm"></span>
-        </div>
-
-        <div class="track" aria-hidden="true">
-          <span class="rail rail-top"></span>
-          <span class="rail rail-bottom"></span>
-          <span class="sleeper sleeper-1"></span>
-          <span class="sleeper sleeper-2"></span>
-          <span class="sleeper sleeper-3"></span>
-          <span class="sleeper sleeper-4"></span>
-        </div>
-
-        <div class="train" aria-hidden="true">
-          <span class="train-window"></span>
-          <span class="train-window"></span>
-          <span class="train-window"></span>
-        </div>
-      </div>
-
-      <p class="status" id="status" role="status" aria-live="polite">待機中です。ボタンで踏切を操作できます。</p>
-    </section>
-
-    <section class="controls" aria-labelledby="controls-title">
-      <h2 id="controls-title">操作</h2>
-      <div class="button-row">
-        <button type="button" id="startButton">踏切を鳴らす</button>
-        <button type="button" id="trainButton">列車を通過</button>
-        <button type="button" id="resetButton" class="secondary">リセット</button>
-      </div>
-      <p class="note">音は使わず、画面の点滅と動きだけで楽しめます。スマートフォンでも操作しやすい大きめのボタンにしています。</p>
-    </section>
-  </main>
+  <p class="hint">どこをタップしてもOK</p>
+  <p id="status" class="visually-hidden" role="status" aria-live="polite">タップすると電車が出発します。</p>
 
   <script src="./script.js"></script>
 </body>
