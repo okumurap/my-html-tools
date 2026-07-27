@@ -1,0 +1,47 @@
+/* Drag lever enhancement for Sakamoto Railway */
+.controls.lever-enhanced { align-items:stretch; }
+.controls.lever-enhanced .lever-card { display:flex; flex-direction:column; min-width:0; }
+.controls.lever-enhanced .step-buttons { position:absolute!important; width:1px!important; height:1px!important; overflow:hidden!important; clip:rect(0 0 0 0)!important; clip-path:inset(50%)!important; white-space:nowrap!important; }
+.drag-control-panel { display:flex; flex-direction:column; flex:1; min-height:0; }
+.drag-lever-head { display:flex; align-items:center; justify-content:space-between; gap:7px; margin-bottom:5px; }
+.drag-lever-head span { color:#314a56; font-size:9px; font-weight:850; }
+.drag-lever-readout { min-width:48px; padding:3px 8px; border-radius:999px; background:#203742; color:#fff; text-align:center; font-size:12px; box-shadow:inset 0 0 0 1px #ffffff33; }
+.drag-lever-body { display:grid; grid-template-columns:minmax(45px,.68fr) minmax(72px,1fr); gap:8px; height:176px; touch-action:none; user-select:none; -webkit-user-select:none; cursor:ns-resize; }
+.drag-notch-list { display:flex; flex-direction:column; justify-content:space-between; min-width:0; }
+.drag-notch { height:25px; border:0; border-radius:7px; background:#eaf0f2; color:#20343e; font-size:11px; font-weight:950; box-shadow:0 2px 0 #647780; touch-action:manipulation; }
+.drag-notch:active { transform:translateY(1px); box-shadow:0 1px 0 #647780; }
+.drag-notch.active { background:var(--orange); color:#132631; box-shadow:0 2px 0 var(--orange-dark); }
+.drag-notch.emergency { background:#b72d2d; color:#fff; box-shadow:0 2px 0 #761b1b; }
+.drag-notch.emergency.active { background:#ff5151; color:#fff; box-shadow:0 2px 0 #8e1717,0 0 0 3px #ffb0b055; }
+.drag-slot { position:relative; border-radius:13px; background:linear-gradient(90deg,#5e6d74,#cbd4d8 17%,#718087 50%,#cbd4d8 83%,#5e6d74); box-shadow:inset 0 3px 7px #263a4488,0 2px 0 #dce3e6; overflow:hidden; }
+.drag-slot::before { content:""; position:absolute; inset:8px 10px; border-radius:9px; border:1px solid #ffffff55; pointer-events:none; }
+.drag-guide { position:absolute; top:13px; bottom:13px; left:50%; width:18px; transform:translateX(-50%); border-radius:999px; background:#1d303a; box-shadow:inset 0 0 0 3px #0f2028,0 0 0 1px #e7edef99; }
+.drag-guide::before { content:""; position:absolute; inset:4px 6px; border-radius:999px; background:linear-gradient(#0d171c,#4f626b,#0d171c); }
+.drag-guide::after { content:""; position:absolute; inset:0 -25px; background:repeating-linear-gradient(to bottom,transparent 0 calc(20% - 1px),#243943 calc(20% - 1px) 20%); opacity:.48; pointer-events:none; }
+.drag-handle { position:absolute; left:50%; top:100%; width:66px; height:39px; transform:translate(-50%,-50%); border-radius:11px; background:linear-gradient(#f8fafb,#aebbc1); border:3px solid #253c47; box-shadow:0 5px 7px #0b1d2688,inset 0 2px 0 #fff; display:grid; place-items:center; transition:top .08s ease-out; z-index:2; }
+.drag-handle::before { content:""; position:absolute; inset:6px 12px; border-radius:6px; background:linear-gradient(90deg,#526871,#dce4e7 20%,#7e9199 50%,#dce4e7 80%,#526871); }
+.drag-handle span { position:relative; z-index:1; color:#17303c; font-size:16px; font-weight:1000; line-height:1; }
+.drag-lever-body.dragging .drag-handle { transition:none; transform:translate(-50%,-50%) scale(1.04); box-shadow:0 7px 10px #0b1d26aa,inset 0 2px 0 #fff,0 0 0 4px #ffd38e66; }
+.drag-control-panel.brake-emergency .drag-slot { box-shadow:inset 0 3px 7px #263a4488,0 0 0 3px #ff515166; }
+.drag-lever-foot { margin-top:4px; color:#334b56; font-size:9px; font-weight:800; text-align:center; }
+
+@media(max-width:760px){
+  .drag-lever-body{height:160px;grid-template-columns:minmax(42px,.64fr) minmax(65px,1fr);gap:6px}
+  .drag-handle{width:58px;height:35px}
+}
+@media(max-width:470px){
+  .controls.lever-enhanced{grid-template-columns:1fr 1fr}
+  .controls.lever-enhanced .sub-controls{grid-column:1/-1;grid-template-columns:repeat(3,1fr)}
+  .controls.lever-enhanced .door-btn{grid-column:auto}
+  .drag-lever-body{height:150px;grid-template-columns:41px minmax(58px,1fr);gap:5px}
+  .drag-notch{height:21px;font-size:9px}
+  .drag-handle{width:52px;height:32px}
+  .drag-lever-head span{font-size:8px}
+}
+@media(orientation:landscape) and (max-height:520px){
+  .controls.lever-enhanced{grid-template-columns:1fr 1fr}
+  .controls.lever-enhanced .sub-controls{grid-column:1/-1;grid-template-columns:repeat(3,1fr)}
+  .drag-lever-body{height:137px;grid-template-columns:40px minmax(56px,1fr);gap:5px}
+  .drag-notch{height:19px;font-size:9px}
+  .drag-handle{width:50px;height:30px}
+}
