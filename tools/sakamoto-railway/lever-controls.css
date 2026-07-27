@@ -1,77 +1,68 @@
-/* Drag lever enhancement for Sakamoto Railway */
-.controls.lever-enhanced { align-items:stretch; }
-.controls.lever-enhanced .lever-card { display:flex; flex-direction:column; min-width:0; }
-.controls.lever-enhanced .step-buttons { position:absolute!important; width:1px!important; height:1px!important; overflow:hidden!important; clip:rect(0 0 0 0)!important; clip-path:inset(50%)!important; white-space:nowrap!important; }
-.drag-control-panel { display:flex; flex-direction:column; flex:1; min-height:0; }
-.drag-lever-head { display:flex; align-items:center; justify-content:space-between; gap:7px; margin-bottom:5px; }
-.drag-lever-head span { color:#314a56; font-size:9px; font-weight:850; }
-.drag-lever-readout { min-width:48px; padding:3px 8px; border-radius:999px; background:#203742; color:#fff; text-align:center; font-size:12px; box-shadow:inset 0 0 0 1px #ffffff33; }
-.drag-lever-body { display:grid; grid-template-columns:minmax(45px,.68fr) minmax(72px,1fr); gap:8px; height:176px; touch-action:none; user-select:none; -webkit-user-select:none; cursor:ns-resize; }
-.drag-notch-list { display:flex; flex-direction:column; justify-content:space-between; min-width:0; }
-.drag-notch { height:25px; border:0; border-radius:7px; background:#eaf0f2; color:#20343e; font-size:11px; font-weight:950; box-shadow:0 2px 0 #647780; touch-action:manipulation; }
-.drag-notch:active { transform:translateY(1px); box-shadow:0 1px 0 #647780; }
-.drag-notch.active { background:var(--orange); color:#132631; box-shadow:0 2px 0 #c86d18; }
-.drag-notch.emergency { background:#b72d2d; color:#fff; box-shadow:0 2px 0 #761b1b; }
-.drag-notch.emergency.active { background:#ff5151; color:#fff; box-shadow:0 2px 0 #8e1717,0 0 0 3px #ffb0b055; }
-.drag-slot { position:relative; border-radius:13px; background:linear-gradient(90deg,#5e6d74,#cbd4d8 17%,#718087 50%,#cbd4d8 83%,#5e6d74); box-shadow:inset 0 3px 7px #263a4488,0 2px 0 #dce3e6; overflow:hidden; }
-.drag-slot::before { content:""; position:absolute; inset:8px 10px; border-radius:9px; border:1px solid #ffffff55; pointer-events:none; }
-.drag-guide { position:absolute; top:13px; bottom:13px; left:50%; width:18px; transform:translateX(-50%); border-radius:999px; background:#1d303a; box-shadow:inset 0 0 0 3px #0f2028,0 0 0 1px #e7edef99; }
-.drag-guide::before { content:""; position:absolute; inset:4px 6px; border-radius:999px; background:linear-gradient(#0d171c,#4f626b,#0d171c); }
-.drag-guide::after { content:""; position:absolute; inset:0 -25px; background:repeating-linear-gradient(to bottom,transparent 0 calc(20% - 1px),#243943 calc(20% - 1px) 20%); opacity:.48; pointer-events:none; }
-.drag-handle { position:absolute; left:50%; top:100%; width:66px; height:39px; transform:translate(-50%,-50%); border-radius:11px; background:linear-gradient(#f8fafb,#aebbc1); border:3px solid #253c47; box-shadow:0 5px 7px #0b1d2688,inset 0 2px 0 #fff; display:grid; place-items:center; transition:top .08s ease-out; z-index:2; }
-.drag-handle::before { content:""; position:absolute; inset:6px 12px; border-radius:6px; background:linear-gradient(90deg,#526871,#dce4e7 20%,#7e9199 50%,#dce4e7 80%,#526871); }
-.drag-handle span { position:relative; z-index:1; color:#17303c; font-size:16px; font-weight:1000; line-height:1; }
-.drag-lever-body.dragging .drag-handle { transition:none; transform:translate(-50%,-50%) scale(1.04); box-shadow:0 7px 10px #0b1d26aa,inset 0 2px 0 #fff,0 0 0 4px #ffd38e66; }
-.drag-control-panel.brake-emergency .drag-slot { box-shadow:inset 0 3px 7px #263a4488,0 0 0 3px #ff515166; }
-.drag-lever-foot { margin-top:4px; color:#334b56; font-size:9px; font-weight:800; text-align:center; }
+/* Sakamoto Railway: drag levers, route speed limits, station scenery */
+.controls.lever-enhanced{align-items:stretch}
+.controls.lever-enhanced .lever-card{display:flex;flex-direction:column;min-width:0}
+.controls.lever-enhanced .step-buttons{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;clip-path:inset(50%)!important;white-space:nowrap!important}
+.drag-control-panel{display:flex;flex-direction:column;flex:1;min-height:0}
+.drag-lever-head{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-bottom:5px}
+.drag-lever-head span{color:#314a56;font-size:9px;font-weight:850}
+.drag-lever-readout{min-width:48px;padding:3px 8px;border-radius:999px;background:#203742;color:#fff;text-align:center;font-size:12px;box-shadow:inset 0 0 0 1px #ffffff33}
+.drag-lever-body{display:grid;grid-template-columns:minmax(45px,.68fr) minmax(72px,1fr);gap:8px;height:176px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:ns-resize}
+.drag-notch-list{display:flex;flex-direction:column;justify-content:space-between;min-width:0}
+.drag-notch{height:25px;border:0;border-radius:7px;background:#eaf0f2;color:#20343e;font-size:11px;font-weight:950;box-shadow:0 2px 0 #647780;touch-action:manipulation}
+.drag-notch:active{transform:translateY(1px);box-shadow:0 1px 0 #647780}
+.drag-notch.active{background:var(--orange);color:#132631;box-shadow:0 2px 0 #c86d18}
+.drag-notch.emergency{background:#b72d2d;color:#fff;box-shadow:0 2px 0 #761b1b}
+.drag-notch.emergency.active{background:#ff5151;color:#fff;box-shadow:0 2px 0 #8e1717,0 0 0 3px #ffb0b055}
+.drag-slot{position:relative;border-radius:13px;background:linear-gradient(90deg,#5e6d74,#cbd4d8 17%,#718087 50%,#cbd4d8 83%,#5e6d74);box-shadow:inset 0 3px 7px #263a4488,0 2px 0 #dce3e6;overflow:hidden}
+.drag-slot::before{content:"";position:absolute;inset:8px 10px;border-radius:9px;border:1px solid #ffffff55;pointer-events:none}
+.drag-guide{position:absolute;top:13px;bottom:13px;left:50%;width:18px;transform:translateX(-50%);border-radius:999px;background:#1d303a;box-shadow:inset 0 0 0 3px #0f2028,0 0 0 1px #e7edef99}
+.drag-guide::before{content:"";position:absolute;inset:4px 6px;border-radius:999px;background:linear-gradient(#0d171c,#4f626b,#0d171c)}
+.drag-guide::after{content:"";position:absolute;inset:0 -25px;background:repeating-linear-gradient(to bottom,transparent 0 calc(20% - 1px),#243943 calc(20% - 1px) 20%);opacity:.48;pointer-events:none}
+.drag-handle{position:absolute;left:50%;top:100%;width:66px;height:39px;transform:translate(-50%,-50%);border-radius:11px;background:linear-gradient(#f8fafb,#aebbc1);border:3px solid #253c47;box-shadow:0 5px 7px #0b1d2688,inset 0 2px 0 #fff;display:grid;place-items:center;transition:top .08s ease-out;z-index:2}
+.drag-handle::before{content:"";position:absolute;inset:6px 12px;border-radius:6px;background:linear-gradient(90deg,#526871,#dce4e7 20%,#7e9199 50%,#dce4e7 80%,#526871)}
+.drag-handle span{position:relative;z-index:1;color:#17303c;font-size:16px;font-weight:1000;line-height:1}
+.drag-lever-body.dragging .drag-handle{transition:none;transform:translate(-50%,-50%) scale(1.04);box-shadow:0 7px 10px #0b1d26aa,inset 0 2px 0 #fff,0 0 0 4px #ffd38e66}
+.drag-control-panel.brake-emergency .drag-slot{box-shadow:inset 0 3px 7px #263a4488,0 0 0 3px #ff515166}
+.drag-lever-foot{margin-top:4px;color:#334b56;font-size:9px;font-weight:800;text-align:center}
 
-/* Route speed limit map */
-.speed-limit-map{margin:2px 8px 8px}
-.speed-limit-caption{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;font-size:9px;font-weight:900;color:#5b6d76}
-.speed-limit-caption strong{color:#b63b32;font-size:11px}
-.speed-limit-track{position:relative;height:25px;border:2px solid #6e8089;border-radius:7px;overflow:visible;background:#d9e0e3;box-shadow:inset 0 1px 2px #0002}
-.speed-limit-zone{position:absolute;top:0;bottom:0;display:flex;align-items:center;justify-content:center;border-right:1px solid #ffffff99;font-size:9px;font-weight:950;color:#102b39;transition:filter .15s,box-shadow .15s;overflow:hidden}
+.route-monitor{overflow:visible}
+.speed-limit-map{margin:5px 8px 9px;padding:7px 8px 8px;border-radius:10px;background:#eef3f5;box-shadow:inset 0 0 0 1px #c7d2d7}
+.speed-limit-caption{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px;font-size:10px;font-weight:900;color:#526771}
+.speed-limit-caption strong{padding:3px 8px;border-radius:999px;background:#fff1dc;color:#a84225;font-size:12px;white-space:nowrap}
+.speed-limit-track{position:relative;height:29px;border:2px solid #657a85;border-radius:8px;overflow:visible;background:#d9e0e3;box-shadow:inset 0 1px 3px #0003}
+.speed-limit-zone{position:absolute;top:0;bottom:0;display:flex;align-items:center;justify-content:center;border-right:1px solid #ffffffbb;font-size:10px;font-weight:950;color:#102b39;transition:filter .15s,box-shadow .15s,background .15s;overflow:hidden}
 .speed-limit-zone:nth-child(odd){background:#dcebf1}
 .speed-limit-zone:nth-child(even){background:#bcd2dc}
 .speed-limit-zone.active{z-index:2;background:#ffd28c;color:#722b16;box-shadow:inset 0 0 0 2px #e67f27;filter:saturate(1.15)}
-.speed-limit-zone.active::after{content:"km/h";margin-left:2px;font-size:6px;font-weight:800}
-.speed-limit-cursor{position:absolute;z-index:5;top:-10px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #d64545;transform:translateX(-6px);filter:drop-shadow(0 1px 1px #fff);pointer-events:none}
-.speed-limit-cursor::after{content:"";position:absolute;left:-1px;top:-13px;width:2px;height:35px;background:#d64545}
+.speed-limit-zone.active::after{content:"";position:absolute;inset:auto 3px 2px;height:2px;border-radius:2px;background:#d64545}
+.speed-limit-cursor{position:absolute;z-index:5;top:-11px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #d64545;transform:translateX(-6px);filter:drop-shadow(0 1px 1px #fff);pointer-events:none}
+.speed-limit-cursor::after{content:"";position:absolute;left:-1px;top:-14px;width:2px;height:41px;background:#d64545}
+.speed-limit-legend{display:flex;justify-content:space-between;margin-top:4px;color:#6e7e86;font-size:8px;font-weight:800}
 .route-monitor .route-line{margin-bottom:3px}
 
-@media(max-width:760px){
-  .drag-lever-body{height:160px;grid-template-columns:minmax(42px,.64fr) minmax(65px,1fr);gap:6px}
-  .drag-handle{width:58px;height:35px}
-  .hud-left{left:8px;max-width:calc(57% - 10px);min-width:0;padding:7px 9px}
-  .hud-right{right:8px;max-width:calc(41% - 10px);min-width:0;padding:7px 8px}
-  .next-station{max-width:100%;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .clock{display:block;max-width:100%;font-size:clamp(12px,4vw,16px);font-variant-numeric:tabular-nums;letter-spacing:-.025em;white-space:nowrap}
-  .distance-row{font-size:16px}
-  .speed-limit-map{margin:1px 2px 7px}
-  .speed-limit-track{height:24px}
-  .speed-limit-zone{font-size:8px}
-  .speed-limit-caption{font-size:8px}
-  .speed-limit-caption strong{font-size:10px}
-}
-@media(max-width:470px){
-  .controls.lever-enhanced{grid-template-columns:1fr 1fr}
-  .controls.lever-enhanced .sub-controls{grid-column:1/-1;grid-template-columns:repeat(3,1fr)}
-  .controls.lever-enhanced .door-btn{grid-column:auto}
-  .drag-lever-body{height:150px;grid-template-columns:41px minmax(58px,1fr);gap:5px}
-  .drag-notch{height:21px;font-size:9px}
-  .drag-handle{width:52px;height:32px}
-  .drag-lever-head span{font-size:8px}
-  .hud-left{max-width:55%}
-  .hud-right{max-width:39%}
-  .clock{font-size:12px}
-  .status-badge{font-size:9px;padding:2px 5px}
-  .speed-limit-zone{font-size:7px}
-  .speed-limit-zone.active::after{display:none}
-}
-@media(orientation:landscape) and (max-height:520px){
-  .controls.lever-enhanced{grid-template-columns:1fr 1fr}
-  .controls.lever-enhanced .sub-controls{grid-column:1/-1;grid-template-columns:repeat(3,1fr)}
-  .drag-lever-body{height:137px;grid-template-columns:40px minmax(56px,1fr);gap:5px}
-  .drag-notch{height:19px;font-size:9px}
-  .drag-handle{width:50px;height:30px}
-}
+.station-scenery{position:absolute;z-index:3;right:-1%;bottom:13%;width:45%;height:55%;pointer-events:none;opacity:0;transform-origin:100% 100%;will-change:transform,opacity;filter:drop-shadow(0 8px 7px #0005)}
+.station-scenery.visible{opacity:1}
+.scene-platform{position:absolute;right:0;bottom:0;width:100%;height:28%;background:linear-gradient(180deg,#d9d3bd 0 62%,#8a8580 63% 100%);clip-path:polygon(12% 35%,100% 0,100% 100%,0 100%)}
+.scene-platform-edge{position:absolute;left:4%;right:0;top:29%;height:9%;background:repeating-linear-gradient(90deg,#f4c737 0 16px,#3a3530 16px 31px);transform:skewY(-5deg)}
+.scene-shelter{position:absolute;right:13%;bottom:23%;width:48%;height:34%;border:5px solid #455b66;border-bottom:0;background:#cbe5eeaa;clip-path:polygon(4% 15%,94% 0,100% 100%,0 100%)}
+.scene-shelter::before{content:"";position:absolute;left:-9%;right:-7%;top:-14%;height:18%;background:#203f51;transform:skewY(-5deg)}
+.scene-bench{position:absolute;right:27%;bottom:22%;width:27%;height:8%;border-radius:3px;background:#9b5e37;box-shadow:0 8px 0 -3px #60402d}
+.scene-station-sign{position:absolute;right:50%;bottom:35%;min-width:155px;padding:8px 13px 7px;border:5px solid #123a59;background:#f7f1df;color:#123a59;text-align:center;transform:translateX(50%);box-shadow:0 4px 0 #ffffff88}
+.scene-station-sign small{display:block;font-size:8px;font-weight:900;letter-spacing:.15em}
+.scene-station-sign strong{display:block;font-size:18px;line-height:1.15;white-space:nowrap}
+.scene-station-sign::before,.scene-station-sign::after{content:"";position:absolute;top:100%;width:7px;height:70px;background:#475b64}
+.scene-station-sign::before{left:25px}.scene-station-sign::after{right:25px}
+.scene-passengers{position:absolute;right:3%;bottom:24%;display:flex;align-items:flex-end;gap:11px}
+.scene-person{position:relative;width:13px;height:38px;border-radius:8px 8px 3px 3px;background:#355e79}
+.scene-person::before{content:"";position:absolute;left:1px;top:-12px;width:11px;height:11px;border-radius:50%;background:#e6bd98}
+.scene-person:nth-child(2){height:30px;background:#b45b4c}.scene-person:nth-child(3){height:34px;background:#5f7b48}
+.scene-station-callout{position:absolute;z-index:4;left:50%;top:20%;transform:translateX(-50%);min-width:190px;padding:6px 13px;border-radius:999px;background:#08263ddd;color:#fff;text-align:center;font-size:11px;font-weight:850;box-shadow:0 5px 15px #0004;opacity:0;transition:opacity .2s}
+.scene-station-callout.visible{opacity:1}
+.scene-station-callout strong{color:#ffd38e;margin-right:6px}
+.hud-left,.hud-right{min-width:0}
+.clock{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+@media(min-width:761px){.route-monitor{min-height:196px}.speed-limit-map{margin-top:7px}.speed-limit-track{height:31px}.speed-limit-zone{font-size:11px}.scene-station-sign{min-width:190px;padding:10px 17px 8px}.scene-station-sign strong{font-size:22px}}
+@media(max-width:760px){.drag-lever-body{height:160px;grid-template-columns:minmax(42px,.64fr) minmax(65px,1fr);gap:6px}.drag-handle{width:58px;height:35px}.hud-left{left:8px;max-width:calc(57% - 10px);padding:7px 9px}.hud-right{right:8px;max-width:calc(41% - 10px);padding:7px 8px}.next-station{max-width:100%;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.clock{display:block;max-width:100%;font-size:clamp(12px,4vw,16px);letter-spacing:-.025em}.distance-row{font-size:16px}.speed-limit-map{margin:3px 1px 7px;padding:5px 5px 6px}.speed-limit-track{height:24px}.speed-limit-zone{font-size:8px}.speed-limit-caption{font-size:8px}.speed-limit-caption strong{font-size:10px;padding:2px 6px}.speed-limit-legend{font-size:7px}.station-scenery{width:54%;height:51%;bottom:14%}.scene-station-sign{min-width:112px;padding:5px 7px 4px;border-width:3px}.scene-station-sign strong{font-size:13px}.scene-station-sign small{font-size:6px}.scene-station-sign::before,.scene-station-sign::after{width:5px;height:48px}.scene-station-callout{top:24%;min-width:150px;padding:5px 9px;font-size:9px}}
+@media(max-width:470px){.controls.lever-enhanced{grid-template-columns:1fr 1fr}.controls.lever-enhanced .sub-controls{grid-column:1/-1;grid-template-columns:repeat(3,1fr)}.controls.lever-enhanced .door-btn{grid-column:auto}.drag-lever-body{height:150px;grid-template-columns:41px minmax(58px,1fr);gap:5px}.drag-notch{height:21px;font-size:9px}.drag-handle{width:52px;height:32px}.drag-lever-head span{font-size:8px}.hud-left{max-width:55%}.hud-right{max-width:39%}.clock{font-size:12px}.status-badge{font-size:9px;padding:2px 5px}.speed-limit-zone{font-size:7px}.scene-passengers{display:none}}
+@media(orientation:landscape) and (max-height:520px){.controls.lever-enhanced{grid-template-columns:1fr 1fr}.controls.lever-enhanced .sub-controls{grid-column:1/-1;grid-template-columns:repeat(3,1fr)}.drag-lever-body{height:137px;grid-template-columns:40px minmax(56px,1fr);gap:5px}.drag-notch{height:19px;font-size:9px}.drag-handle{width:50px;height:30px}.station-scenery{width:48%;height:58%;bottom:12%}}
