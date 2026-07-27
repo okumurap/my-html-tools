@@ -10,7 +10,7 @@
 .drag-notch-list { display:flex; flex-direction:column; justify-content:space-between; min-width:0; }
 .drag-notch { height:25px; border:0; border-radius:7px; background:#eaf0f2; color:#20343e; font-size:11px; font-weight:950; box-shadow:0 2px 0 #647780; touch-action:manipulation; }
 .drag-notch:active { transform:translateY(1px); box-shadow:0 1px 0 #647780; }
-.drag-notch.active { background:var(--orange); color:#132631; box-shadow:0 2px 0 var(--orange-dark); }
+.drag-notch.active { background:var(--orange); color:#132631; box-shadow:0 2px 0 #c86d18; }
 .drag-notch.emergency { background:#b72d2d; color:#fff; box-shadow:0 2px 0 #761b1b; }
 .drag-notch.emergency.active { background:#ff5151; color:#fff; box-shadow:0 2px 0 #8e1717,0 0 0 3px #ffb0b055; }
 .drag-slot { position:relative; border-radius:13px; background:linear-gradient(90deg,#5e6d74,#cbd4d8 17%,#718087 50%,#cbd4d8 83%,#5e6d74); box-shadow:inset 0 3px 7px #263a4488,0 2px 0 #dce3e6; overflow:hidden; }
@@ -25,9 +25,33 @@
 .drag-control-panel.brake-emergency .drag-slot { box-shadow:inset 0 3px 7px #263a4488,0 0 0 3px #ff515166; }
 .drag-lever-foot { margin-top:4px; color:#334b56; font-size:9px; font-weight:800; text-align:center; }
 
+/* Route speed limit map */
+.speed-limit-map{margin:2px 8px 8px}
+.speed-limit-caption{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;font-size:9px;font-weight:900;color:#5b6d76}
+.speed-limit-caption strong{color:#b63b32;font-size:11px}
+.speed-limit-track{position:relative;height:25px;border:2px solid #6e8089;border-radius:7px;overflow:visible;background:#d9e0e3;box-shadow:inset 0 1px 2px #0002}
+.speed-limit-zone{position:absolute;top:0;bottom:0;display:flex;align-items:center;justify-content:center;border-right:1px solid #ffffff99;font-size:9px;font-weight:950;color:#102b39;transition:filter .15s,box-shadow .15s;overflow:hidden}
+.speed-limit-zone:nth-child(odd){background:#dcebf1}
+.speed-limit-zone:nth-child(even){background:#bcd2dc}
+.speed-limit-zone.active{z-index:2;background:#ffd28c;color:#722b16;box-shadow:inset 0 0 0 2px #e67f27;filter:saturate(1.15)}
+.speed-limit-zone.active::after{content:"km/h";margin-left:2px;font-size:6px;font-weight:800}
+.speed-limit-cursor{position:absolute;z-index:5;top:-10px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #d64545;transform:translateX(-6px);filter:drop-shadow(0 1px 1px #fff);pointer-events:none}
+.speed-limit-cursor::after{content:"";position:absolute;left:-1px;top:-13px;width:2px;height:35px;background:#d64545}
+.route-monitor .route-line{margin-bottom:3px}
+
 @media(max-width:760px){
   .drag-lever-body{height:160px;grid-template-columns:minmax(42px,.64fr) minmax(65px,1fr);gap:6px}
   .drag-handle{width:58px;height:35px}
+  .hud-left{left:8px;max-width:calc(57% - 10px);min-width:0;padding:7px 9px}
+  .hud-right{right:8px;max-width:calc(41% - 10px);min-width:0;padding:7px 8px}
+  .next-station{max-width:100%;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .clock{display:block;max-width:100%;font-size:clamp(12px,4vw,16px);font-variant-numeric:tabular-nums;letter-spacing:-.025em;white-space:nowrap}
+  .distance-row{font-size:16px}
+  .speed-limit-map{margin:1px 2px 7px}
+  .speed-limit-track{height:24px}
+  .speed-limit-zone{font-size:8px}
+  .speed-limit-caption{font-size:8px}
+  .speed-limit-caption strong{font-size:10px}
 }
 @media(max-width:470px){
   .controls.lever-enhanced{grid-template-columns:1fr 1fr}
@@ -37,6 +61,12 @@
   .drag-notch{height:21px;font-size:9px}
   .drag-handle{width:52px;height:32px}
   .drag-lever-head span{font-size:8px}
+  .hud-left{max-width:55%}
+  .hud-right{max-width:39%}
+  .clock{font-size:12px}
+  .status-badge{font-size:9px;padding:2px 5px}
+  .speed-limit-zone{font-size:7px}
+  .speed-limit-zone.active::after{display:none}
 }
 @media(orientation:landscape) and (max-height:520px){
   .controls.lever-enhanced{grid-template-columns:1fr 1fr}
