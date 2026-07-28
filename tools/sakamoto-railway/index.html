@@ -15,111 +15,45 @@
   <link rel="stylesheet" href="./telemetry-curves.css">
   <link rel="stylesheet" href="./compact-layout.css">
   <link rel="stylesheet" href="./layout-adjust.css">
+  <link rel="stylesheet" href="./unified-screen.css">
   <title>坂本電鉄 海岸線</title>
 </head>
 <body>
   <main id="app">
     <header class="topbar">
-      <div>
-        <div class="company">SAKAMOTO RAILWAY</div>
-        <h1>坂本電鉄 <span>海岸線</span></h1>
-      </div>
-      <div class="top-actions">
-        <button id="soundBtn" class="icon-btn" aria-label="音声切替">🔊</button>
-        <button id="installBtn" class="install-btn" hidden>ホーム画面に追加</button>
-      </div>
+      <div><div class="company">SAKAMOTO RAILWAY</div><h1>坂本電鉄 <span>海岸線</span></h1></div>
+      <div class="top-actions"><button id="soundBtn" class="icon-btn" aria-label="音声切替">🔊</button><button id="installBtn" class="install-btn" hidden>ホーム画面に追加</button></div>
     </header>
-
     <section class="game-shell">
       <div class="scene-wrap">
         <canvas id="scene" width="1280" height="720" aria-label="運転画面"></canvas>
-
-        <div class="hud hud-left">
-          <div class="hud-label">次駅</div>
-          <div id="nextStation" class="next-station">滑走台跡前</div>
-          <div class="distance-row"><span id="distance">1,400</span><small>m</small></div>
-        </div>
-
-        <div class="hud hud-right">
-          <div class="hud-label">現在時刻</div>
-          <div id="clock" class="clock">09:00:00</div>
-          <div id="statusBadge" class="status-badge ready">停車中</div>
-        </div>
-
-        <div id="messagePanel" class="message-panel">
-          <div id="messageTitle">坂本電鉄 海岸線</div>
-          <p id="messageBody">ドアを閉め、ブレーキを解除して、マスコンを入れてください。</p>
-        </div>
-
-        <div id="stationBoard" class="station-board" hidden>
-          <span>まもなく</span>
-          <strong id="stationBoardName">滑走台跡前</strong>
-        </div>
+        <div class="hud hud-left"><div class="hud-label">次駅</div><div id="nextStation" class="next-station">滑走台跡前</div><div class="distance-row"><span id="distance">1,400</span><small>m</small></div></div>
+        <div class="hud hud-right"><div class="hud-label">現在時刻</div><div id="clock" class="clock">09:00:00</div><div id="statusBadge" class="status-badge ready">停車中</div></div>
+        <div id="messagePanel" class="message-panel"><div id="messageTitle">坂本電鉄 海岸線</div><p id="messageBody">ドアを閉め、ブレーキを解除して、マスコンを入れてください。</p></div>
+        <div id="stationBoard" class="station-board" hidden><span>まもなく</span><strong id="stationBoardName">滑走台跡前</strong></div>
       </div>
-
       <section class="cab-panel">
         <div class="meter-cluster">
-          <div class="speedometer" aria-label="速度計">
-            <div class="speed-ring">
-              <div id="needle" class="needle"></div>
-              <div class="speed-center"><span id="speed">0</span><small>km/h</small></div>
-            </div>
-            <div class="limit-row">制限 <strong id="speedLimit">60</strong> km/h</div>
-          </div>
-
+          <div class="speedometer" aria-label="速度計"><div class="speed-ring"><div id="needle" class="needle"></div><div class="speed-center"><span id="speed">0</span><small>km/h</small></div></div><div class="limit-row">制限 <strong id="speedLimit">60</strong> km/h</div></div>
           <div class="route-monitor">
             <div class="route-head"><span>運行状況</span><strong id="score">0 pt</strong></div>
-            <div class="route-line">
-              <div id="routeProgress" class="route-progress"></div>
-              <div class="station-dot passed" style="left:0%"><span>坂本車庫</span></div>
-              <div class="station-dot" style="left:33.3%"><span>滑走台跡前</span></div>
-              <div class="station-dot" style="left:69%"><span>河和海岸</span></div>
-              <div class="station-dot" style="left:100%"><span>釣り桟橋</span></div>
-            </div>
-            <div class="mini-grid">
-              <div><span>マスコン</span><strong id="powerValue">切</strong></div>
-              <div><span>ブレーキ</span><strong id="brakeValue">B8</strong></div>
-              <div><span>ドア</span><strong id="doorValue">開</strong></div>
-              <div><span>乗り心地</span><strong id="comfortValue">100</strong></div>
-            </div>
+            <div class="route-line"><div id="routeProgress" class="route-progress"></div><div class="station-dot passed" style="left:0%"><span>坂本車庫</span></div><div class="station-dot" style="left:33.3%"><span>滑走台跡前</span></div><div class="station-dot" style="left:69%"><span>河和海岸</span></div><div class="station-dot" style="left:100%"><span>釣り桟橋</span></div></div>
+            <div class="mini-grid"><div><span>マスコン</span><strong id="powerValue">切</strong></div><div><span>ブレーキ</span><strong id="brakeValue">B8</strong></div><div><span>ドア</span><strong id="doorValue">開</strong></div><div><span>乗り心地</span><strong id="comfortValue">100</strong></div></div>
           </div>
         </div>
-
         <div class="controls">
-          <div class="lever-card">
-            <div class="control-title">マスコン</div>
-            <div class="step-buttons power-steps">
-              <button data-power="0" class="active">切</button><button data-power="1">P1</button><button data-power="2">P2</button><button data-power="3">P3</button><button data-power="4">P4</button><button data-power="5">P5</button>
-            </div>
-          </div>
-          <div class="lever-card">
-            <div class="control-title">ブレーキ</div>
-            <div class="step-buttons brake-steps">
-              <button data-brake="0">解除</button><button data-brake="2">B2</button><button data-brake="4">B4</button><button data-brake="6">B6</button><button data-brake="8" class="active">B8</button><button id="emergencyBtn" class="danger">非常</button>
-            </div>
-          </div>
-          <div class="sub-controls">
-            <button id="doorBtn" class="door-btn open"><span class="door-icon">⇆</span><span id="doorBtnText">ドアを閉める</span></button>
-            <button id="announceBtn" class="announce-btn"><span>♪</span> 車内放送</button>
-            <button id="resetBtn" class="reset-btn">最初から</button>
-          </div>
+          <div class="lever-card"><div class="control-title">マスコン</div><div class="step-buttons power-steps"><button data-power="0" class="active">切</button><button data-power="1">P1</button><button data-power="2">P2</button><button data-power="3">P3</button><button data-power="4">P4</button><button data-power="5">P5</button></div></div>
+          <div class="lever-card"><div class="control-title">ブレーキ</div><div class="step-buttons brake-steps"><button data-brake="0">解除</button><button data-brake="2">B2</button><button data-brake="4">B4</button><button data-brake="6">B6</button><button data-brake="8" class="active">B8</button><button id="emergencyBtn" class="danger">非常</button></div></div>
+          <div class="sub-controls"><button id="doorBtn" class="door-btn open"><span class="door-icon">⇆</span><span id="doorBtnText">ドアを閉める</span></button><button id="announceBtn" class="announce-btn"><span>♪</span> 車内放送</button><button id="resetBtn" class="reset-btn">最初から</button></div>
         </div>
       </section>
     </section>
-
-    <section id="resultModal" class="modal" hidden>
-      <div class="modal-card">
-        <div class="modal-kicker">運転終了</div><h2>坂本電鉄 海岸線</h2><div id="resultRank" class="rank">A</div>
-        <div class="result-grid">
-          <div><span>総合得点</span><strong id="finalScore">0</strong></div><div><span>停止精度</span><strong id="stopScore">0</strong></div><div><span>安全運転</span><strong id="safetyScore">0</strong></div><div><span>乗り心地</span><strong id="comfortScore">0</strong></div>
-        </div>
-        <p id="resultComment">安全運転、お疲れさまでした。</p><button id="retryBtn">もう一度運転する</button>
-      </div>
-    </section>
+    <section id="resultModal" class="modal" hidden><div class="modal-card"><div class="modal-kicker">運転終了</div><h2>坂本電鉄 海岸線</h2><div id="resultRank" class="rank">A</div><div class="result-grid"><div><span>総合得点</span><strong id="finalScore">0</strong></div><div><span>停止精度</span><strong id="stopScore">0</strong></div><div><span>安全運転</span><strong id="safetyScore">0</strong></div><div><span>乗り心地</span><strong id="comfortScore">0</strong></div></div><p id="resultComment">安全運転、お疲れさまでした。</p><button id="retryBtn">もう一度運転する</button></div></section>
   </main>
   <script src="./app.js"></script>
   <script src="./lever-controls.js"></script>
   <script src="./telemetry-curves.js"></script>
   <script src="./layout-adjust.js"></script>
+  <script src="./operation-sounds.js"></script>
 </body>
 </html>
