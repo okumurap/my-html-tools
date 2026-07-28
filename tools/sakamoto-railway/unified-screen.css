@@ -1,0 +1,38 @@
+/* Unified phone/PC layout: one shared cockpit composition */
+#app{min-height:100dvh;padding-left:0!important;padding-right:0!important}
+.game-shell{width:min(1180px,100%);margin:auto;border-radius:0!important}
+.scene-wrap{aspect-ratio:16/8.2;min-height:235px;max-height:none!important}
+.cab-panel{padding:7px!important}
+.meter-cluster.route-wide{display:block!important}
+.route-monitor{width:100%!important;min-width:0!important;padding:7px!important}
+.speed-limit-map{margin:3px 0 0!important;padding:5px 6px 6px!important}
+.speed-chart-canvas{display:block;width:100%!important;height:118px!important}
+.controls{grid-template-columns:1fr 1fr!important;gap:7px!important;margin-top:7px!important}
+.controls .sub-controls{grid-column:1/-1!important;grid-template-columns:1.3fr 1fr .8fr!important}
+.controls .door-btn{grid-column:auto!important}
+.drag-lever-body{height:145px!important}
+.hud-left{max-width:58%!important}
+.hud-right{max-width:40%!important}
+.curve-ground-cover{display:none!important}
+.curve-overlay,.curve-badge{display:none!important}
+@media(min-width:761px){
+  #app{height:auto!important;min-height:100dvh!important;overflow:visible!important}
+  .topbar{height:48px!important}
+  .game-shell{height:auto!important;display:block!important}
+  .scene-wrap{height:auto!important;aspect-ratio:16/7.1!important;min-height:300px!important}
+  .cab-panel{overflow:visible!important}
+  .speed-chart-canvas{height:138px!important}
+  .drag-lever-body{height:145px!important}
+}
+@media(max-width:760px){
+  .scene-wrap{min-height:250px!important;aspect-ratio:16/9!important}
+  .speed-chart-canvas{height:108px!important}
+  .drag-lever-body{height:145px!important}
+}
+@media(max-width:470px){
+  .controls{grid-template-columns:1fr 1fr!important}
+  .controls .sub-controls{grid-template-columns:repeat(3,1fr)!important}
+  .speed-chart-canvas{height:102px!important}
+  .hud-left{max-width:56%!important}
+  .hud-right{max-width:41%!important}
+}
