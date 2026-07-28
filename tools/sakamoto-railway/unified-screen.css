@@ -1,38 +1,77 @@
-/* Unified phone/PC layout: one shared cockpit composition */
-#app{min-height:100dvh;padding-left:0!important;padding-right:0!important}
-.game-shell{width:min(1180px,100%);margin:auto;border-radius:0!important}
-.scene-wrap{aspect-ratio:16/8.2;min-height:235px;max-height:none!important}
-.cab-panel{padding:7px!important}
+/* Shared phone/PC cockpit layout */
+html,body{overflow-x:hidden}
+#app{width:100%;min-height:100dvh;padding-left:0!important;padding-right:0!important}
+.topbar{width:100%;max-width:none!important}
+.game-shell{width:100%!important;max-width:none!important;margin:0!important;border-radius:0!important}
+.scene-wrap{width:100%!important;height:clamp(250px,44vw,520px)!important;min-height:250px!important;max-height:520px!important;aspect-ratio:auto!important}
+.scene-wrap>canvas{width:100%!important;height:100%!important}
+.cab-panel{width:100%;padding:7px!important}
 .meter-cluster.route-wide{display:block!important}
 .route-monitor{width:100%!important;min-width:0!important;padding:7px!important}
-.speed-limit-map{margin:3px 0 0!important;padding:5px 6px 6px!important}
-.speed-chart-canvas{display:block;width:100%!important;height:118px!important}
-.controls{grid-template-columns:1fr 1fr!important;gap:7px!important;margin-top:7px!important}
+.speed-limit-map{margin:4px 0 0!important;padding:6px 7px 7px!important}
+.speed-chart-canvas{display:block;width:100%!important;height:136px!important}
+
+.scene-status-wrap{position:absolute;z-index:9;left:50%;top:11px;transform:translateX(-50%);pointer-events:none;text-align:center}
+.scene-status-wrap .status-badge{margin:0!important;min-width:82px;padding:5px 13px;border:1px solid #ffffff66;box-shadow:0 4px 12px #0006;font-size:11px!important;letter-spacing:.04em;white-space:nowrap}
+.scene-status-wrap .status-badge.warn,.scene-status-wrap .status-badge.danger{font-size:13px!important;padding:6px 16px}
+
+.mini-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important}
+.mini-grid div{min-width:0;padding:6px 4px!important;text-align:center}
+.mini-grid span{font-size:8px!important;white-space:nowrap}
+.mini-grid strong{display:block;font-size:13px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.controls{grid-template-columns:1fr 1fr!important;gap:8px!important;margin-top:8px!important}
 .controls .sub-controls{grid-column:1/-1!important;grid-template-columns:1.3fr 1fr .8fr!important}
 .controls .door-btn{grid-column:auto!important}
-.drag-lever-body{height:145px!important}
+.lever-card{padding:8px!important}
+.drag-lever-body{height:190px!important;grid-template-columns:minmax(46px,.58fr) minmax(88px,1fr)!important;gap:9px!important}
+.drag-notch{height:29px!important;font-size:10px!important}
+.drag-slot{min-width:88px;border-radius:15px!important}
+.drag-slot::before{inset:7px 8px!important}
+.drag-guide{top:17px!important;bottom:17px!important;width:25px!important}
+.drag-guide::after{inset:0 -32px!important}
+.drag-handle{width:82px!important;height:48px!important;border-radius:13px!important}
+.drag-handle::before{inset:7px 13px!important}
+.drag-handle span{font-size:19px!important}
 .hud-left{max-width:58%!important}
 .hud-right{max-width:40%!important}
-.curve-ground-cover{display:none!important}
-.curve-overlay,.curve-badge{display:none!important}
+.curve-ground-cover,.curve-overlay,.curve-badge{display:none!important}
+
 @media(min-width:761px){
-  #app{height:auto!important;min-height:100dvh!important;overflow:visible!important}
+  #app{height:auto!important;overflow:visible!important}
   .topbar{height:48px!important}
   .game-shell{height:auto!important;display:block!important}
-  .scene-wrap{height:auto!important;aspect-ratio:16/7.1!important;min-height:300px!important}
+  .scene-wrap{height:clamp(320px,38vw,520px)!important}
   .cab-panel{overflow:visible!important}
-  .speed-chart-canvas{height:138px!important}
-  .drag-lever-body{height:145px!important}
+  .speed-chart-canvas{height:152px!important}
+  .drag-lever-body{height:200px!important;grid-template-columns:minmax(58px,.48fr) minmax(130px,1fr)!important}
+  .drag-handle{width:104px!important;height:52px!important}
+  .drag-slot{min-width:130px}
+  .drag-notch{height:31px!important;font-size:11px!important}
 }
+
 @media(max-width:760px){
-  .scene-wrap{min-height:250px!important;aspect-ratio:16/9!important}
-  .speed-chart-canvas{height:108px!important}
-  .drag-lever-body{height:145px!important}
+  .scene-wrap{height:clamp(250px,64vw,360px)!important}
+  .speed-chart-canvas{height:132px!important}
+  .drag-lever-body{height:184px!important}
+  .scene-status-wrap{top:8px}
+  .scene-status-wrap .status-badge{font-size:10px!important;padding:4px 10px}
 }
+
 @media(max-width:470px){
-  .controls{grid-template-columns:1fr 1fr!important}
+  .controls{grid-template-columns:1fr 1fr!important;gap:6px!important}
   .controls .sub-controls{grid-template-columns:repeat(3,1fr)!important}
-  .speed-chart-canvas{height:102px!important}
+  .speed-chart-canvas{height:128px!important}
   .hud-left{max-width:56%!important}
   .hud-right{max-width:41%!important}
+  .mini-grid{gap:3px!important}
+  .mini-grid div{padding:5px 2px!important}
+  .mini-grid span{font-size:7px!important}
+  .mini-grid strong{font-size:11px!important}
+  .lever-card{padding:6px!important}
+  .drag-lever-body{height:178px!important;grid-template-columns:43px minmax(72px,1fr)!important;gap:6px!important}
+  .drag-notch{height:27px!important;font-size:9px!important}
+  .drag-slot{min-width:72px}
+  .drag-guide{width:23px!important}
+  .drag-handle{width:70px!important;height:45px!important}
 }
