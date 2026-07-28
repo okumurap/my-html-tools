@@ -1,4 +1,5 @@
 /* Speed HUD, wide route monitor, and single-track curve cleanup */
+.hud,.message-panel{z-index:6!important}
 .hud-left{grid-template-columns:auto auto!important;grid-template-rows:auto auto!important;align-items:end!important}
 .hud-speed{grid-column:1/-1;display:flex;align-items:flex-end;gap:5px;margin-bottom:2px}
 .hud-speed-label{font-size:8px;font-weight:900;opacity:.72}
@@ -8,6 +9,7 @@
 .speedometer-relocated{display:none!important}
 .meter-cluster.route-wide{grid-template-columns:minmax(0,1fr)!important}
 .meter-cluster.route-wide .route-monitor{width:100%;min-width:0}
+.curve-ground-cover{position:absolute;z-index:1;left:0;right:0;bottom:8%;height:43%;background:#8faf72;pointer-events:none}
 .curve-overlay{z-index:2!important}
 @media(min-width:761px){
   .hud-left{min-width:190px;max-width:48%!important}
