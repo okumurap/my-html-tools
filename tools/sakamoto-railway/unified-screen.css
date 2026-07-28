@@ -1,5 +1,9 @@
 /* Shared phone/PC cockpit layout */
-html,body{overflow-x:hidden}
+html,body{overflow-x:hidden;touch-action:pan-y;-webkit-text-size-adjust:100%}
+html,body,body *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
+img,canvas{-webkit-user-drag:none;user-drag:none}
+button,.duty-option,.duty-start,.duty-change-btn,.station-eval-continue{touch-action:manipulation}
+.drag-lever-body,.drag-slot,.drag-guide,.drag-handle{touch-action:none!important}
 #app{width:100%;min-height:100dvh;padding-left:0!important;padding-right:0!important}
 .topbar{width:100%;max-width:none!important}
 .game-shell{width:100%!important;max-width:none!important;margin:0!important;border-radius:0!important}
