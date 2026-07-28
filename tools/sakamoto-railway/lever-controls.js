@@ -40,7 +40,7 @@
     powerCard.insertAdjacentHTML('beforeend', panelMarkup('power', powerSteps, 5, '上へ動かすほど加速'));
     brakeCard.insertAdjacentHTML('beforeend', panelMarkup('brake', brakeSteps, 4, '下へ引くほど強く制動'));
 
-    function createLever(card, steps, readValue, indexFromValue) {
+    function createLever(card, kind, steps, readValue, indexFromValue) {
       const panel = $('.drag-control-panel', card);
       const body = $('.drag-lever-body', panel);
       const guide = $('.drag-guide', panel);
@@ -62,13 +62,29 @@
         notchButtons.forEach((button, i) => button.classList.toggle('active', i === safe));
         panel.classList.toggle('brake-emergency', Boolean(steps[safe].emergency));
       };
+
       const trigger = (index) => {
         const safe = clamp(index, 0, steps.length - 1);
         if (safe === lastTriggered) return;
+        const fromIndex = shownIndex;
         lastTriggered = safe;
+        if (pointerId !== null && safe !== fromIndex) {
+          document.dispatchEvent(new CustomEvent('sakamoto:lever-notch', {
+            detail: {
+              source: 'drag',
+              kind,
+              index: safe,
+              fromIndex,
+              count: steps.length,
+              label: steps[safe].label,
+              emergency: Boolean(steps[safe].emergency)
+            }
+          }));
+        }
         $(steps[safe].selector, card)?.click();
         showIndex(safe);
       };
+
       const indexAt = (clientY) => {
         const rect = guide.getBoundingClientRect();
         const ratio = clamp((clientY - rect.top) / rect.height, 0, 1);
@@ -124,8 +140,8 @@
       return () => showIndex(indexFromValue(readValue()));
     }
 
-    const syncPower = createLever(powerCard, powerSteps, () => $('#powerValue')?.textContent.trim() || '切', (value) => value === '切' ? 5 : clamp(5 - Number(value.replace('P', '')), 0, 5));
-    const syncBrake = createLever(brakeCard, brakeSteps, () => $('#brakeValue')?.textContent.trim() || 'B8', (value) => value === '非常' ? 5 : value === '解除' ? 0 : clamp(Number(value.replace('B', '')) / 2, 0, 4));
+    const syncPower = createLever(powerCard, 'power', powerSteps, () => $('#powerValue')?.textContent.trim() || '切', (value) => value === '切' ? 5 : clamp(5 - Number(value.replace('P', '')), 0, 5));
+    const syncBrake = createLever(brakeCard, 'brake', brakeSteps, () => $('#brakeValue')?.textContent.trim() || 'B8', (value) => value === '非常' ? 5 : value === '解除' ? 0 : clamp(Number(value.replace('B', '')) / 2, 0, 4));
     const sync = () => { syncPower(); syncBrake(); requestAnimationFrame(sync); };
     sync();
   }
