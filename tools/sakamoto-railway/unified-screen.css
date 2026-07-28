@@ -8,6 +8,8 @@ html,body{overflow-x:hidden}
 .cab-panel{width:100%;padding:7px!important}
 .meter-cluster.route-wide{display:block!important}
 .route-monitor{width:100%!important;min-width:0!important;padding:7px!important}
+.route-line{display:none!important}
+.route-head{margin-bottom:5px!important}
 .speed-limit-map{margin:4px 0 0!important;padding:6px 7px 7px!important}
 .speed-chart-canvas{display:block;width:100%!important;height:136px!important}
 
@@ -15,7 +17,7 @@ html,body{overflow-x:hidden}
 .scene-status-wrap .status-badge{margin:0!important;min-width:82px;padding:5px 13px;border:1px solid #ffffff66;box-shadow:0 4px 12px #0006;font-size:11px!important;letter-spacing:.04em;white-space:nowrap}
 .scene-status-wrap .status-badge.warn,.scene-status-wrap .status-badge.danger{font-size:13px!important;padding:6px 16px}
 
-.mini-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important}
+.mini-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important;margin-top:0!important}
 .mini-grid div{min-width:0;padding:6px 4px!important;text-align:center}
 .mini-grid span{font-size:8px!important;white-space:nowrap}
 .mini-grid strong{display:block;font-size:13px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
