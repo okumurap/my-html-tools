@@ -7,7 +7,7 @@ button,.duty-option,.duty-start,.duty-change-btn,.station-eval-continue{touch-ac
 #app{width:100%;min-height:100dvh;padding-left:0!important;padding-right:0!important}
 .topbar{width:100%;max-width:none!important}
 .game-shell{width:100%!important;max-width:none!important;margin:0!important;border-radius:0!important}
-.scene-wrap{width:100%!important;height:min(56.25vw,360px)!important;min-height:0!important;max-height:360px!important;aspect-ratio:16/9!important}
+.scene-wrap{width:100%!important;height:min(33.333vw,400px)!important;min-height:0!important;max-height:400px!important;aspect-ratio:3/1!important}
 .scene-wrap>canvas{width:100%!important;height:100%!important}
 .cab-panel{width:100%;padding:7px!important}
 .meter-cluster.route-wide{display:block!important}
@@ -47,7 +47,7 @@ button,.duty-option,.duty-start,.duty-change-btn,.station-eval-continue{touch-ac
   #app{height:auto!important;overflow:visible!important}
   .topbar{height:48px!important}
   .game-shell{height:auto!important;display:block!important}
-  .scene-wrap{height:clamp(280px,30vw,420px)!important;max-height:420px!important}
+  .scene-wrap{height:min(33.333vw,400px)!important;max-height:400px!important}
   .cab-panel{overflow:visible!important}
   .speed-chart-canvas{height:152px!important}
   .drag-lever-body{height:200px!important;grid-template-columns:minmax(58px,.48fr) minmax(130px,1fr)!important}
@@ -57,7 +57,7 @@ button,.duty-option,.duty-start,.duty-change-btn,.station-eval-continue{touch-ac
 }
 
 @media(max-width:760px){
-  .scene-wrap{height:min(56.25vw,360px)!important;min-height:0!important;max-height:360px!important}
+  .scene-wrap{height:33.333vw!important;min-height:0!important;max-height:none!important}
   .speed-chart-canvas{height:132px!important}
   .drag-lever-body{height:184px!important}
   .scene-status-wrap{top:8px}
