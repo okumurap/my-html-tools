@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="見て、聴いて、押して覚えるピアノコード練習ツール。">
+  <meta name="theme-color" content="#f6f7fb">
+  <title>コード鍵盤</title>
+  <style>
+    :root{
+      color-scheme:light;
+      --bg:#f4f5f8;--panel:#fff;--panel-2:#eef0f5;--text:#17191f;--muted:#6b7280;
+      --line:#d9dde7;--accent:#4f46e5;--accent-soft:#ecebff;--root:#ef4444;--chord:#4f46e5;
+      --key-border:#b8becb;--shadow:0 10px 30px rgba(17,24,39,.08);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+    }
+    [data-theme="dark"]{
+      color-scheme:dark;
+      --bg:#111318;--panel:#1a1d24;--panel-2:#232730;--text:#f5f7fb;--muted:#a8afbd;
+      --line:#353a46;--accent:#8b83ff;--accent-soft:#292650;--root:#ff7373;--chord:#958eff;
+      --key-border:#4a5060;--shadow:0 10px 30px rgba(0,0,0,.28);
+    }
+    *{box-sizing:border-box}
+    html{-webkit-text-size-adjust:100%;touch-action:manipulation}
+    body{
+      margin:0;background:var(--bg);color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Noto Sans JP",sans-serif;
+      min-height:100svh;touch-action:manipulation;overscroll-behavior-y:contain;
+    }
+    button,select,input{font:inherit}
+    button{touch-action:manipulation}
+    button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 35%,transparent);outline-offset:2px}
+    .shell{width:min(940px,100%);margin:auto;padding:16px 14px calc(22px + var(--safe-bottom))}
+    .topbar{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+    .brand{min-width:0;flex:1}
+    h1{font-size:clamp(1.45rem,5vw,2rem);margin:0;letter-spacing:.02em}
+    .subtitle{margin:4px 0 0;color:var(--muted);font-size:.88rem}
+    .icon-btn{
+      width:44px;height:44px;border:1px solid var(--line);border-radius:13px;background:var(--panel);
+      color:var(--text);display:grid;place-items:center;cursor:pointer
+    }
+    .mode-switch{
+      display:grid;grid-template-columns:1fr 1fr;background:var(--panel-2);padding:4px;border-radius:14px;
+      margin:0 0 14px
+    }
+    .mode-switch button{
+      min-height:44px;border:0;border-radius:11px;background:transparent;color:var(--muted);font-weight:700;cursor:pointer
+    }
+    .mode-switch button[aria-selected="true"]{background:var(--panel);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+    .panel{
+      background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;
+      box-shadow:var(--shadow);margin-bottom:14px
+    }
+    .eyebrow{font-size:.72rem;letter-spacing:.12em;color:var(--muted);font-weight:800}
+    .selected-head{display:flex;align-items:flex-start;gap:12px}
+    .selected-main{min-width:0;flex:1}
+    .chord-name{font-size:clamp(2.1rem,10vw,3.6rem);line-height:1;margin:8px 0 10px}
+    .notes{font-weight:800;font-size:1.02rem;word-break:keep-all}
+    .notes-jp{margin-top:5px;color:var(--muted);font-size:.9rem}
+    .description{margin:14px 0 0;line-height:1.7;color:var(--muted);font-size:.9rem}
+    .play-btn{
+      min-width:92px;min-height:44px;border:0;border-radius:13px;background:var(--accent);color:#fff;
+      font-weight:800;cursor:pointer;padding:0 14px
+    }
+    .picker-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+    .field label{display:block;color:var(--muted);font-size:.76rem;font-weight:700;margin:0 0 5px}
+    select{
+      width:100%;height:44px;border:1px solid var(--line);border-radius:11px;background:var(--panel-2);
+      color:var(--text);padding:0 36px 0 11px
+    }
+    .quick-chords{display:flex;gap:8px;overflow:auto;padding:12px 1px 2px;scrollbar-width:none}
+    .quick-chords::-webkit-scrollbar{display:none}
+    .quick-chords button{
+      flex:0 0 auto;min-width:48px;height:39px;border:1px solid var(--line);border-radius:999px;
+      background:var(--panel);color:var(--text);cursor:pointer;font-weight:750;padding:0 13px
+    }
+    .quick-chords button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+    .quiz-panel[hidden],.study-panel[hidden]{display:none}
+    .segmented{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+    .segmented button,.action-secondary{
+      min-height:40px;border:1px solid var(--line);border-radius:11px;background:var(--panel);
+      color:var(--text);padding:0 12px;cursor:pointer;font-weight:700
+    }
+    .segmented button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+    .score{display:flex;gap:16px;color:var(--muted);font-size:.9rem;margin:10px 0 14px}
+    .score b{color:var(--text);font-size:1rem}
+    .question{font-size:1.08rem;font-weight:850;line-height:1.55;margin:4px 0}
+    .hint{color:var(--muted);font-size:.84rem;line-height:1.55;margin:5px 0 0}
+    .answer-name{
+      margin:12px 0 0;padding:12px;border-radius:12px;background:var(--panel-2);font-size:1.25rem;font-weight:900;text-align:center
+    }
+    .quiz-actions{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:8px;margin-top:14px}
+    .quiz-actions button{min-height:44px}
+    .primary{border:0!important;background:var(--accent)!important;color:#fff!important}
+    .feedback{min-height:1.5em;margin:10px 0 0;font-weight:800;font-size:.9rem}
+    .feedback.good{color:#15803d}.feedback.bad{color:#dc2626}
+    .keyboard-card{padding:12px 10px 14px}
+    .legend{display:flex;gap:14px;align-items:center;margin:0 4px 10px;color:var(--muted);font-size:.78rem}
+    .dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:-1px}
+    .dot.root{background:var(--root)}.dot.chord{background:var(--chord)}
+    .keyboard-wrap{
+      position:relative;width:100%;height:clamp(190px,42vw,300px);
+      user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:none
+    }
+    .white-keys{height:100%;display:flex}
+    .key{
+      appearance:none;-webkit-appearance:none;padding:0;border:1px solid var(--key-border);cursor:pointer;
+      position:relative;touch-action:none
+    }
+    .key.white{
+      flex:1;height:100%;background:#fff;border-radius:0 0 8px 8px;margin-left:-1px;color:#1f2937;
+      display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px;font-size:.7rem
+    }
+    .key.white:first-child{margin-left:0}
+    .key.black{
+      position:absolute;top:0;height:61%;width:5.1%;background:#17191f;border-color:#08090b;border-radius:0 0 7px 7px;
+      z-index:3;color:#fff;box-shadow:0 4px 6px rgba(0,0,0,.2)
+    }
+    .key.is-chord::after,.key.is-root::after,.key.is-selected::after{
+      content:"";position:absolute;left:50%;bottom:24px;transform:translateX(-50%);width:16px;height:16px;border-radius:50%;
+      background:var(--chord);box-shadow:0 0 0 3px rgba(255,255,255,.72)
+    }
+    .key.is-root::after{background:var(--root)}
+    .key.is-selected::after{background:#10b981}
+    .key.black.is-chord::after,.key.black.is-root::after,.key.black.is-selected::after{bottom:11px;width:14px;height:14px;box-shadow:0 0 0 2px rgba(255,255,255,.55)}
+    .key.is-playing{filter:brightness(.82)}
+    .controls{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;margin-top:13px}
+    .controls label{font-size:.82rem;color:var(--muted)}
+    input[type="range"]{width:100%;accent-color:var(--accent)}
+    .footer-note{text-align:center;color:var(--muted);font-size:.76rem;line-height:1.6;margin:14px 4px 0}
+    .back{display:inline-block;margin-top:14px;color:var(--muted);font-size:.82rem;text-decoration:none}
+    .back:hover{text-decoration:underline}
+    @media (max-width:560px){
+      .shell{padding-left:10px;padding-right:10px}
+      .panel{padding:14px;border-radius:16px}
+      .selected-head{align-items:center}
+      .play-btn{min-width:78px}
+      .picker-row{grid-template-columns:1fr}
+      .quiz-actions{grid-template-columns:1fr 1fr}
+      .quiz-actions .next{grid-column:1/-1}
+      .keyboard-card{padding-left:6px;padding-right:6px}
+      .key.white{font-size:0;padding-bottom:7px}
+      .key.is-chord::after,.key.is-root::after,.key.is-selected::after{bottom:12px}
+      .controls{grid-template-columns:auto 1fr}
+      .controls .mute{grid-column:1/-1}
+    }
+    @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <h1>コード鍵盤</h1>
+        <p class="subtitle">見て、聴いて、押して覚えるピアノコード</p>
+      </div>
+      <button class="icon-btn" id="themeButton" type="button" aria-label="ダークモードに切り替え" title="テーマ切り替え">🌙</button>
+    </header>
+
+    <div class="mode-switch" role="tablist" aria-label="学習モード">
+      <button id="studyTab" type="button" role="tab" aria-selected="true">コードを見る</button>
+      <button id="quizTab" type="button" role="tab" aria-selected="false">問題に挑戦</button>
+    </div>
+
+    <section class="panel study-panel" id="studyPanel">
+      <div class="selected-head">
+        <div class="selected-main">
+          <div class="eyebrow">SELECTED CHORD</div>
+          <div class="chord-name" id="chordName">C</div>
+          <div class="notes" id="notesEn">C ・ E ・ G</div>
+          <div class="notes-jp" id="notesJp">ド ・ ミ ・ ソ</div>
+        </div>
+        <button class="play-btn" id="playChordButton" type="button">▶ 鳴らす</button>
+      </div>
+      <p class="description" id="description">明るく安定した響きの、基本となるメジャーコードです。</p>
+
+      <div class="picker-row">
+        <div class="field">
+          <label for="rootSelect">ルート音</label>
+          <select id="rootSelect"></select>
+        </div>
+        <div class="field">
+          <label for="typeSelect">コードタイプ</label>
+          <select id="typeSelect"></select>
+        </div>
+      </div>
+      <div class="quick-chords" id="quickChords" aria-label="よく使うコード"></div>
+    </section>
+
+    <section class="panel quiz-panel" id="quizPanel" hidden>
+      <div class="eyebrow">CHORD QUIZ</div>
+      <div class="segmented" aria-label="問題形式">
+        <button type="button" data-quiz-mode="notes" aria-pressed="true">構成音</button>
+        <button type="button" data-quiz-mode="name" aria-pressed="false">コード名</button>
+      </div>
+      <div class="segmented" aria-label="難易度">
+        <button type="button" data-level="easy" aria-pressed="true">初級</button>
+        <button type="button" data-level="medium" aria-pressed="false">中級</button>
+        <button type="button" data-level="hard" aria-pressed="false">上級</button>
+      </div>
+      <div class="score"><span>正解 <b id="correctCount">0</b></span><span>連続 <b id="streakCount">0</b></span></div>
+      <p class="question" id="question">Cコードの構成音を押してください</p>
+      <p class="hint" id="quizHint">鍵盤から3音選びます。同じ音名は1つとして判定します。</p>
+      <div class="answer-name" id="answerName" hidden></div>
+      <div class="quiz-actions">
+        <button class="action-secondary" id="clearButton" type="button">選択解除</button>
+        <button class="action-secondary primary" id="answerButton" type="button">回答する</button>
+        <button class="action-secondary next" id="nextButton" type="button">次の問題</button>
+      </div>
+      <p class="feedback" id="feedback" aria-live="polite"></p>
+    </section>
+
+    <section class="panel keyboard-card" aria-label="ピアノ鍵盤">
+      <div class="legend"><span><span class="dot root"></span>ルート音</span><span><span class="dot chord"></span>構成音</span></div>
+      <div class="keyboard-wrap" id="keyboard" aria-label="2オクターブのピアノ鍵盤">
+        <div class="white-keys" id="whiteKeys"></div>
+        <div id="blackKeys"></div>
+      </div>
+      <div class="controls">
+        <button class="action-secondary" id="replayButton" type="button">もう一度鳴らす</button>
+        <label for="volumeRange">音量</label>
+        <input id="volumeRange" type="range" min="0" max="100" value="68" aria-label="音量">
+        <button class="action-secondary mute" id="muteButton" type="button" aria-pressed="false">ミュート</button>
+      </div>
+    </section>
+
+    <p class="footer-note">鍵盤はタップ・クリック・横ドラッグで演奏できます。初回の操作で音声が有効になります。<br>スマートフォンではダブルタップによるページ拡大を無効化しています。</p>
+    <a class="back" href="../../index.html">← ツール一覧へ戻る</a>
+  </main>
+
+<script>
+(() => {
+  "use strict";
+
+  const NOTE_NAMES = ["C","C♯","D","D♯","E","F","F♯","G","G♯","A","A♯","B"];
+  const NOTE_JP = ["ド","ド♯","レ","レ♯","ミ","ファ","ファ♯","ソ","ソ♯","ラ","ラ♯","シ"];
+  const ROOT_VALUES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+  const TYPES = {
+    major:{label:"メジャー",suffix:"",intervals:[0,4,7],description:"明るく安定した響きの、基本となるメジャーコードです。"},
+    minor:{label:"マイナー",suffix:"m",intervals:[0,3,7],description:"少し暗く落ち着いた響きのマイナーコードです。"},
+    seven:{label:"セブンス",suffix:"7",intervals:[0,4,7,10],description:"メジャーコードに短7度を加えた、次へ進みたくなる響きです。"},
+    maj7:{label:"メジャーセブンス",suffix:"maj7",intervals:[0,4,7,11],description:"メジャーコードに長7度を加えた、やわらかく都会的な響きです。"},
+    m7:{label:"マイナーセブンス",suffix:"m7",intervals:[0,3,7,10],description:"マイナーコードに短7度を加えた、落ち着きのある響きです。"},
+    sus4:{label:"サスフォー",suffix:"sus4",intervals:[0,5,7],description:"3度の代わりに4度を使う、浮遊感のある響きです。"},
+    dim:{label:"ディミニッシュ",suffix:"dim",intervals:[0,3,6],description:"短3度を積み重ねた、不安定で緊張感のある響きです。"}
+  };
+  const QUICK = [
+    ["C","major"],["G","major"],["F","major"],["A","minor"],
+    ["D","minor"],["E","minor"],["C","seven"],["G","seven"]
+  ];
+
+  const el = (id) => document.getElementById(id);
+  const state = {
+    root:"C", type:"major", mode:"study", quizMode:"notes", level:"easy",
+    correct:0, streak:0, selected:new Set(), quiz:null, answered:false,
+    muted:false, volume:.68, audio:null, master:null, dragPointer:null, lastDragNote:null
+  };
+
+  const rootIndex = (root) => ROOT_VALUES.indexOf(root);
+  const chordData = (root=state.root, type=state.type) => {
+    const r = rootIndex(root);
+    const t = TYPES[type];
+    const pcs = t.intervals.map(i => (r+i)%12);
+    return {rootIndex:r, pcs, name: NOTE_NAMES[r] + t.suffix, type:t};
+  };
+
+  function initSelectors(){
+    ROOT_VALUES.forEach((root,i)=>{
+      const option=document.createElement("option");
+      option.value=root; option.textContent=`${NOTE_NAMES[i]}（${NOTE_JP[i]}）`;
+      el("rootSelect").append(option);
+    });
+    Object.entries(TYPES).forEach(([value,t])=>{
+      const option=document.createElement("option");
+      option.value=value; option.textContent=t.label;
+      el("typeSelect").append(option);
+    });
+    el("rootSelect").value=state.root;
+    el("typeSelect").value=state.type;
+  }
+
+  function initQuick(){
+    QUICK.forEach(([root,type])=>{
+      const b=document.createElement("button");
+      const d=chordData(root,type);
+      b.type="button"; b.textContent=d.name;
+      b.dataset.root=root; b.dataset.type=type; b.setAttribute("aria-pressed","false");
+      b.addEventListener("click",()=>setChord(root,type,true));
+      el("quickChords").append(b);
+    });
+  }
+
+  function renderChord(){
+    const d=chordData();
+    el("chordName").textContent=d.name;
+    el("notesEn").textContent=d.pcs.map(i=>NOTE_NAMES[i]).join(" ・ ");
+    el("notesJp").textContent=d.pcs.map(i=>NOTE_JP[i]).join(" ・ ");
+    el("description").textContent=d.type.description;
+    el("rootSelect").value=state.root;
+    el("typeSelect").value=state.type;
+    document.querySelectorAll("#quickChords button").forEach(b=>{
+      b.setAttribute("aria-pressed", String(b.dataset.root===state.root && b.dataset.type===state.type));
+    });
+    renderKeyStates();
+  }
+
+  function setChord(root,type,play=false){
+    state.root=root; state.type=type;
+    renderChord();
+    if(play) playCurrentChord();
+  }
+
+  function buildKeyboard(){
+    const whiteSemis=[0,2,4,5,7,9,11];
+    for(let octave=4; octave<=5; octave++){
+      whiteSemis.forEach(pc=>{
+        const midi=12*(octave+1)+pc;
+        const b=document.createElement("button");
+        b.type="button"; b.className="key white"; b.dataset.midi=midi; b.dataset.pc=pc;
+        b.setAttribute("aria-label",`${NOTE_NAMES[pc]}${octave}`);
+        b.textContent=(pc===0)?`C${octave}`:"";
+        el("whiteKeys").append(b);
+      });
+    }
+    const blackMap=[
+      {pc:1,afterWhite:1},{pc:3,afterWhite:2},{pc:6,afterWhite:4},{pc:8,afterWhite:5},{pc:10,afterWhite:6}
+    ];
+    blackMap.forEach(item=>{
+      for(let octave=4;octave<=5;octave++){
+        const whiteOffset=(octave-4)*7;
+        const midi=12*(octave+1)+item.pc;
+        const b=document.createElement("button");
+        b.type="button"; b.className="key black"; b.dataset.midi=midi; b.dataset.pc=item.pc;
+        b.setAttribute("aria-label",`${NOTE_NAMES[item.pc]}${octave}`);
+        b.style.left=`calc(${((whiteOffset+item.afterWhite)/14)*100}% - 2.55%)`;
+        el("blackKeys").append(b);
+      }
+    });
+  }
+
+  function renderKeyStates(){
+    const d=chordData();
+    document.querySelectorAll(".key").forEach(k=>{
+      const pc=Number(k.dataset.pc);
+      k.classList.toggle("is-selected", state.mode==="quiz" && state.quizMode==="notes" && state.selected.has(pc));
+      k.classList.toggle("is-root", state.mode==="study" && pc===d.rootIndex);
+      k.classList.toggle("is-chord", state.mode==="study" && pc!==d.rootIndex && d.pcs.includes(pc));
+    });
+  }
+
+  function ensureAudio(){
+    if(!state.audio){
+      const AC=window.AudioContext||window.webkitAudioContext;
+      if(!AC) return false;
+      state.audio=new AC();
+      state.master=state.audio.createGain();
+      state.master.gain.value=state.muted?0:state.volume;
+      state.master.connect(state.audio.destination);
+    }
+    if(state.audio.state==="suspended") state.audio.resume();
+    return true;
+  }
+
+  function midiFreq(midi){ return 440*Math.pow(2,(midi-69)/12); }
+
+  function playMidi(midi,duration=.75,delay=0){
+    if(!ensureAudio()) return;
+    const ctx=state.audio;
+    const start=ctx.currentTime+delay;
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+    osc.type="triangle";
+    osc.frequency.value=midiFreq(midi);
+    gain.gain.setValueAtTime(0.0001,start);
+    gain.gain.exponentialRampToValueAtTime(0.24,start+.018);
+    gain.gain.exponentialRampToValueAtTime(0.0001,start+duration);
+    osc.connect(gain); gain.connect(state.master);
+    osc.start(start); osc.stop(start+duration+.03);
+  }
+
+  function playPc(pc){
+    const midi=60+pc;
+    playMidi(midi,.55);
+    flashKey(midi);
+  }
+
+  function flashKey(midi){
+    const key=document.querySelector(`.key[data-midi="${midi}"]`) || document.querySelector(`.key[data-pc="${midi%12}"]`);
+    if(!key) return;
+    key.classList.add("is-playing");
+    setTimeout(()=>key.classList.remove("is-playing"),120);
+  }
+
+  function playCurrentChord(){
+    const d=chordData();
+    d.pcs.forEach((pc,i)=>playMidi(60+pc,.9,i*.025));
+    d.pcs.forEach(pc=>flashKey(60+pc));
+  }
+
+  function handleKeyHit(key,fromDrag=false){
+    const midi=Number(key.dataset.midi);
+    const pc=Number(key.dataset.pc);
+    playMidi(midi,.5);
+    flashKey(midi);
+    if(state.mode==="quiz" && state.quizMode==="notes" && !state.answered){
+      if(fromDrag) state.selected.add(pc);
+      else state.selected.has(pc)?state.selected.delete(pc):state.selected.add(pc);
+      renderKeyStates();
+    }
+  }
+
+  function bindKeyboard(){
+    const keyboard=el("keyboard");
+    keyboard.addEventListener("pointerdown",e=>{
+      const key=e.target.closest(".key");
+      if(!key) return;
+      e.preventDefault();
+      state.dragPointer=e.pointerId;
+      state.lastDragNote=key.dataset.midi;
+      keyboard.setPointerCapture?.(e.pointerId);
+      handleKeyHit(key,false);
+    });
+    keyboard.addEventListener("pointermove",e=>{
+      if(state.dragPointer!==e.pointerId) return;
+      e.preventDefault();
+      const at=document.elementFromPoint(e.clientX,e.clientY);
+      const key=at?.closest?.(".key");
+      if(!key || key.dataset.midi===state.lastDragNote) return;
+      state.lastDragNote=key.dataset.midi;
+      handleKeyHit(key,true);
+    });
+    const end=e=>{
+      if(state.dragPointer===e.pointerId){
+        state.dragPointer=null; state.lastDragNote=null;
+      }
+    };
+    keyboard.addEventListener("pointerup",end);
+    keyboard.addEventListener("pointercancel",end);
+  }
+
+  function setMode(mode){
+    state.mode=mode;
+    const study=mode==="study";
+    el("studyTab").setAttribute("aria-selected",String(study));
+    el("quizTab").setAttribute("aria-selected",String(!study));
+    el("studyPanel").hidden=!study;
+    el("quizPanel").hidden=study;
+    if(!study && !state.quiz) newQuestion();
+    renderKeyStates();
+  }
+
+  function typePool(){
+    if(state.level==="easy") return ["major","minor"];
+    if(state.level==="medium") return ["major","minor","seven","maj7","m7"];
+    return Object.keys(TYPES);
+  }
+
+  function rootPool(){
+    if(state.level==="easy") return ["C","D","E","F","G","A"];
+    if(state.level==="medium") return ["C","C#","D","E","F","F#","G","A","B"];
+    return ROOT_VALUES;
+  }
+
+  function randomItem(a){ return a[Math.floor(Math.random()*a.length)]; }
+
+  function newQuestion(){
+    state.selected.clear(); state.answered=false;
+    const root=randomItem(rootPool());
+    const type=randomItem(typePool());
+    state.quiz={root,type};
+    el("feedback").textContent="";
+    el("feedback").className="feedback";
+    el("answerName").hidden=true;
+    const d=chordData(root,type);
+    if(state.quizMode==="notes"){
+      el("question").textContent=`${d.name}コードの構成音を押してください`;
+      el("quizHint").textContent=`鍵盤から${d.pcs.length}音選びます。同じ音名は1つとして判定します。`;
+      el("answerName").hidden=true;
+    }else{
+      el("question").textContent="光っている構成音のコード名を答えてください";
+      el("quizHint").textContent="「回答する」を押すとコード名を表示します。先に頭の中で答えてください。";
+      el("answerName").textContent=d.pcs.map(i=>NOTE_NAMES[i]).join(" ・ ");
+      el("answerName").hidden=false;
+    }
+    renderKeyStates();
+    if(state.quizMode==="name"){
+      document.querySelectorAll(".key").forEach(k=>{
+        const pc=Number(k.dataset.pc);
+        k.classList.toggle("is-root",pc===d.rootIndex);
+        k.classList.toggle("is-chord",pc!==d.rootIndex && d.pcs.includes(pc));
+      });
+    }
+  }
+
+  function answerQuiz(){
+    if(!state.quiz || state.answered) return;
+    const d=chordData(state.quiz.root,state.quiz.type);
+    if(state.quizMode==="name"){
+      state.answered=true;
+      el("feedback").textContent=`答え：${d.name}`;
+      el("feedback").className="feedback good";
+      return;
+    }
+    const expected=new Set(d.pcs);
+    const correct=state.selected.size===expected.size && [...expected].every(pc=>state.selected.has(pc));
+    state.answered=true;
+    if(correct){
+      state.correct++; state.streak++;
+      el("feedback").textContent="正解です";
+      el("feedback").className="feedback good";
+      d.pcs.forEach((pc,i)=>playMidi(60+pc,.8,i*.02));
+    }else{
+      state.streak=0;
+      el("feedback").textContent=`もう一度確認：${d.pcs.map(i=>NOTE_NAMES[i]).join("・")}`;
+      el("feedback").className="feedback bad";
+    }
+    el("correctCount").textContent=state.correct;
+    el("streakCount").textContent=state.streak;
+  }
+
+  function bindUI(){
+    el("studyTab").addEventListener("click",()=>setMode("study"));
+    el("quizTab").addEventListener("click",()=>setMode("quiz"));
+    el("rootSelect").addEventListener("change",e=>setChord(e.target.value,state.type,true));
+    el("typeSelect").addEventListener("change",e=>setChord(state.root,e.target.value,true));
+    el("playChordButton").addEventListener("click",playCurrentChord);
+    el("replayButton").addEventListener("click",()=>{
+      if(state.mode==="quiz" && state.quiz){
+        const d=chordData(state.quiz.root,state.quiz.type);
+        d.pcs.forEach((pc,i)=>playMidi(60+pc,.8,i*.02));
+      } else playCurrentChord();
+    });
+    document.querySelectorAll("[data-quiz-mode]").forEach(b=>b.addEventListener("click",()=>{
+      state.quizMode=b.dataset.quizMode;
+      document.querySelectorAll("[data-quiz-mode]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+      newQuestion();
+    }));
+    document.querySelectorAll("[data-level]").forEach(b=>b.addEventListener("click",()=>{
+      state.level=b.dataset.level;
+      document.querySelectorAll("[data-level]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+      newQuestion();
+    }));
+    el("clearButton").addEventListener("click",()=>{state.selected.clear();state.answered=false;el("feedback").textContent="";renderKeyStates();});
+    el("answerButton").addEventListener("click",answerQuiz);
+    el("nextButton").addEventListener("click",newQuestion);
+    el("volumeRange").addEventListener("input",e=>{
+      state.volume=Number(e.target.value)/100;
+      if(state.master && !state.muted) state.master.gain.value=state.volume;
+    });
+    el("muteButton").addEventListener("click",()=>{
+      state.muted=!state.muted;
+      el("muteButton").setAttribute("aria-pressed",String(state.muted));
+      el("muteButton").textContent=state.muted?"ミュート解除":"ミュート";
+      if(state.master) state.master.gain.value=state.muted?0:state.volume;
+    });
+    el("themeButton").addEventListener("click",toggleTheme);
+  }
+
+  function toggleTheme(){
+    const dark=document.documentElement.dataset.theme==="dark";
+    document.documentElement.dataset.theme=dark?"light":"dark";
+    el("themeButton").textContent=dark?"🌙":"☀️";
+    el("themeButton").setAttribute("aria-label",dark?"ダークモードに切り替え":"ライトモードに切り替え");
+    try{localStorage.setItem("chord-piano:theme",dark?"light":"dark")}catch{}
+  }
+
+  function initTheme(){
+    let theme="light";
+    try{
+      theme=localStorage.getItem("chord-piano:theme") || (matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+    }catch{}
+    document.documentElement.dataset.theme=theme;
+    el("themeButton").textContent=theme==="dark"?"☀️":"🌙";
+    el("themeButton").setAttribute("aria-label",theme==="dark"?"ライトモードに切り替え":"ダークモードに切り替え");
+  }
+
+  document.addEventListener("dblclick",e=>e.preventDefault(),{passive:false});
+
+  initSelectors();
+  initQuick();
+  buildKeyboard();
+  bindKeyboard();
+  bindUI();
+  initTheme();
+  renderChord();
+})();
+</script>
+</body>
+</html>
