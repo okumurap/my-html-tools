@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>表整形・編集ツール 安定版</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0b1020;--panel:#141b2d;--panel2:#1b253a;--text:#edf2ff;--muted:#9eabc3;--border:#344158;--accent:#67a7ff;--accent2:#1e4e82;--danger:#ff7b84;--row:#202d45;--cell:#254e78;--shadow:0 12px 32px #0005}
+    body.light{color-scheme:light;--bg:#eef2f7;--panel:#fff;--panel2:#f5f7fb;--text:#182033;--muted:#607089;--border:#ccd4df;--accent:#1769c2;--accent2:#cfe6ff;--danger:#bd2430;--row:#e8f1fb;--cell:#bcdcff;--shadow:0 10px 28px #24304418}
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;display:flex;flex-direction:column}
+    button,textarea,input{font:inherit}
+    button{border:1px solid var(--border);border-radius:8px;padding:8px 12px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
+    button.secondary{background:var(--panel2);color:var(--text)}
+    button.danger{color:var(--danger)}
+    button:disabled{opacity:.4;cursor:not-allowed}
+    button:focus-visible,textarea:focus-visible,input:focus-visible,#tableWrap:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+    header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--panel)}
+    h1{font-size:20px;margin:0}.sub{font-size:12px;color:var(--muted);margin-top:3px}.actions{display:flex;gap:8px;flex-wrap:wrap}
+    main{flex:1;min-height:0;padding:14px;display:grid;grid-template-columns:minmax(260px,320px) minmax(0,1fr);gap:14px}
+    .card{min-height:0;border:1px solid var(--border);border-radius:12px;background:var(--panel);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+    .card-head{padding:12px 14px;border-bottom:1px solid var(--border);font-weight:800}.card-body{padding:12px;min-height:0;display:flex;flex-direction:column;gap:10px}
+    textarea{width:100%;min-height:180px;flex:1;resize:none;border:1px solid var(--border);border-radius:8px;padding:12px;background:var(--panel2);color:var(--text);line-height:1.5}
+    .toolbar{display:flex;gap:7px;flex-wrap:wrap;padding:10px;border-bottom:1px solid var(--border)}
+    .toolbar button{padding:7px 10px}
+    #tableWrap{position:relative;flex:1;min-height:240px;overflow:auto;overscroll-behavior:contain;background:var(--panel2)}
+    table{border-collapse:separate;border-spacing:0;min-width:100%;table-layout:auto}
+    th,td{min-width:110px;max-width:360px;padding:9px 11px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);white-space:pre-wrap;overflow-wrap:anywhere;text-align:left;vertical-align:top}
+    th{position:sticky;top:0;z-index:2;background:var(--panel);user-select:none}.handle{display:flex;align-items:center;gap:8px}.drag::before{content:"⋮⋮";color:var(--muted);letter-spacing:-3px}.th-text{flex:1}
+    th.dragging{opacity:.5}th.drop-target{box-shadow:inset 3px 0 var(--accent)}
+    th.col-selected,td.col-selected{box-shadow:inset 0 0 0 999px color-mix(in srgb,var(--accent2) 32%,transparent)}
+    tr.row-selected>td{background:var(--row)}tr.row-selected>td.cell-selected{background:var(--cell);box-shadow:inset 0 0 0 2px var(--accent)}
+    .empty{padding:40px;text-align:center;color:var(--muted)}
+    .cell-editor{position:absolute;z-index:10;margin:0;border:2px solid var(--accent);border-radius:3px;padding:7px 9px;background:var(--panel);color:var(--text);box-shadow:0 6px 20px #0005}
+    .menu{position:fixed;z-index:1000;min-width:170px;padding:6px;border:1px solid var(--border);border-radius:9px;background:var(--panel);box-shadow:var(--shadow)}
+    .menu button{display:block;width:100%;margin:2px 0;text-align:left;background:transparent;color:var(--text);border:0}.menu button:hover{background:var(--panel2)}.menu button.danger{color:var(--danger)}
+    #toast{position:fixed;left:50%;bottom:24px;z-index:2000;transform:translate(-50%,18px);opacity:0;pointer-events:none;padding:9px 14px;border-radius:999px;background:#111d;color:#fff;transition:.18s}.show{opacity:1!important;transform:translate(-50%,0)!important}
+    .hint{font-size:12px;line-height:1.5;color:var(--muted)}
+    @media(max-width:900px){main{grid-template-columns:1fr;height:auto;overflow:auto}.card:first-child{min-height:300px}.card:last-child{min-height:70dvh}textarea{min-height:160px;resize:vertical}}
+  </style>
+</head>
+<body>
+  <header>
+    <div><h1>表整形・編集ツール</h1><div class="sub">Markdown・CSV・TSV対応</div></div>
+    <div class="actions"><button id="themeBtn" class="secondary" type="button">ライトモード</button></div>
+  </header>
+  <main>
+    <section class="card">
+      <div class="card-head">1. 表を貼り付け</div>
+      <div class="card-body">
+        <textarea id="pasteArea" spellcheck="false" placeholder="Markdown表、CSV、またはExcelのセル範囲を貼り付け"></textarea>
+        <div class="actions"><button id="parseBtn" type="button">表として読み込む</button><button id="clearBtn" class="secondary danger" type="button">クリア</button></div>
+        <div class="hint">貼り付けると自動解析します。CSVの引用符、セル内の改行・カンマにも対応します。</div>
+      </div>
+    </section>
+    <section class="card">
+      <div class="toolbar">
+        <button id="undoBtn" class="secondary" type="button" disabled>戻す</button><button id="redoBtn" class="secondary" type="button" disabled>やり直す</button>
+        <button id="copyMdBtn" class="secondary" type="button" disabled>Markdownコピー</button><button id="copyTsvBtn" class="secondary" type="button" disabled>TSVコピー</button>
+        <button id="addRowEndBtn" class="secondary" type="button" disabled>行追加</button><button id="addColEndBtn" class="secondary" type="button" disabled>列追加</button><button id="delSelectedColBtn" class="secondary danger" type="button" disabled>選択列を削除</button>
+      </div>
+      <div id="tableWrap" tabindex="0" aria-label="表エディター"><div class="empty">左側に表を貼り付けてください</div><table id="grid" hidden><thead></thead><tbody></tbody></table></div>
+    </section>
+  </main>
+  <div id="toast" role="status" aria-live="polite"></div>
+<script>
+(()=>{'use strict';
+  const $=id=>document.getElementById(id);
+  const grid=$('grid'),thead=grid.tHead,tbody=grid.tBodies[0],tableWrap=$('tableWrap'),pasteArea=$('pasteArea');
+  const state={data:[],cols:[],rows:[],selectedCol:0,selectedCell:{r:null,c:null},editing:null,theme:'dark'};
+  const history={undo:[],redo:[],limit:80};
+  let editorEl=null,dragFromCol=null,toastTimer=null,activeMenu=null;
+
+  const toast=msg=>{const el=$('toast');clearTimeout(toastTimer);el.textContent=msg;el.classList.add('show');toastTimer=setTimeout(()=>el.classList.remove('show'),1600)};
+  const clamp=(n,min,max)=>Math.min(max,Math.max(min,n));
+  const hasData=()=>state.data.length>0&&state.cols.length>0&&state.rows.length>0;
+  const snapshot=()=>({data:state.data.map(r=>r.slice()),cols:state.cols.slice(),rows:state.rows.slice(),selectedCol:state.selectedCol,selectedCell:{...state.selectedCell}});
+  const sameSnapshot=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+  const restoreSnapshot=s=>{state.data=s.data.map(r=>r.slice());state.cols=s.cols.slice();state.rows=s.rows.slice();state.selectedCol=s.selectedCol;state.selectedCell={...s.selectedCell};normalizeSelection();render()};
+  const pushUndo=()=>{const s=snapshot();if(history.undo.length&&sameSnapshot(history.undo.at(-1),s))return;history.undo.push(s);if(history.undo.length>history.limit)history.undo.shift();history.redo.length=0;updateControls()};
+  const undo=()=>{if(!history.undo.length)return toast('これ以上戻れません');history.redo.push(snapshot());restoreSnapshot(history.undo.pop());toast('1操作戻しました')};
+  const redo=()=>{if(!history.redo.length)return toast('これ以上やり直せません');history.undo.push(snapshot());restoreSnapshot(history.redo.pop());toast('1操作やり直しました')};
+  const normalizeSelection=()=>{
+    if(!hasData()){state.selectedCol=0;state.selectedCell={r:null,c:null};return}
+    state.selectedCol=clamp(Number.isInteger(state.selectedCol)?state.selectedCol:0,0,state.cols.length-1);
+    const maxRow=state.rows.length-1;
+    state.selectedCell.c=clamp(Number.isInteger(state.selectedCell.c)?state.selectedCell.c:state.selectedCol,0,state.cols.length-1);
+    state.selectedCell.r=maxRow>=1?clamp(Number.isInteger(state.selectedCell.r)?state.selectedCell.r:1,1,maxRow):null;
+  };
+  const updateControls=()=>{
+    const ok=hasData();$('undoBtn').disabled=!history.undo.length;$('redoBtn').disabled=!history.redo.length;
+    for(const id of ['copyMdBtn','copyTsvBtn','addRowEndBtn','addColEndBtn','delSelectedColBtn'])$(id).disabled=!ok;
+  };
+
+  const applyTheme=()=>{document.body.classList.toggle('light',state.theme==='light');$('themeBtn').textContent=state.theme==='light'?'ダークモード':'ライトモード';try{localStorage.setItem('table_tool_theme',state.theme)}catch{}};
+  try{const saved=localStorage.getItem('table_tool_theme');if(saved==='light'||saved==='dark')state.theme=saved}catch{}applyTheme();
+  $('themeBtn').addEventListener('click',()=>{state.theme=state.theme==='light'?'dark':'light';applyTheme()});
+
+  const parseDelimited=(text,delimiter)=>{
+    const rows=[];let row=[],cell='',quoted=false;
+    for(let i=0;i<text.length;i++){
+      const ch=text[i];
+      if(quoted){if(ch==='"'){if(text[i+1]==='"'){cell+='"';i++}else quoted=false}else cell+=ch;continue}
+      if(ch==='"'&&cell===''){quoted=true;continue}
+      if(ch===delimiter){row.push(cell);cell='';continue}
+      if(ch==='\n'){row.push(cell);rows.push(row);row=[];cell='';continue}
+      if(ch!=='\r')cell+=ch;
+    }
+    if(quoted)throw new Error('引用符が閉じていません');
+    if(cell!==''||row.length){row.push(cell);rows.push(row)}
+    return rows.filter(r=>r.some(c=>c!==''));
+  };
+  const markdownCells=line=>{const mark='\uE000';let s=line.trim().replace(/\\\|/g,mark),cells=s.split('|');if(cells[0]?.trim()==='')cells.shift();if(cells.at(-1)?.trim()==='')cells.pop();return cells.map(c=>c.replaceAll(mark,'|').trim())};
+  const parseMarkdown=text=>text.split(/\r?\n/).filter(l=>l.trim()).filter(l=>!/^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(l)).map(markdownCells);
+  const extractMarkdownBlock=text=>{const lines=text.split(/\r?\n/);let best=[],current=[];for(const line of lines){if(line.includes('|'))current.push(line);else{if(current.length>best.length)best=current;current=[]}}if(current.length>best.length)best=current;return best.length?best.join('\n'):text};
+  const guessKind=text=>{const first=(text.split(/\r?\n/).find(l=>l.trim())||'');if(first.includes('\t'))return'tsv';if(first.includes('|'))return'md';if(first.includes(','))return'csv';return'md'};
+  const normalizeTable=rows=>{const width=rows.reduce((m,r)=>Math.max(m,r.length),0);return rows.map(r=>r.map(v=>String(v??'')).concat(Array(width-r.length).fill('')))};
+  const parseInput=text=>{const raw=text.replace(/^\uFEFF/,'').trim();if(!raw)throw new Error('入力が空です');const kind=guessKind(raw);const rows=kind==='md'?parseMarkdown(extractMarkdownBlock(raw)):parseDelimited(raw,kind==='tsv'?'\t':',');const normalized=normalizeTable(rows);if(!normalized.length||!normalized[0].length)throw new Error('表が見つかりません');return normalized};
+  const escapeMd=s=>String(s??'').replace(/\\/g,'\\\\').replace(/\|/g,'\\|').replace(/\r?\n/g,'<br>');
+  const currentViewRows=()=>state.rows.map(r=>state.cols.map(c=>state.data[r]?.[c]??''));
+  const toMarkdown=rows=>{const data=normalizeTable(rows);if(!data.length)return'';return ['| '+data[0].map(escapeMd).join(' | ')+' |','| '+data[0].map(()=>'---').join(' | ')+' |',...data.slice(1).map(r=>'| '+r.map(escapeMd).join(' | ')+' |')].join('\n')};
+  const quoteTsv=s=>{s=String(s??'');return /[\t\r\n"]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
+  const toTsv=rows=>normalizeTable(rows).map(r=>r.map(quoteTsv).join('\t')).join('\n');
+
+  const parseAndRender=text=>{try{const rows=parseInput(text??pasteArea.value);cancelEdit();state.data=rows;state.cols=rows[0].map((_,i)=>i);state.rows=rows.map((_,i)=>i);state.selectedCol=0;state.selectedCell={r:rows.length>1?1:null,c:0};history.undo.length=0;history.redo.length=0;render();toast(`${rows.length}行 × ${rows[0].length}列を読み込みました`)}catch(err){console.error(err);toast(err.message||'解析に失敗しました')}};
+
+  const closeMenu=()=>{activeMenu?.remove();activeMenu=null};
+  const showMenu=(items,x,y)=>{closeMenu();const menu=document.createElement('div');menu.className='menu';for(const item of items){const b=document.createElement('button');b.type='button';b.textContent=item.label;if(item.danger)b.className='danger';b.addEventListener('click',()=>{closeMenu();item.fn()});menu.appendChild(b)}document.body.appendChild(menu);const r=menu.getBoundingClientRect();menu.style.left=`${clamp(x,4,innerWidth-r.width-4)}px`;menu.style.top=`${clamp(y,4,innerHeight-r.height-4)}px`;activeMenu=menu;setTimeout(()=>document.addEventListener('pointerdown',closeMenu,{once:true}),0)};
+
+  const render=()=>{
+    normalizeSelection();thead.replaceChildren();tbody.replaceChildren();
+    grid.hidden=!hasData();tableWrap.querySelector('.empty')?.remove();
+    if(!hasData()){const e=document.createElement('div');e.className='empty';e.textContent='左側に表を貼り付けてください';tableWrap.prepend(e);updateControls();return}
+    const trh=document.createElement('tr');
+    state.cols.forEach((rawCol,vc)=>{const th=document.createElement('th');th.draggable=true;th.tabIndex=0;th.classList.toggle('col-selected',vc===state.selectedCol);const handle=document.createElement('div');handle.className='handle';const drag=document.createElement('span');drag.className='drag';const label=document.createElement('span');label.className='th-text';label.textContent=state.data[state.rows[0]]?.[rawCol]??'';handle.append(drag,label);th.append(handle);bindHeader(th,vc);trh.append(th)});thead.append(trh);
+    for(let vr=1;vr<state.rows.length;vr++){const tr=document.createElement('tr');tr.classList.toggle('row-selected',state.selectedCell.r===vr);for(let vc=0;vc<state.cols.length;vc++){const td=document.createElement('td');td.textContent=state.data[state.rows[vr]]?.[state.cols[vc]]??'';td.classList.toggle('col-selected',vc===state.selectedCol);td.classList.toggle('cell-selected',state.selectedCell.r===vr&&state.selectedCell.c===vc);td.addEventListener('click',()=>selectCell(vr,vc));td.addEventListener('dblclick',()=>beginEdit(vr,vc));td.addEventListener('contextmenu',e=>{e.preventDefault();selectCell(vr,vc,false);rowMenu(vr,e.clientX,e.clientY)});tr.append(td)}tbody.append(tr)}
+    updateControls();requestAnimationFrame(ensureSelectionVisible);
+  };
+  const selectCell=(r,c,doRender=true)=>{state.selectedCol=c;state.selectedCell={r,c};tableWrap.focus({preventScroll:true});if(doRender)render()};
+  const bindHeader=(th,vc)=>{
+    th.addEventListener('click',()=>{state.selectedCol=vc;state.selectedCell.c=vc;tableWrap.focus({preventScroll:true});render()});
+    th.addEventListener('dblclick',()=>beginEdit(0,vc));th.addEventListener('contextmenu',e=>{e.preventDefault();columnMenu(vc,e.clientX,e.clientY)});
+    th.addEventListener('dragstart',e=>{dragFromCol=vc;th.classList.add('dragging');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',String(vc))});
+    th.addEventListener('dragend',()=>{th.classList.remove('dragging');dragFromCol=null});th.addEventListener('dragover',e=>{e.preventDefault();th.classList.add('drop-target');e.dataTransfer.dropEffect='move'});th.addEventListener('dragleave',()=>th.classList.remove('drop-target'));
+    th.addEventListener('drop',e=>{e.preventDefault();th.classList.remove('drop-target');if(dragFromCol!==null)moveCol(dragFromCol,vc)});
+  };
+  const ensureSelectionVisible=()=>{const {r,c}=state.selectedCell;if(r==null||c==null)return;const td=tbody.rows[r-1]?.cells[c];if(!td)return;const wr=tableWrap.getBoundingClientRect(),cr=td.getBoundingClientRect();if(cr.left<wr.left)tableWrap.scrollLeft-=wr.left-cr.left;else if(cr.right>wr.right)tableWrap.scrollLeft+=cr.right-wr.right;if(cr.top<wr.top)tableWrap.scrollTop-=wr.top-cr.top;else if(cr.bottom>wr.bottom)tableWrap.scrollTop+=cr.bottom-wr.bottom};
+
+  const remapIndex=(value,from,to)=>value===from?to:from<value&&value<=to?value-1:to<=value&&value<from?value+1:value;
+  const moveCol=(from,to)=>{if(!Number.isInteger(from)||!Number.isInteger(to)||from===to||from<0||to<0||from>=state.cols.length||to>=state.cols.length)return;pushUndo();const [id]=state.cols.splice(from,1);state.cols.splice(to,0,id);state.selectedCol=remapIndex(state.selectedCol,from,to);if(state.selectedCell.c!=null)state.selectedCell.c=remapIndex(state.selectedCell.c,from,to);render()};
+  const moveRow=(from,to)=>{if(!Number.isInteger(from)||!Number.isInteger(to)||from===to||from<1||to<1||from>=state.rows.length||to>=state.rows.length)return;pushUndo();const [id]=state.rows.splice(from,1);state.rows.splice(to,0,id);if(state.selectedCell.r!=null)state.selectedCell.r=remapIndex(state.selectedCell.r,from,to);render()};
+  const addColumnAt=at=>{if(!hasData())return;at=clamp(at,0,state.cols.length);pushUndo();const raw=state.data[0].length;state.data.forEach(r=>r.push(''));state.cols.splice(at,0,raw);state.selectedCol=at;state.selectedCell.c=at;render()};
+  const deleteColumnAt=at=>{if(state.cols.length<=1)return toast('最後の1列は削除できません');if(at<0||at>=state.cols.length)return;pushUndo();const raw=state.cols[at];state.data.forEach(r=>r.splice(raw,1));state.cols.splice(at,1);state.cols=state.cols.map(i=>i>raw?i-1:i);state.selectedCol=clamp(state.selectedCol-(state.selectedCol>at?1:0),0,state.cols.length-1);state.selectedCell.c=state.selectedCell.c===at?state.selectedCol:state.selectedCell.c>at?state.selectedCell.c-1:state.selectedCell.c;render()};
+  const addRowAt=at=>{if(!hasData())return;at=clamp(at,1,state.rows.length);pushUndo();const raw=state.data.length;state.data.push(Array(state.data[0].length).fill(''));state.rows.splice(at,0,raw);state.selectedCell.r=at;render()};
+  const deleteRowAt=at=>{if(at<1||at>=state.rows.length)return;if(state.rows.length<=1)return toast('削除できるデータ行がありません');pushUndo();const raw=state.rows[at];state.data.splice(raw,1);state.rows.splice(at,1);state.rows=state.rows.map(i=>i>raw?i-1:i);state.selectedCell.r=state.rows.length>1?clamp(at,1,state.rows.length-1):null;render()};
+  const columnMenu=(i,x,y)=>showMenu([{label:'列を左に追加',fn:()=>addColumnAt(i)},{label:'列を右に追加',fn:()=>addColumnAt(i+1)},{label:'列を左へ移動',fn:()=>moveCol(i,Math.max(0,i-1))},{label:'列を右へ移動',fn:()=>moveCol(i,Math.min(state.cols.length-1,i+1))},{label:'列を先頭へ',fn:()=>moveCol(i,0)},{label:'列を末尾へ',fn:()=>moveCol(i,state.cols.length-1)},{label:'列を削除',danger:true,fn:()=>deleteColumnAt(i)}],x,y);
+  const rowMenu=(i,x,y)=>showMenu([{label:'行を上に追加',fn:()=>addRowAt(i)},{label:'行を下に追加',fn:()=>addRowAt(i+1)},{label:'行を上へ',fn:()=>moveRow(i,Math.max(1,i-1))},{label:'行を下へ',fn:()=>moveRow(i,Math.min(state.rows.length-1,i+1))},{label:'行を先頭へ',fn:()=>moveRow(i,1)},{label:'行を末尾へ',fn:()=>moveRow(i,state.rows.length-1)},{label:'行を削除',danger:true,fn:()=>deleteRowAt(i)}],x,y);
+
+  const cancelEdit=()=>{editorEl?.remove();editorEl=null;state.editing=null};
+  const endEdit=(commit,next)=>{if(!state.editing||!editorEl)return cancelEdit();const {r,c}=state.editing,rawRow=state.rows[r],rawCol=state.cols[c],value=editorEl.value,old=state.data[rawRow][rawCol];cancelEdit();if(commit&&value!==old){pushUndo();state.data[rawRow][rawCol]=value}render();if(next)next()};
+  const beginEdit=(r,c)=>{if(!hasData()||c<0||c>=state.cols.length||r<0||r>=state.rows.length)return;cancelEdit();state.selectedCol=c;if(r>0)state.selectedCell={r,c};state.editing={r,c};const target=r===0?thead.rows[0]?.cells[c]:tbody.rows[r-1]?.cells[c];if(!target){state.editing=null;return}const rect=target.getBoundingClientRect(),wr=tableWrap.getBoundingClientRect();editorEl=document.createElement('input');editorEl.className='cell-editor';editorEl.value=state.data[state.rows[r]][state.cols[c]]??'';Object.assign(editorEl.style,{left:`${rect.left-wr.left+tableWrap.scrollLeft}px`,top:`${rect.top-wr.top+tableWrap.scrollTop}px`,width:`${Math.max(rect.width,100)}px`,height:`${rect.height}px`});tableWrap.append(editorEl);editorEl.focus();editorEl.select();editorEl.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();endEdit(false)}else if(e.key==='Enter'||e.key==='Tab'){e.preventDefault();const shift=e.shiftKey;endEdit(true,()=>{if(r===0)return;let nr=r,nc=c+(shift?-1:1);if(nc<0){nc=state.cols.length-1;nr=Math.max(1,r-1)}else if(nc>=state.cols.length){nc=0;nr=Math.min(state.rows.length-1,r+1)}beginEdit(nr,nc)})}});editorEl.addEventListener('blur',()=>{if(state.editing)endEdit(true)},{once:true})};
+
+  const pasteIntoGrid=text=>{if(state.selectedCell.r==null)return;let incoming;try{incoming=parseDelimited(text,text.includes('\t')?'\t':',')}catch(err){return toast(err.message)}if(!incoming.length)return;const startR=state.selectedCell.r,startC=state.selectedCell.c;pushUndo();const needVisualCols=startC+Math.max(...incoming.map(r=>r.length));while(state.cols.length<needVisualCols){const raw=state.data[0].length;state.data.forEach(r=>r.push(''));state.cols.push(raw)}const needVisualRows=startR+incoming.length;while(state.rows.length<needVisualRows){const raw=state.data.length;state.data.push(Array(state.data[0].length).fill(''));state.rows.push(raw)}incoming.forEach((row,dr)=>row.forEach((value,dc)=>{state.data[state.rows[startR+dr]][state.cols[startC+dc]]=value}));render();toast(`${incoming.length}行を貼り付けました`)};
+  tableWrap.addEventListener('paste',e=>{if(state.editing||!hasData())return;const text=e.clipboardData?.getData('text/plain');if(!text)return;e.preventDefault();pasteIntoGrid(text)});
+  tableWrap.addEventListener('keydown',e=>{if(!hasData()||state.editing)return;const mod=e.ctrlKey||e.metaKey,key=e.key.toLowerCase();if(mod&&key==='c'){e.preventDefault();copyText(toMarkdown(currentViewRows()));return}if(mod&&key==='z'&&!e.shiftKey){e.preventDefault();undo();return}if((mod&&key==='y')||(mod&&e.shiftKey&&key==='z')){e.preventDefault();redo();return}let r=state.selectedCell.r,c=state.selectedCell.c;if(r==null||c==null)return;if(e.key==='F2'||e.key==='Enter'){e.preventDefault();beginEdit(r,c);return}if(mod&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();if(e.key==='ArrowLeft'||e.key==='ArrowRight')moveCol(c,e.key==='ArrowLeft'?Math.max(0,c-1):Math.min(state.cols.length-1,c+1));else moveRow(r,e.key==='ArrowUp'?Math.max(1,r-1):Math.min(state.rows.length-1,r+1));return}const delta={ArrowLeft:[0,-1],ArrowRight:[0,1],ArrowUp:[-1,0],ArrowDown:[1,0]}[e.key];if(delta){e.preventDefault();selectCell(clamp(r+delta[0],1,state.rows.length-1),clamp(c+delta[1],0,state.cols.length-1))}});
+
+  const copyText=async text=>{try{await navigator.clipboard.writeText(text);toast('クリップボードにコピーしました')}catch{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.append(ta);ta.select();const ok=document.execCommand('copy');ta.remove();toast(ok?'コピーしました':'コピーできませんでした')}};
+  $('parseBtn').addEventListener('click',()=>parseAndRender());$('clearBtn').addEventListener('click',()=>{cancelEdit();pasteArea.value='';state.data=[];state.cols=[];state.rows=[];history.undo.length=0;history.redo.length=0;render()});
+  $('undoBtn').addEventListener('click',undo);$('redoBtn').addEventListener('click',redo);$('copyMdBtn').addEventListener('click',()=>copyText(toMarkdown(currentViewRows())));$('copyTsvBtn').addEventListener('click',()=>copyText(toTsv(currentViewRows())));$('addRowEndBtn').addEventListener('click',()=>addRowAt(state.rows.length));$('addColEndBtn').addEventListener('click',()=>addColumnAt(state.cols.length));$('delSelectedColBtn').addEventListener('click',()=>deleteColumnAt(state.selectedCol));
+  pasteArea.addEventListener('paste',e=>{const text=e.clipboardData?.getData('text/plain');if(!text)return;e.preventDefault();pasteArea.value=text;parseAndRender(text)});
+  window.addEventListener('resize',()=>{if(state.editing)endEdit(true)});render();
+})();
+</script>
+</body>
+</html>
