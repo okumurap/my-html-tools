@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="description" content="見て、聴いて、押して覚えるピアノコード練習ツール。">
   <meta name="theme-color" content="#f6f7fb">
   <title>コード鍵盤</title>
@@ -261,7 +261,7 @@
     const r = rootIndex(root);
     const t = TYPES[type];
     const pcs = t.intervals.map(i => (r+i)%12);
-    return {rootIndex:r, pcs, name: NOTE_NAMES[r] + t.suffix, type:t};
+    return {rootIndex:r, pcs, midis:t.intervals.map(i=>60+r+i), name: NOTE_NAMES[r] + t.suffix, type:t};
   };
 
   function initSelectors(){
@@ -339,12 +339,14 @@
   }
 
   function renderKeyStates(){
-    const d=chordData();
+    const showStudy=state.mode==="study";
+    const showNameQuiz=state.mode==="quiz" && state.quizMode==="name" && !!state.quiz;
+    const d=showNameQuiz ? chordData(state.quiz.root,state.quiz.type) : chordData();
     document.querySelectorAll(".key").forEach(k=>{
       const pc=Number(k.dataset.pc);
       k.classList.toggle("is-selected", state.mode==="quiz" && state.quizMode==="notes" && state.selected.has(pc));
-      k.classList.toggle("is-root", state.mode==="study" && pc===d.rootIndex);
-      k.classList.toggle("is-chord", state.mode==="study" && pc!==d.rootIndex && d.pcs.includes(pc));
+      k.classList.toggle("is-root", (showStudy || showNameQuiz) && pc===d.rootIndex);
+      k.classList.toggle("is-chord", (showStudy || showNameQuiz) && pc!==d.rootIndex && d.pcs.includes(pc));
     });
   }
 
@@ -393,8 +395,8 @@
 
   function playCurrentChord(){
     const d=chordData();
-    d.pcs.forEach((pc,i)=>playMidi(60+pc,.9,i*.025));
-    d.pcs.forEach(pc=>flashKey(60+pc));
+    d.midis.forEach((midi,i)=>playMidi(midi,.9,i*.025));
+    d.midis.forEach(flashKey);
   }
 
   function handleKeyHit(key,fromDrag=false){
@@ -483,13 +485,6 @@
       el("answerName").hidden=false;
     }
     renderKeyStates();
-    if(state.quizMode==="name"){
-      document.querySelectorAll(".key").forEach(k=>{
-        const pc=Number(k.dataset.pc);
-        k.classList.toggle("is-root",pc===d.rootIndex);
-        k.classList.toggle("is-chord",pc!==d.rootIndex && d.pcs.includes(pc));
-      });
-    }
   }
 
   function answerQuiz(){
@@ -508,7 +503,7 @@
       state.correct++; state.streak++;
       el("feedback").textContent="正解です";
       el("feedback").className="feedback good";
-      d.pcs.forEach((pc,i)=>playMidi(60+pc,.8,i*.02));
+      d.midis.forEach((midi,i)=>playMidi(midi,.8,i*.02));
     }else{
       state.streak=0;
       el("feedback").textContent=`もう一度確認：${d.pcs.map(i=>NOTE_NAMES[i]).join("・")}`;
@@ -527,7 +522,7 @@
     el("replayButton").addEventListener("click",()=>{
       if(state.mode==="quiz" && state.quiz){
         const d=chordData(state.quiz.root,state.quiz.type);
-        d.pcs.forEach((pc,i)=>playMidi(60+pc,.8,i*.02));
+        d.midis.forEach((midi,i)=>playMidi(midi,.8,i*.02));
       } else playCurrentChord();
     });
     document.querySelectorAll("[data-quiz-mode]").forEach(b=>b.addEventListener("click",()=>{
@@ -574,6 +569,7 @@
     el("themeButton").setAttribute("aria-label",theme==="dark"?"ライトモードに切り替え":"ダークモードに切り替え");
   }
 
+  // ダブルタップ拡大を抑止。通常タップやピンチ以外の操作には干渉しない。
   document.addEventListener("dblclick",e=>e.preventDefault(),{passive:false});
 
   initSelectors();
