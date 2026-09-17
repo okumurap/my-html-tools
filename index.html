@@ -40,59 +40,39 @@
   </style>
 </head>
 <body>
-  <header class="site-header">
-    <div class="container">
-      <a class="site-name" href="./index.html" aria-label="My HTML Tools ホーム">My HTML Tools</a>
-    </div>
-  </header>
-
+  <header class="site-header"><div class="container"><a class="site-name" href="./index.html" aria-label="My HTML Tools ホーム">My HTML Tools</a></div></header>
   <main>
-    <section class="hero" aria-labelledby="page-title">
-      <div class="container">
-        <h1 id="page-title">ブラウザで使えるツール</h1>
-        <p class="lead">インストール不要。PCでもスマートフォンでも、必要なときにすぐ使えます。</p>
-      </div>
-    </section>
-
-    <section class="tools-section" aria-labelledby="tools-title">
-      <div class="container">
-        <div class="section-heading">
-          <h2 id="tools-title">ツール一覧</h2>
-          <span id="result-count" class="tool-count" role="status" aria-live="polite">10件表示 / 全10件</span>
+    <section class="hero" aria-labelledby="page-title"><div class="container"><h1 id="page-title">ブラウザで使えるツール</h1><p class="lead">インストール不要。PCでもスマートフォンでも、必要なときにすぐ使えます。</p></div></section>
+    <section class="tools-section" aria-labelledby="tools-title"><div class="container">
+      <div class="section-heading"><h2 id="tools-title">ツール一覧</h2><span id="result-count" class="tool-count" role="status" aria-live="polite">11件表示 / 全11件</span></div>
+      <div class="catalog-controls">
+        <label class="catalog-search" for="tool-search">ツールを検索<input id="tool-search" type="search" placeholder="名前や説明で検索" autocomplete="off" aria-controls="tool-list"></label>
+        <div class="category-filters" role="group" aria-label="カテゴリーで絞り込み">
+          <button class="category-filter" type="button" data-filter="all" aria-pressed="true" aria-controls="tool-list">すべて 11</button>
+          <button class="category-filter" type="button" data-filter="work" aria-pressed="false" aria-controls="tool-list">仕事・設計 3</button>
+          <button class="category-filter" type="button" data-filter="utility" aria-pressed="false" aria-controls="tool-list">編集・便利 1</button>
+          <button class="category-filter" type="button" data-filter="finance" aria-pressed="false" aria-controls="tool-list">お金・資産形成 1</button>
+          <button class="category-filter" type="button" data-filter="music" aria-pressed="false" aria-controls="tool-list">音楽・学習 1</button>
+          <button class="category-filter" type="button" data-filter="trains" aria-pressed="false" aria-controls="tool-list">電車・子ども向け 3</button>
+          <button class="category-filter" type="button" data-filter="fishing" aria-pressed="false" aria-controls="tool-list">釣り 2</button>
         </div>
-
-        <div class="catalog-controls">
-          <label class="catalog-search" for="tool-search">
-            ツールを検索
-            <input id="tool-search" type="search" placeholder="名前や説明で検索" autocomplete="off" aria-controls="tool-list">
-          </label>
-          <div class="category-filters" role="group" aria-label="カテゴリーで絞り込み">
-            <button class="category-filter" type="button" data-filter="all" aria-pressed="true" aria-controls="tool-list">すべて 10</button>
-            <button class="category-filter" type="button" data-filter="work" aria-pressed="false" aria-controls="tool-list">仕事・設計 3</button>
-            <button class="category-filter" type="button" data-filter="utility" aria-pressed="false" aria-controls="tool-list">編集・便利 1</button>
-            <button class="category-filter" type="button" data-filter="music" aria-pressed="false" aria-controls="tool-list">音楽・学習 1</button>
-            <button class="category-filter" type="button" data-filter="trains" aria-pressed="false" aria-controls="tool-list">電車・子ども向け 3</button>
-            <button class="category-filter" type="button" data-filter="fishing" aria-pressed="false" aria-controls="tool-list">釣り 2</button>
-          </div>
-        </div>
-
-        <ol id="tool-list" class="tool-grid">
-          <li data-category="work"><a class="tool-card" href="./tools/offset-capability-lab/"><span class="tool-number">001</span><span class="tool-card__content"><span class="tool-card__title">Offset Capability Lab</span><span class="tool-card__description">工程能力指数（Cp・Cpk）とヒストグラムを比較します。</span><span class="tool-card__category">仕事・設計</span><span class="tool-card__meta">PC・スマートフォン対応</span></span><span class="tool-card__arrow" aria-hidden="true">開く →</span></a></li>
-          <li data-category="work"><a class="tool-card" href="./tools/drawing-annotation/"><span class="tool-number">002</span><span class="tool-card__content"><span class="tool-card__title">図面注釈ツール</span><span class="tool-card__description">画像や図面に注釈を書き込み、PNGで出力します。</span><span class="tool-card__category">仕事・設計</span><span class="tool-card__meta">PC・スマートフォン・ペン対応</span></span><span class="tool-card__arrow" aria-hidden="true">開く →</span></a></li>
-          <li data-category="work"><a class="tool-card" href="./tools/screw-diameter-comparator/"><span class="tool-number">003</span><span class="tool-card__content"><span class="tool-card__title">スクリュ径A/B比較ツール</span><span class="tool-card__description">射出成形機のスクリュ径による流量・充填体積・必要ストロークの違いを比較します。</span><span class="tool-card__category">仕事・設計</span><span class="tool-card__meta">PC・スマートフォン対応</span></span><span class="tool-card__arrow" aria-hidden="true">開く →</span></a></li>
-          <li data-category="trains"><a class="tool-card" href="./tools/train-crossing/"><span class="tool-number">004</span><span class="tool-card__content"><span class="tool-card__title">でんしゃを走らせよう！</span><span class="tool-card__description">タップで電車を走らせ、踏切とトンネルを越えて次の駅を目指すミニゲームです。</span><span class="tool-card__category">電車・子ども向け</span><span class="tool-card__meta">PC・スマートフォン対応</span></span><span class="tool-card__arrow" aria-hidden="true">開く →</span></a></li>
-          <li data-category="trains"><a class="tool-card" href="./tools/sakamoto-railway/"><span class="tool-number">005</span><span class="tool-card__content"><span class="tool-card__title">坂本電鉄 海岸線</span><span class="tool-card__description">マスコン、ブレーキ、ドア、車内放送を操作して終点を目指す電車運転ゲームです。</span><span class="tool-card__category">電車・子ども向け</span><span class="tool-card__meta">PWA・スマートフォン対応</span></span><span class="tool-card__arrow" aria-hidden="true">運転する →</span></a></li>
-          <li data-category="fishing"><a class="tool-card" href="./tools/sakamoto-kiss-navi/"><span class="tool-number">006</span><span class="tool-card__content"><span class="tool-card__title">坂本キスナビ</span><span class="tool-card__description">キスの釣果、潮、風、投げた方向と距離を記録し、着水点をヒートマップで振り返ります。</span><span class="tool-card__category">釣り</span><span class="tool-card__meta">スマートフォン対応・端末内保存</span></span><span class="tool-card__arrow" aria-hidden="true">記録する →</span></a></li>
-          <li data-category="trains"><a class="tool-card" href="./tools/plarail-layout/"><span class="tool-number">007</span><span class="tool-card__content"><span class="tool-card__title">レールタウン・レイアウト</span><span class="tool-card__description">線路、駅、踏切、ポイントを自由に配置して、電車を走らせるレイアウトゲームです。</span><span class="tool-card__category">電車・子ども向け</span><span class="tool-card__meta">PC・スマートフォン対応・端末内保存</span></span><span class="tool-card__arrow" aria-hidden="true">遊ぶ →</span></a></li>
-          <li data-category="fishing"><a class="tool-card" href="./tools/sakamoto-kiss-fishing/"><span class="tool-number">008</span><span class="tool-card__content"><span class="tool-card__title">坂本のキス釣り</span><span class="tool-card__description">投げて、海底をさびいて、アタリに合わせる3分間のキス釣りゲームです。</span><span class="tool-card__category">釣り</span><span class="tool-card__meta">PC・スマートフォン対応・端末内記録</span></span><span class="tool-card__arrow" aria-hidden="true">釣る →</span></a></li>
-          <li data-category="utility"><a class="tool-card" href="./tools/table-editor/"><span class="tool-number">009</span><span class="tool-card__content"><span class="tool-card__title">表整形・編集ツール</span><span class="tool-card__description">Markdown・CSV・TSVの表を読み込み、並べ替えや編集、コピーができます。</span><span class="tool-card__category">編集・便利</span><span class="tool-card__meta">PC・スマートフォン対応・端末内処理</span></span><span class="tool-card__arrow" aria-hidden="true">編集する →</span></a></li>
-          <li data-category="music"><a class="tool-card" href="./tools/chord-piano/"><span class="tool-number">010</span><span class="tool-card__content"><span class="tool-card__title">コード鍵盤</span><span class="tool-card__description">鍵盤を見て・聴いて・押しながら、ピアノコードの構成音を練習します。</span><span class="tool-card__category">音楽・学習</span><span class="tool-card__meta">PC・スマートフォン対応・Web Audio</span></span><span class="tool-card__arrow" aria-hidden="true">練習する →</span></a></li>
-        </ol>
-        <p id="catalog-empty" class="catalog-empty" hidden>該当するツールがありません。検索語やカテゴリーを変更してください。</p>
       </div>
-    </section>
+      <ol id="tool-list" class="tool-grid">
+        <li data-category="work"><a class="tool-card" href="./tools/offset-capability-lab/"><span class="tool-number">001</span><span class="tool-card__content"><span class="tool-card__title">Offset Capability Lab</span><span class="tool-card__description">工程能力指数（Cp・Cpk）とヒストグラムを比較します。</span><span class="tool-card__category">仕事・設計</span><span class="tool-card__meta">PC・スマートフォン対応</span></span><span class="tool-card__arrow" aria-hidden="true">開く →</span></a></li>
+        <li data-category="work"><a class="tool-card" href="./tools/drawing-annotation/"><span class="tool-number">002</span><span class="tool-card__content"><span class="tool-card__title">図面注釈ツール</span><span class="tool-card__description">画像や図面に注釈を書き込み、PNGで出力します。</span><span class="tool-card__category">仕事・設計</span><span class="tool-card__meta">PC・スマートフォン・ペン対応</span></span><span class="tool-card__arrow" aria-hidden="true">開く →</span></a></li>
+        <li data-category="work"><a class="tool-card" href="./tools/screw-diameter-comparator/"><span class="tool-number">003</span><span class="tool-card__content"><span class="tool-card__title">スクリュ径A/B比較ツール</span><span class="tool-card__description">射出成形機のスクリュ径による流量・充填体積・必要ストロークの違いを比較します。</span><span class="tool-card__category">仕事・設計</span><span class="tool-card__meta">PC・スマートフォン対応</span></span><span class="tool-card__arrow" aria-hidden="true">開く →</span></a></li>
+        <li data-category="trains"><a class="tool-card" href="./tools/train-crossing/"><span class="tool-number">004</span><span class="tool-card__content"><span class="tool-card__title">でんしゃを走らせよう！</span><span class="tool-card__description">タップで電車を走らせ、踏切とトンネルを越えて次の駅を目指すミニゲームです。</span><span class="tool-card__category">電車・子ども向け</span><span class="tool-card__meta">PC・スマートフォン対応</span></span><span class="tool-card__arrow" aria-hidden="true">開く →</span></a></li>
+        <li data-category="trains"><a class="tool-card" href="./tools/sakamoto-railway/"><span class="tool-number">005</span><span class="tool-card__content"><span class="tool-card__title">坂本電鉄 海岸線</span><span class="tool-card__description">マスコン、ブレーキ、ドア、車内放送を操作して終点を目指す電車運転ゲームです。</span><span class="tool-card__category">電車・子ども向け</span><span class="tool-card__meta">PWA・スマートフォン対応</span></span><span class="tool-card__arrow" aria-hidden="true">運転する →</span></a></li>
+        <li data-category="fishing"><a class="tool-card" href="./tools/sakamoto-kiss-navi/"><span class="tool-number">006</span><span class="tool-card__content"><span class="tool-card__title">坂本キスナビ</span><span class="tool-card__description">キスの釣果、潮、風、投げた方向と距離を記録し、着水点をヒートマップで振り返ります。</span><span class="tool-card__category">釣り</span><span class="tool-card__meta">スマートフォン対応・端末内保存</span></span><span class="tool-card__arrow" aria-hidden="true">記録する →</span></a></li>
+        <li data-category="trains"><a class="tool-card" href="./tools/plarail-layout/"><span class="tool-number">007</span><span class="tool-card__content"><span class="tool-card__title">レールタウン・レイアウト</span><span class="tool-card__description">線路、駅、踏切、ポイントを自由に配置して、電車を走らせるレイアウトゲームです。</span><span class="tool-card__category">電車・子ども向け</span><span class="tool-card__meta">PC・スマートフォン対応・端末内保存</span></span><span class="tool-card__arrow" aria-hidden="true">遊ぶ →</span></a></li>
+        <li data-category="fishing"><a class="tool-card" href="./tools/sakamoto-kiss-fishing/"><span class="tool-number">008</span><span class="tool-card__content"><span class="tool-card__title">坂本のキス釣り</span><span class="tool-card__description">投げて、海底をさびいて、アタリに合わせる3分間のキス釣りゲームです。</span><span class="tool-card__category">釣り</span><span class="tool-card__meta">PC・スマートフォン対応・端末内記録</span></span><span class="tool-card__arrow" aria-hidden="true">釣る →</span></a></li>
+        <li data-category="utility"><a class="tool-card" href="./tools/table-editor/"><span class="tool-number">009</span><span class="tool-card__content"><span class="tool-card__title">表整形・編集ツール</span><span class="tool-card__description">Markdown・CSV・TSVの表を読み込み、並べ替えや編集、コピーができます。</span><span class="tool-card__category">編集・便利</span><span class="tool-card__meta">PC・スマートフォン対応・端末内処理</span></span><span class="tool-card__arrow" aria-hidden="true">編集する →</span></a></li>
+        <li data-category="music"><a class="tool-card" href="./tools/chord-piano/"><span class="tool-number">010</span><span class="tool-card__content"><span class="tool-card__title">コード鍵盤</span><span class="tool-card__description">鍵盤を見て・聴いて・押しながら、ピアノコードの構成音を練習します。</span><span class="tool-card__category">音楽・学習</span><span class="tool-card__meta">PC・スマートフォン対応・Web Audio</span></span><span class="tool-card__arrow" aria-hidden="true">練習する →</span></a></li>
+        <li data-category="finance"><a class="tool-card" href="./tools/investment-simulator/"><span class="tool-number">011</span><span class="tool-card__content"><span class="tool-card__title">積立投資シミュレーター</span><span class="tool-card__description">初期投資と毎月の積立から、将来資産・元本・運用益をグラフで試算します。</span><span class="tool-card__category">お金・資産形成</span><span class="tool-card__meta">PC・スマートフォン対応・端末内計算</span></span><span class="tool-card__arrow" aria-hidden="true">試算する →</span></a></li>
+      </ol>
+      <p id="catalog-empty" class="catalog-empty" hidden>該当するツールがありません。検索語やカテゴリーを変更してください。</p>
+    </div></section>
   </main>
-
   <footer class="site-footer"><div class="container"><p>&copy; My HTML Tools</p></div></footer>
   <script>
     (() => {
@@ -102,7 +82,6 @@
       const count = document.getElementById('result-count');
       const empty = document.getElementById('catalog-empty');
       let activeCategory = 'all';
-
       function updateResults() {
         const query = search.value.normalize('NFKC').toLocaleLowerCase('ja').trim();
         let visible = 0;
@@ -115,13 +94,10 @@
         count.textContent = `${visible}件表示 / 全${items.length}件`;
         empty.hidden = visible !== 0;
       }
-
       buttons.forEach((button) => {
         button.addEventListener('click', () => {
           activeCategory = button.dataset.filter;
-          buttons.forEach((candidate) => {
-            candidate.setAttribute('aria-pressed', String(candidate === button));
-          });
+          buttons.forEach(candidate => candidate.setAttribute('aria-pressed', String(candidate === button)));
           updateResults();
         });
       });
