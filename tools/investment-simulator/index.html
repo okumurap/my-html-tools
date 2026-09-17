@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="初期投資・毎月積立・年利・年数から将来の資産額を試算。元本と運用益の推移も確認できます。">
+<meta name="theme-color" content="#f6f7f8">
+<title>積立投資シミュレーター | My HTML Tools</title>
+<style>
+:root{color-scheme:light;--bg:#f6f7f8;--surface:#fff;--text:#20252b;--muted:#66707b;--border:#dde2e7;--accent:#2563a9;--accent-light:#edf4fd;--principal:#94a3b8;--gain:#1c9b82;--loss:#c2414e}
+*{box-sizing:border-box}
+html{background:var(--bg);scroll-behavior:smooth}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;color:var(--text);line-height:1.5}
+button,input{font:inherit}button{cursor:pointer;touch-action:manipulation}
+a{color:var(--accent)}
+.shell{width:min(100% - 24px,820px);margin:0 auto;padding:14px 0 36px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.top a{font-size:.85rem;text-decoration:none}
+h1{font-size:clamp(1.27rem,4vw,1.65rem);margin:0;letter-spacing:-.025em}
+.subtitle{color:var(--muted);font-size:.82rem;margin:4px 0 0}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-top:12px}
+.panel h2{font-size:1rem;margin:0 0 12px}
+.controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 20px}
+.field{min-width:0}
+.field-head{display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-bottom:5px}
+.field label{font-weight:700;font-size:.86rem}
+.number-wrap{display:flex;align-items:center;gap:4px}
+.number-wrap input{width:85px;min-width:0;padding:5px 7px;border:1px solid var(--border);border-radius:7px;text-align:right;font-size:16px;color:var(--text);background:var(--surface);font-variant-numeric:tabular-nums}
+.unit{font-size:.78rem;color:var(--muted);white-space:nowrap}
+input[type=range]{display:block;width:100%;height:25px;margin:2px 0 0;accent-color:var(--accent);touch-action:pan-y}
+.bounds{display:flex;justify-content:space-between;font-size:.68rem;color:var(--muted);line-height:1.2}
+.actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;flex-wrap:wrap}
+.hint{font-size:.74rem;color:var(--muted)}
+.reset{background:var(--surface);border:1px solid var(--border);border-radius:8px;min-height:40px;padding:6px 12px;font-size:.83rem;color:var(--text)}
+.summary{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(2,minmax(0,1fr));gap:10px}
+.metric{background:var(--bg);border-radius:10px;padding:10px;min-width:0}
+.metric.primary{background:var(--accent-light)}
+.metric-label{display:block;color:var(--muted);font-size:.75rem}
+.metric strong{display:block;font-size:clamp(.96rem,3vw,1.35rem);line-height:1.4;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.metric.primary strong{font-size:clamp(1.35rem,4.2vw,2rem);color:var(--accent)}
+.metric .small{font-size:.7rem;color:var(--muted)}
+.split{display:flex;width:100%;height:10px;overflow:hidden;border-radius:999px;background:var(--bg);margin:13px 0 5px}
+.split span{display:block;transition:width .12s linear}
+.split .principal{background:var(--principal)}
+.split .gain{background:var(--gain)}
+.split .loss{background:var(--loss)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.72rem;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;background:var(--principal)}
+.legend .growth::before{background:var(--gain)}
+.legend .negative::before{background:var(--loss)}
+.figure{margin:0}
+.figure svg{display:block;width:100%;height:auto;overflow:visible}
+.figure figcaption{font-size:.73rem;color:var(--muted);margin-top:5px}
+svg text{font-family:inherit;fill:var(--muted);font-size:12px}
+svg .grid{stroke:var(--border);stroke-width:1}
+svg .total{stroke:var(--accent);stroke-width:3;fill:none;stroke-linejoin:round;stroke-linecap:round}
+svg .invested{stroke:var(--principal);stroke-width:2;fill:none;stroke-dasharray:5 4;stroke-linejoin:round}
+.details{margin-top:12px;border-top:1px solid var(--border);padding-top:10px}
+.details summary{cursor:pointer;font-size:.85rem;font-weight:700;touch-action:manipulation}
+.table-wrap{max-height:310px;overflow:auto;margin-top:10px;border:1px solid var(--border);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:.79rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+th,td{padding:7px 9px;border-bottom:1px solid var(--border);text-align:right}
+th:first-child,td:first-child{text-align:left}thead{position:sticky;top:0;background:var(--bg)}
+.note{color:var(--muted);font-size:.73rem;line-height:1.65;margin:12px 2px 0}
+@media(max-width:560px){.shell{width:min(100% - 20px,820px);padding-top:10px}.panel{padding:12px;margin-top:10px}.controls{grid-template-columns:1fr;gap:12px}.summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.metric.primary{grid-column:1/-1}.metric.primary strong{font-size:1.85rem}.field-head{align-items:center}.field label{font-size:.85rem}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main class="shell">
+  <header class="top"><div><h1>積立投資シミュレーター</h1><p class="subtitle">一括投資＋毎月積立の将来額をすばやく試算</p></div><a href="../../index.html">ツール一覧へ ↗</a></header>
+  <section class="panel" aria-labelledby="conditions"><h2 id="conditions">投資条件</h2>
+    <div class="controls">
+      <div class="field"><div class="field-head"><label for="initial">初期投資額</label><div class="number-wrap"><input id="initial" type="number" min="0" max="20000" step="100" value="2000" inputmode="numeric"><span class="unit">万円</span></div></div><input id="initial-range" type="range" min="0" max="20000" step="100" value="2000" aria-label="初期投資額（100万円刻み）"><div class="bounds"><span>0万円</span><span>2億円</span></div></div>
+      <div class="field"><div class="field-head"><label for="monthly">毎月の積立額</label><div class="number-wrap"><input id="monthly" type="number" min="0" max="100" step="5" value="10" inputmode="numeric"><span class="unit">万円</span></div></div><input id="monthly-range" type="range" min="0" max="100" step="5" value="10" aria-label="毎月の積立額（5万円刻み）"><div class="bounds"><span>0万円</span><span>100万円</span></div></div>
+      <div class="field"><div class="field-head"><label for="rate">想定年利</label><div class="number-wrap"><input id="rate" type="number" min="-5" max="15" step="1" value="5" inputmode="numeric"><span class="unit">%</span></div></div><input id="rate-range" type="range" min="-5" max="15" step="1" value="5" aria-label="想定年利（1パーセント刻み）"><div class="bounds"><span>−5%</span><span>15%</span></div></div>
+      <div class="field"><div class="field-head"><label for="years">積立・運用期間</label><div class="number-wrap"><input id="years" type="number" min="5" max="50" step="5" value="20" inputmode="numeric"><span class="unit">年</span></div></div><input id="years-range" type="range" min="5" max="50" step="5" value="20" aria-label="積立・運用期間（5年刻み）"><div class="bounds"><span>5年</span><span>50年</span></div></div>
+    </div><div class="actions"><span class="hint">数値入力・スライダー両方に対応</span><button id="reset" class="reset" type="button">初期値に戻す</button></div>
+  </section>
+  <section class="panel" aria-labelledby="results"><h2 id="results">シミュレーション結果</h2>
+    <div class="summary"><div class="metric primary"><span class="metric-label">期間終了時の資産額</span><strong id="final">—</strong><span class="small">万円単位・概算</span></div><div class="metric"><span class="metric-label">投資元本</span><strong id="principal">—</strong></div><div class="metric"><span class="metric-label">運用損益</span><strong id="profit">—</strong></div></div>
+    <div class="split" role="img" id="split" aria-label="元本と運用益の構成"><span class="principal" id="principal-bar"></span><span class="gain" id="gain-bar"></span></div><div class="legend"><span>投資元本</span><span id="gain-label" class="growth">運用益</span></div>
+  </section>
+  <section class="panel" aria-labelledby="chart-title"><h2 id="chart-title">資産の推移</h2><figure class="figure"><svg id="chart" role="img" aria-label="年ごとの資産額と投資元本の推移" viewBox="0 0 660 240" preserveAspectRatio="xMidYMid meet"></svg><figcaption>青：資産額 ／ 破線：投資元本（万円）</figcaption></figure>
+    <details class="details"><summary>年ごとの数値を表示</summary><div class="table-wrap"><table><thead><tr><th scope="col">経過</th><th scope="col">投資元本</th><th scope="col">資産額</th><th scope="col">運用損益</th></tr></thead><tbody id="annual-rows"></tbody></table></div></details>
+  </section>
+  <p class="note">試算条件：年利は毎月の複利利率に換算し、初期投資は開始時・積立は毎月末に実施。利回りは全期間一定と仮定し、税金・手数料・インフレ・値動きは考慮しません。将来の運用成果を予測・保証するものではありません。</p>
+</main>
+<script>
+(() => {
+  'use strict';
+  const definitions = [
+    {id:'initial',min:0,max:20000,step:100,defaultValue:2000},
+    {id:'monthly',min:0,max:100,step:5,defaultValue:10},
+    {id:'rate',min:-5,max:15,step:1,defaultValue:5},
+    {id:'years',min:5,max:50,step:5,defaultValue:20}
+  ];
+  const $ = id => document.getElementById(id);
+  const format = value => Math.round(value).toLocaleString('ja-JP') + '万円';
+  const signed = value => (value>0?'+':'') + Math.round(value).toLocaleString('ja-JP') + '万円';
+  const clamp = (v,def) => Math.min(def.max,Math.max(def.min,Math.round((v-def.min)/def.step)*def.step+def.min));
+  const read = id => Number($(id).value);
+  function simulate(initial,monthly,rate,years){
+    const monthlyRate = Math.pow(1+rate/100,1/12)-1;
+    let balance=initial, principal=initial;
+    const points=[{year:0,balance,principal}];
+    for(let month=1;month<=years*12;month++){
+      balance=balance*(1+monthlyRate)+monthly;
+      principal+=monthly;
+      if(month%12===0)points.push({year:month/12,balance,principal});
+    }
+    return points;
+  }
+  function svgEl(tag,attributes,text){
+    const el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+    Object.entries(attributes).forEach(([name,value])=>el.setAttribute(name,String(value)));
+    if(text!==undefined)el.textContent=text;
+    return el;
+  }
+  function draw(points){
+    const svg=$('chart');svg.replaceChildren();
+    const w=660,h=240,left=68,right=14,top=12,bottom=30;
+    const maxValue=Math.max(1,...points.map(p=>Math.max(p.balance,p.principal)))*1.1;
+    const x=yr=>left+(w-left-right)*yr/points.at(-1).year;
+    const y=value=>h-bottom-(h-top-bottom)*value/maxValue;
+    for(let i=0;i<=4;i++){
+      const val=maxValue*i/4,py=y(val);
+      svg.append(svgEl('line',{x1:left,y1:py,x2:w-right,y2:py,class:'grid'}));
+      svg.append(svgEl('text',{x:left-7,y:py+4,'text-anchor':'end'},Math.round(val).toLocaleString('ja-JP')));
+    }
+    const duration=points.at(-1).year;
+    for(let yr=0;yr<=duration;yr+=5){
+      svg.append(svgEl('text',{x:x(yr),y:h-8,'text-anchor':yr===0?'start':yr===duration?'end':'middle'},yr+'年'));
+    }
+    const path=field=>points.map((p,i)=>(i?'L':'M')+x(p.year).toFixed(2)+','+y(p[field]).toFixed(2)).join(' ');
+    svg.append(svgEl('path',{d:path('principal'),class:'invested'}));
+    svg.append(svgEl('path',{d:path('balance'),class:'total'}));
+  }
+  function render(){
+    const points=simulate(read('initial'),read('monthly'),read('rate'),read('years'));
+    const last=points.at(-1),gain=last.balance-last.principal;
+    $('final').textContent=format(last.balance);
+    $('principal').textContent=format(last.principal);
+    $('profit').textContent=signed(gain);
+    $('profit').style.color=gain<0?'var(--loss)':'var(--gain)';
+    const total=Math.max(last.principal,last.balance,1);
+    const principalShare=gain>=0?last.principal/Math.max(last.balance,1)*100:100;
+    $('principal-bar').style.width=principalShare+'%';
+    $('gain-bar').style.width=(gain>0?100-principalShare:0)+'%';
+    $('gain-label').textContent=gain<0?'運用損失（棒は元本基準）':'運用益';
+    $('gain-label').className=gain<0?'negative':'growth';
+    $('split').setAttribute('aria-label','元本 '+format(last.principal)+'、運用損益 '+signed(gain));
+    draw(points);
+    const rows=document.createDocumentFragment();
+    points.forEach(p=>{
+      const tr=document.createElement('tr');
+      [p.year+'年',format(p.principal),format(p.balance),signed(p.balance-p.principal)].forEach(value=>{
+        const td=document.createElement('td');td.textContent=value;tr.append(td);
+      });rows.append(tr);
+    });
+    $('annual-rows').replaceChildren(rows);
+  }
+  definitions.forEach(def=>{
+    const number=$(def.id),range=$(def.id+'-range');
+    range.addEventListener('input',()=>{number.value=range.value;render();});
+    number.addEventListener('change',()=>{
+      const raw=Number(number.value);
+      const normalized=number.value.trim()===''||!Number.isFinite(raw)?def.defaultValue:clamp(raw,def);
+      number.value=range.value=String(normalized);
+      render();
+    });
+  });
+  $('reset').addEventListener('click',()=>{
+    definitions.forEach(def=>{$(def.id).value=$(def.id+'-range').value=def.defaultValue;});
+    render();
+  });
+  render();
+})();
+</script>
+</body>
+</html>
