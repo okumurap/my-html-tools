@@ -1,0 +1,30 @@
+name: One-time clamp slider adjustment
+on:
+  push:
+    paths:
+      - '.github/workflows/clamp-slider-update-once.yml'
+permissions:
+  contents: write
+jobs:
+  adjust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Change only machine slider bounds and default
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('tools/clamp-force-calculator/index.html')
+          source = path.read_text(encoding='utf-8')
+          old = "{key:'machine',label:'成形機定格型締力',unit:'tf',min:50,max:1500,step:10,initial:300}"
+          new = "{key:'machine',label:'成形機定格型締力',unit:'tf',min:50,max:220,step:10,initial:200}"
+          assert source.count(old) == 1, 'Expected exactly one machine slider configuration'
+          path.write_text(source.replace(old, new), encoding='utf-8')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tools/clamp-force-calculator/index.html
+          git commit -m 'Set clamp force machine slider to 220 tf'
+          git push origin HEAD:main
