@@ -10,16 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inspect targeted source code
+      - name: Inspect restore and inline edit code
         run: |
           python3 - <<'PY'
           from pathlib import Path
           lines=Path('tools/drawing-pdf-dimension-manager/index.html').read_text(encoding='utf-8').splitlines()
-          for start,end in [(1,125),(180,255),(334,359),(378,445),(460,525),(552,559)]:
+          for start,end in [(250,288),(442,460),(526,562)]:
             print(f'===== LINES {start}-{end} =====')
             for n in range(start,end+1):
               if n>len(lines):break
               value=lines[n-1]
-              if len(value)>1100:value=value[:450]+' ... [TRUNCATED] ... '+value[-300:]
+              if len(value)>1200:value=value[:700]+' ... [TRUNCATED] ... '+value[-300:]
               print(f'{n:04d}: {value}')
           PY
