@@ -1,0 +1,24 @@
+document.getElementById("advanced-sections").insertAdjacentHTML("beforeend", `
+  <section class="panel feature-panel" aria-labelledby="inflation-title"><h2 id="inflation-title">④ インフレ調整・現在価値</h2>
+    <p class="description">将来のお金の価値を、現在の購買力に換算。名目資産額とインフレを割り引いた資産額を同じグラフで比較します。</p>
+    <div class="advanced-grid"><div class="field"><div class="field-head"><label for="inflation-rate">毎年の想定インフレ率</label><div class="number-wrap"><input id="inflation-rate" type="number" min="0" max="10" step="0.5" value="2" inputmode="decimal"><span class="unit">%</span></div></div><input id="inflation-rate-range" type="range" min="0" max="10" step="0.5" value="2" aria-label="インフレ率"><div class="bounds"><span>0%</span><span>10%</span></div></div></div>
+    <div class="feature-results" aria-live="polite"><div class="metric primary"><span class="metric-label">最終資産の現在価値</span><strong id="real-final">—</strong></div><div class="metric"><span class="metric-label">名目資産額</span><strong id="nominal-final">—</strong></div><div class="metric"><span class="metric-label">購買力換算の差額</span><strong id="real-gap">—</strong></div></div>
+    <figure class="figure"><svg id="inflation-chart" role="img" aria-label="名目資産と現在価値の年次推移" viewBox="0 0 660 240" preserveAspectRatio="xMidYMid meet"></svg><div class="chart-caption"><span>名目資産</span><span class="real">現在価値</span></div><figcaption>万円。すべて試算開始時点の物価水準に換算。インフレ率は一定と仮定します。</figcaption></figure>
+    <details class="details"><summary>名目資産・現在価値の年次表</summary><div class="table-wrap"><table><thead><tr><th>経過</th><th>名目資産</th><th>現在価値</th></tr></thead><tbody id="inflation-rows"></tbody></table></div></details>
+  </section>
+  <section class="panel feature-panel" aria-labelledby="withdraw-title"><h2 id="withdraw-title">⑤ 積立後の取り崩し</h2>
+    <p class="description">基本条件で積み立てた資産を運用終了時に引き継ぎ、その後は毎月初めに取り崩します。資金不足になる年齢と目標年齢時点の残高を試算します。</p>
+    <div class="advanced-grid">
+      <div class="field"><div class="field-head"><label for="current-age">現在の年齢</label><div class="number-wrap"><input id="current-age" type="number" min="20" max="70" step="1" value="40" inputmode="numeric"><span class="unit">歳</span></div></div><input id="current-age-range" type="range" min="20" max="70" step="1" value="40" aria-label="現在の年齢"><div class="bounds"><span>20歳</span><span>70歳</span></div></div>
+      <div class="field"><div class="field-head"><label for="end-age">取り崩し試算の終了年齢</label><div class="number-wrap"><input id="end-age" type="number" min="60" max="120" step="1" value="90" inputmode="numeric"><span class="unit">歳</span></div></div><input id="end-age-range" type="range" min="60" max="120" step="1" value="90" aria-label="終了年齢"><div class="bounds"><span>60歳</span><span>120歳</span></div></div>
+      <div class="field"><div class="field-head"><label for="withdraw-monthly">毎月の取り崩し開始額</label><div class="number-wrap"><input id="withdraw-monthly" type="number" min="0" max="100" step="1" value="20" inputmode="decimal"><span class="unit">万円</span></div></div><input id="withdraw-monthly-range" type="range" min="0" max="100" step="1" value="20" aria-label="毎月の取り崩し額"><div class="bounds"><span>0万円</span><span>100万円</span></div></div>
+      <div class="field"><div class="field-head"><label for="withdraw-rate">取り崩し期の想定年利</label><div class="number-wrap"><input id="withdraw-rate" type="number" min="-5" max="15" step="0.5" value="3" inputmode="decimal"><span class="unit">%</span></div></div><input id="withdraw-rate-range" type="range" min="-5" max="15" step="0.5" value="3" aria-label="取り崩し期の想定年利"><div class="bounds"><span>−5%</span><span>15%</span></div></div>
+      <div class="field"><label class="toggle-row" for="withdraw-inflate"><input id="withdraw-inflate" type="checkbox">取り崩し額を物価に連動して年1回増額</label><span class="hint">上のインフレ率（初期値2%）を適用</span></div>
+    </div>
+    <p class="inline-note" id="withdraw-start">—</p>
+    <div class="feature-results" aria-live="polite"><div class="metric primary"><span class="metric-label">終了年齢での資産残高</span><strong id="withdraw-final">—</strong></div><div class="metric"><span class="metric-label">毎月の取り崩しが不足する時期</span><strong id="withdraw-exhaust">—</strong></div><div class="metric"><span class="metric-label">期間中に実際に取り崩せる合計</span><strong id="withdraw-paid">—</strong></div></div>
+    <figure class="figure"><svg id="withdraw-chart" role="img" aria-label="積立開始から取り崩し終了までの資産推移" viewBox="0 0 660 240" preserveAspectRatio="xMidYMid meet"></svg><div class="chart-caption"><span>積立期</span><span class="withdraw">取り崩し期</span></div><figcaption>万円。年齢軸で表示。積立中は基本条件、取り崩し中は上記年利を適用します。</figcaption></figure>
+    <details class="details"><summary>年齢ごとの資産残高</summary><div class="table-wrap"><table><thead><tr><th>年齢</th><th>資産額</th><th>累計取り崩し額</th></tr></thead><tbody id="withdraw-rows"></tbody></table></div></details>
+    <p class="inline-note">生活費・年金・税金・手数料は別途考慮しません。資産が不足すると残高は0で止め、不足した取り崩し額を借入金として計上しません。</p>
+  </section>
+`);
