@@ -10,27 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inspect source without embedded PDF libraries
+      - name: Inspect targeted source code
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
-          s=Path('tools/drawing-pdf-dimension-manager/index.html').read_text(encoding='utf-8')
-          print('SOURCE LENGTH:',len(s),'LINES:',s.count('\n')+1)
-          terms=['分類','測定方法','category','measurement','measureMethod','renderMarkers','renderAnnotations','drawMarker','undo','exportCSV','localStorage','dimensions','dimensionRows','dimTable','saveJSON','measurementMethod','分類別','フィルタ']
-          lines=s.splitlines()
-          hits=[]
-          for i,line in enumerate(lines):
-            if len(line)>500: continue
-            if any(t.lower() in line.lower() for t in terms): hits.append(i)
-          print('HIT COUNT:',len(hits))
-          indices=set()
-          for i in hits[:230]: indices.update(range(max(i-2,0),min(i+3,len(lines))))
-          budget=50000
-          for i in sorted(indices):
-            text=lines[i]
-            if len(text)>600: text=text[:300]+' ... [LONG LINE] ... '+text[-200:]
-            formatted=f'{i+1:05d}: {text}'
-            if budget-len(formatted)<0: break
-            print(formatted);budget-=len(formatted)
+          lines=Path('tools/drawing-pdf-dimension-manager/index.html').read_text(encoding='utf-8').splitlines()
+          for start,end in [(1,125),(180,255),(334,359),(378,445),(460,525),(552,559)]:
+            print(f'===== LINES {start}-{end} =====')
+            for n in range(start,end+1):
+              if n>len(lines):break
+              value=lines[n-1]
+              if len(value)>1100:value=value[:450]+' ... [TRUNCATED] ... '+value[-300:]
+              print(f'{n:04d}: {value}')
           PY
