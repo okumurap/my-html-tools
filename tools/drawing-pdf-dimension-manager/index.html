@@ -21,6 +21,18 @@ aside{display:flex;flex-direction:column}.sidehead{padding:9px;border-bottom:1px
 @media(max-width:1180px){:root{--head-h:126px}.toolbar-row{flex-wrap:wrap}.layout{grid-template-columns:minmax(0,1fr) 320px}}
 </style>
 <style>.tol-preview{grid-column:1/-1;padding:8px 10px;border-radius:7px;background:#f0fdf4;color:#166534;font-size:12px;line-height:1.5}.tol-preview.invalid{background:#fef2f2;color:#b91c1c}.tol-preview.muted{background:#f8fafc;color:#64748b}</style>
+<style id="confirmation-upgrade-v1">
+.confirmation-controls{display:grid;gap:5px;margin-top:8px;padding:8px;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc}
+.confirmation-controls label{display:grid;gap:3px;color:#334155;font-size:11px;font-weight:700}
+.confirmation-controls select{min-width:0;width:100%;padding:6px;border:1px solid #94a3b8;border-radius:6px;background:#fff;font-size:12px}
+.confirmation-controls details{font-size:11px}.confirmation-controls summary{cursor:pointer;font-weight:700}
+.confirmation-editor{display:grid;gap:5px;margin-top:6px}.confirmation-editor-row{display:grid;grid-template-columns:minmax(0,1fr) 35px 25px;align-items:center;gap:4px}
+.confirmation-editor-row input[type=text]{width:100%;min-width:0;border:1px solid #cbd5e1;border-radius:5px;padding:5px;font-size:11px}
+.confirmation-editor-row input[type=color]{width:35px;height:30px;padding:2px;border:1px solid #cbd5e1;border-radius:5px;background:#fff}
+.confirmation-editor-row button{border:0;background:#e2e8f0;border-radius:5px;height:28px}.confirmation-editor-row button:disabled{opacity:.3}
+.confirmation-disclaimer{margin:6px 0 0;color:#64748b;line-height:1.5}
+#confirmationCategory{border-left:5px solid #64748b}
+</style>
 </head>
 <body>
 <header class="head">
@@ -68,6 +80,15 @@ aside{display:flex;flex-direction:column}.sidehead{padding:9px;border-bottom:1px
   <aside class="panel">
     <div class="sidehead">
       <div class="hint">枠をダブルクリック、または一覧をダブルクリックして編集。手動順のときだけドラッグ並べ替えできます。</div>
+      <div class="confirmation-controls" aria-label="確認方法による色分け">
+        <label>連続登録の確認方法<select id="defaultConfirmation" aria-label="新規寸法に適用する確認方法"></select></label>
+        <label>表示する確認方法<select id="confirmationFilter" aria-label="図面と一覧の確認方法フィルター"></select></label>
+        <details id="confirmationSettings"><summary>カテゴリの名前・色を編集</summary>
+          <div id="confirmationEditor" class="confirmation-editor"></div>
+          <button id="addConfirmationCategory" type="button" class="btn small">＋ カテゴリ追加</button>
+          <p class="confirmation-disclaimer">金型精度による代替確認は、収縮・反り等を考慮した適用根拠が必要です。</p>
+        </details>
+      </div>
       <div class="side-tools">
         <input id="search" class="search" placeholder="ID・寸法・備考を検索">
         <select id="sort" class="sort">
@@ -98,8 +119,9 @@ aside{display:flex;flex-direction:column}.sidehead{padding:9px;border-bottom:1px
       <label><span>上公差</span><input id="upperTolerance" type="number" step="any"></label>
       <label><span>下公差</span><input id="lowerTolerance" type="number" step="any"></label>
       <div id="tolPreview" class="tol-preview muted">基準値と上下公差を入力すると、最大・最小許容寸法を表示します。</div>
-      <label><span>分類</span><input id="category" placeholder="径、距離、平面度など"></label>
-      <label><span>測定方法</span><input id="measurementMethod" placeholder="三次元測定、ノギスなど"></label>
+      <label><span>寸法種別（任意）</span><input id="category" placeholder="径、距離、平面度など"></label>
+      <label><span>確認方法（色分け）</span><select id="confirmationCategory"></select></label>
+      <label><span>測定器・詳細（任意）</span><input id="measurementMethod" placeholder="接触式CMM、ノギスなど"></label>
       <label><span>重要度</span><select id="importance"><option value="通常">通常</option><option value="重要">重要</option><option value="参考">参考</option></select></label>
       <label><span>ページ</span><input id="pageDisplay" disabled></label>
       <label class="wide"><span>備考</span><textarea id="note"></textarea></label>
@@ -198,19 +220,97 @@ const selected=()=>S.markers.find(m=>m.key===S.selectedKey)||null;
 const toNum=v=>v===''||v==null?null:Number(v);
 const numText=v=>v==null||Number.isNaN(v)?'':String(v);
 
+// confirmation-upgrade-v1: stable IDs; measurement method and work orientation are stored independently.
+const DEFAULT_CONFIRMATIONS=[
+  {id:'cmm-front',name:'3次元測定（表）',color:'#0072B2'},
+  {id:'cmm-back',name:'3次元測定（裏）',color:'#D55E00'},
+  {id:'general',name:'汎用測定',color:'#009E73'},
+  {id:'optical',name:'画像・投影測定',color:'#B56B00'},
+  {id:'mold',name:'金型精度で代替確認',color:'#8B5BC7'},
+  {id:'excluded',name:'測定対象外',color:'#64748B'}
+];
+const validColor=c=>/^#[0-9a-f]{6}$/i.test(String(c||''));
+function normalizeConfirmations(value){
+  const supplied=Array.isArray(value)?value:[];
+  const byId=new Map(supplied.filter(c=>c&&typeof c.id==='string').map(c=>[c.id,c]));
+  const builtIn=DEFAULT_CONFIRMATIONS.map(c=>{
+    const v=byId.get(c.id)||{};
+    return {...c,name:typeof v.name==='string'&&v.name.trim()?v.name.trim().slice(0,45):c.name,color:validColor(v.color)?v.color:c.color};
+  });
+  const custom=[],seen=new Set(builtIn.map(c=>c.id));
+  for(const c of supplied){
+    if(!c||typeof c.id!=='string'||!c.id.startsWith('custom-')||seen.has(c.id))continue;
+    if(typeof c.name!=='string'||!c.name.trim())continue;
+    seen.add(c.id);custom.push({id:c.id,name:c.name.trim().slice(0,45),color:validColor(c.color)?c.color:'#64748B'});
+  }
+  return builtIn.concat(custom);
+}
+S.confirmationCategories=normalizeConfirmations();S.activeConfirmation='';S.confirmationFilter='all';
+function recordConfirmationChange(){if(S.data)recordHistory();else{resetHistory();setDirty(false)}}
+function confirmationParts(id){
+  if(id==='cmm-front')return {method:'cmm',orientation:'front'};
+  if(id==='cmm-back')return {method:'cmm',orientation:'back'};
+  if(id==='general'||id==='optical'||id==='mold'||id==='excluded')return {method:id,orientation:''};
+  if(String(id).startsWith('custom-'))return {method:'custom',orientation:''};
+  return {method:'',orientation:''};
+}
+function confirmationId(m){
+  if(m.confirmationCategory)return String(m.confirmationCategory);
+  if(m.confirmationMethod==='cmm'&&['front','back'].includes(m.measurementOrientation))return 'cmm-'+m.measurementOrientation;
+  if(['general','optical','mold','excluded'].includes(m.confirmationMethod))return m.confirmationMethod;
+  return '';
+}
+function confirmationById(id){return S.confirmationCategories.find(c=>c.id===id)||null}
+function confirmationName(m){return confirmationById(confirmationId(m))?.name||(m.confirmationMethod==='cmm'?'3次元測定（向き未設定）':'未設定')}
+function confirmationColor(m){return confirmationById(confirmationId(m))?.color||'#64748B'}
+function confirmationRgb(m){const c=confirmationColor(m);return {r:parseInt(c.slice(1,3),16)/255,g:parseInt(c.slice(3,5),16)/255,b:parseInt(c.slice(5,7),16)/255}}
+function matchesConfirmation(m){const f=S.confirmationFilter;if(f==='all')return true;if(f==='cmm-all')return m.confirmationMethod==='cmm'||confirmationId(m).startsWith('cmm-');return confirmationId(m)===f}
+function populateConfirmationSelect(el,entries,value){
+  el.replaceChildren();for(const [id,label] of entries){const option=document.createElement('option');option.value=id;option.textContent=label;el.appendChild(option)}
+  el.value=entries.some(([id])=>id===value)?value:'';
+}
+function refreshConfirmationFilter(){
+  const options=[['all',`すべて（${S.markers.length}件）`],['cmm-all',`3次元すべて（${S.markers.filter(m=>m.confirmationMethod==='cmm').length}件）`],
+    ['',`未設定（${S.markers.filter(m=>!confirmationId(m)).length}件）`],
+    ...S.confirmationCategories.map(c=>[c.id,`${c.name}（${S.markers.filter(m=>confirmationId(m)===c.id).length}件）`])];
+  // Filter option for empty ID would conflict with the all/unassigned convention. It is valid on its own.
+  populateConfirmationSelect($('confirmationFilter'),options,S.confirmationFilter);
+}
+function renderConfirmationControls(){
+  const options=[['','未設定'],...S.confirmationCategories.map(c=>[c.id,c.name])];
+  populateConfirmationSelect($('defaultConfirmation'),options,S.activeConfirmation);
+  populateConfirmationSelect($('confirmationCategory'),options,$('confirmationCategory').value);
+  refreshConfirmationFilter();
+  const editor=$('confirmationEditor');editor.replaceChildren();
+  for(const c of S.confirmationCategories){
+    const row=document.createElement('div');row.className='confirmation-editor-row';
+    const name=document.createElement('input');name.type='text';name.value=c.name;name.maxLength=45;name.setAttribute('aria-label','カテゴリ名 '+c.name);
+    name.addEventListener('change',()=>{const value=name.value.trim();if(!value){name.value=c.name;return}if(value===c.name)return;c.name=value;recordConfirmationChange();renderConfirmationControls();renderMarkers();renderList()});
+    const color=document.createElement('input');color.type='color';color.value=c.color;color.setAttribute('aria-label',c.name+' の色');
+    color.addEventListener('change',()=>{if(!validColor(color.value)||color.value.toLowerCase()===c.color.toLowerCase())return;c.color=color.value;recordConfirmationChange();renderConfirmationControls();renderMarkers();renderList()});
+    const del=document.createElement('button');del.type='button';del.textContent='×';del.title='カテゴリ削除';del.disabled=!c.id.startsWith('custom-');
+    del.addEventListener('click',()=>{if(S.markers.some(m=>confirmationId(m)===c.id)){msg('使用中のカテゴリは削除できません');return}S.confirmationCategories=S.confirmationCategories.filter(x=>x.id!==c.id);if(S.activeConfirmation===c.id)S.activeConfirmation='';if(S.confirmationFilter===c.id)S.confirmationFilter='all';recordConfirmationChange();renderConfirmationControls();renderMarkers();renderList()});
+    row.append(name,color,del);editor.appendChild(row);
+  }
+}
+$('defaultConfirmation').addEventListener('change',e=>{S.activeConfirmation=e.target.value});
+$('confirmationFilter').addEventListener('change',e=>{S.confirmationFilter=e.target.value;renderMarkers();renderList()});
+$('addConfirmationCategory').addEventListener('click',()=>{const name=prompt('新しい確認方法カテゴリ名');if(!name||!name.trim())return;const id='custom-'+uid();S.confirmationCategories.push({id,name:name.trim().slice(0,45),color:'#64748B'});S.activeConfirmation=id;recordConfirmationChange();renderConfirmationControls();renderMarkers();renderList()});
+
 function ready(){
   if(!window.pdfjsLib){msg('PDF.jsを読み込めません。HTMLファイルが破損している可能性があります');return false}
   if(window.__pdfWorkerUrl)window.pdfjsLib.GlobalWorkerOptions.workerSrc=window.__pdfWorkerUrl;
   return true;
 }
 function normalizeMarker(m,i=0){
+  const id=confirmationId(m),parts=confirmationParts(id);
   return {
     key:m.key||uid(),id:String(m.id||('D'+String(i+1).padStart(3,'0'))),order:Number.isFinite(+m.order)?+m.order:i+1,
     page:Math.max(1,+m.page||1),x:clamp(+m.x||0,0,1),y:clamp(+m.y||0,0,1),width:clamp(+m.width||.03,.002,1),height:clamp(+m.height||.02,.002,1),
     dimensionText:String(m.dimensionText??m.dimension??''),nominal:m.nominal===''||m.nominal==null?null:+m.nominal,
     upperTolerance:m.upperTolerance===''||m.upperTolerance==null?null:+m.upperTolerance,
     lowerTolerance:m.lowerTolerance===''||m.lowerTolerance==null?null:+m.lowerTolerance,
-    unit:String(m.unit||'mm'),category:String(m.category||''),measurementMethod:String(m.measurementMethod||''),importance:String(m.importance||'通常'),note:String(m.note||'')
+    unit:String(m.unit||'mm'),category:String(m.category||''),measurementMethod:String(m.measurementMethod||''),confirmationCategory:id,confirmationMethod:parts.method||String(m.confirmationMethod||''),measurementOrientation:parts.orientation||String(m.measurementOrientation||''),importance:String(m.importance||'通常'),note:String(m.note||'')
   };
 }
 function normalizeOrders(){
@@ -220,8 +320,8 @@ function nextId(){
   const n=S.markers.reduce((a,m)=>Math.max(a,+(String(m.id).match(/^D(\d+)$/i)?.[1]||0)),0);
   return 'D'+String(n+1).padStart(3,'0');
 }
-function projectObject(){return {version:3,data:S.data,name:S.name,zoom:S.zoom,continuousAdd:S.continuousAdd,markers:deepCopy(S.markers),savedAt:new Date().toISOString()}}
-function snapshot(){return JSON.stringify({markers:S.markers,selectedKey:S.selectedKey})}
+function projectObject(){return {version:4,data:S.data,name:S.name,zoom:S.zoom,continuousAdd:S.continuousAdd,confirmationCategories:deepCopy(S.confirmationCategories),markers:deepCopy(S.markers),savedAt:new Date().toISOString()}}
+function snapshot(){return JSON.stringify({markers:S.markers,selectedKey:S.selectedKey,confirmationCategories:S.confirmationCategories})}
 function resetHistory(){S.history=[snapshot()];S.historyIndex=0;updateControls()}
 function recordHistory(){
   const snap=snapshot();
@@ -233,7 +333,7 @@ function recordHistory(){
 }
 function applyHistory(index){
   if(index<0||index>=S.history.length)return;
-  const h=JSON.parse(S.history[index]);S.historyIndex=index;S.markers=(h.markers||[]).map(normalizeMarker);S.selectedKey=h.selectedKey;
+  const h=JSON.parse(S.history[index]);S.historyIndex=index;S.markers=(h.markers||[]).map(normalizeMarker);S.selectedKey=h.selectedKey;S.confirmationCategories=normalizeConfirmations(h.confirmationCategories);renderConfirmationControls();
   renderMarkers();renderList();setDirty(true);scheduleAutosave();updateControls();
 }
 function undo(){applyHistory(S.historyIndex-1)}
@@ -260,7 +360,7 @@ async function loadFile(f){
 function readAsDataURL(f){return new Promise((res,rej)=>{const r=new FileReader;r.onload=()=>res(String(r.result));r.onerror=rej;r.readAsDataURL(f)})}
 function dataUrlBytes(data){const b=atob(data.split(',')[1]),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
 async function applyProject(p,clean){
-  const old={data:S.data,name:S.name,pdf:S.pdf,zoom:S.zoom,continuousAdd:S.continuousAdd,markers:S.markers,selectedKey:S.selectedKey};
+  const old={data:S.data,name:S.name,pdf:S.pdf,zoom:S.zoom,continuousAdd:S.continuousAdd,markers:S.markers,selectedKey:S.selectedKey,confirmationCategories:S.confirmationCategories};
   try{
     if(!p||typeof p!=='object')throw new Error('Invalid project');
     const nextData=typeof p.data==='string'?p.data:'';if(!nextData)throw new Error('PDF data is missing');
@@ -270,11 +370,11 @@ async function applyProject(p,clean){
     if(nextMarkers.some(m=>m.page>nextPdf.numPages))throw new Error('Marker page is out of range');
     const nextIds=new Set();for(const m of nextMarkers){const id=m.id.trim().toLowerCase();if(!id||nextIds.has(id))throw new Error('Marker ID is empty or duplicated');nextIds.add(id)}
     S.data=nextData;S.name=String(p.name||'drawing.pdf');S.zoom=clamp(+p.zoom||1,.25,4);S.continuousAdd=!!p.continuousAdd;
-    S.markers=nextMarkers;S.selectedKey=null;S.pdf=nextPdf;
+    S.markers=nextMarkers;S.selectedKey=null;S.pdf=nextPdf;S.confirmationCategories=normalizeConfirmations(p.confirmationCategories);S.activeConfirmation='';S.confirmationFilter='all';renderConfirmationControls();
     $('z').textContent=Math.round(S.zoom*100)+'%';await drawPdf();$('drop').classList.add('hidden');renderList();resetHistory();setDirty(!clean);
     updateContinuousButton();msg(S.pdf.numPages+'ページを表示しました');setMode('add');return true;
   }catch(e){
-    console.error(e);Object.assign(S,old);updateContinuousButton();
+    console.error(e);Object.assign(S,old);renderConfirmationControls();updateContinuousButton();
     if(old.pdf){try{await drawPdf();$('drop').classList.add('hidden');renderList()}catch(redrawError){console.error(redrawError)}}
     else{$('pages').innerHTML='';$('drop').classList.remove('hidden');renderList()}
     msg('プロジェクトまたはPDFの解析に失敗しました。元のデータは保持しています');return false;
@@ -332,7 +432,7 @@ function updateMarkerElement(b,m){
   const selected=m.key===S.selectedKey,wasSelected=b.classList.contains('sel');b.className='marker'+(selected?' sel':'');
   Object.assign(b.style,{left:m.x*100+'%',top:m.y*100+'%',width:m.width*100+'%',height:m.height*100+'%'});
   if(selected!==wasSelected||!b.querySelector('.tag'))b.innerHTML='<span class="tag"></span><span class="marker-info"></span>'+(selected?'<i class="handle nw" data-h="nw"></i><i class="handle ne" data-h="ne"></i><i class="handle sw" data-h="sw"></i><i class="handle se" data-h="se"></i>':'');
-  b.querySelector('.tag').textContent=m.id;const info=markerInfo(m);b.querySelector('.marker-info').textContent=info;b.querySelector('.marker-info').title=info;
+  b.querySelector('.tag').textContent=m.id;const info=markerInfo(m);b.querySelector('.marker-info').textContent=info;b.querySelector('.marker-info').title=info;const color=confirmationColor(m);b.style.borderColor=color;b.style.background=color+'1c';b.querySelector('.tag').style.background=color;b.style.opacity=matchesConfirmation(m)?'1':'.12';b.style.pointerEvents=matchesConfirmation(m)?'auto':'none';
 }
 function createMarkerElement(m){
   const b=document.createElement('button');b.type='button';b.dataset.key=m.key;
@@ -370,7 +470,7 @@ function updateContinuousButton(){const b=$('continuousAdd');b.classList.toggle(
 function toggleContinuousAdd(){S.continuousAdd=!S.continuousAdd;updateContinuousButton();if(S.mode!=='add')setMode('add');else msg(S.continuousAdd?'連続登録をONにしました。枠を描くとIDを自動登録します':'連続登録をOFFにしました。枠ごとに詳細フォームを開きます')}
 function commitDraft(){
   if(!S.draft)return;const id=nextId(),maxOrder=Math.max(0,...S.markers.map(x=>x.order));
-  const m=normalizeMarker({key:uid(),id,order:maxOrder+1,page:S.draft.page,x:S.draft.x,y:S.draft.y,width:S.draft.width,height:S.draft.height});
+  const m=normalizeMarker({key:uid(),id,order:maxOrder+1,page:S.draft.page,x:S.draft.x,y:S.draft.y,width:S.draft.width,height:S.draft.height,confirmationCategory:S.activeConfirmation});
   S.markers.push(m);S.selectedKey=m.key;S.draft=null;recordHistory();renderMarkers();renderList();msg(id+' を登録しました。続けて枠を追加できます');
 }
 function focusMarker(m){
@@ -381,7 +481,7 @@ function focusMarker(m){
 }
 
 function openForm(m){
-  S.editingKey=m?.key||null;$('modalTitle').textContent=m?'寸法IDを編集':'寸法IDを登録';$('id').value=m?.id||nextId();$('dimensionText').value=m?.dimensionText||'';$('nominal').value=numText(m?.nominal);$('unit').value=m?.unit||'mm';$('upperTolerance').value=numText(m?.upperTolerance);$('lowerTolerance').value=numText(m?.lowerTolerance);$('category').value=m?.category||'';$('measurementMethod').value=m?.measurementMethod||'';$('importance').value=m?.importance||'通常';$('note').value=m?.note||'';$('pageDisplay').value=m?.page||S.draft?.page||'';$('modal').classList.remove('hidden');setTimeout(()=>$('id').focus(),0)
+  S.editingKey=m?.key||null;$('modalTitle').textContent=m?'寸法IDを編集':'寸法IDを登録';$('id').value=m?.id||nextId();$('dimensionText').value=m?.dimensionText||'';$('nominal').value=numText(m?.nominal);$('unit').value=m?.unit||'mm';$('upperTolerance').value=numText(m?.upperTolerance);$('lowerTolerance').value=numText(m?.lowerTolerance);$('category').value=m?.category||'';$('confirmationCategory').value=m?.confirmationCategory||S.activeConfirmation||'';$('measurementMethod').value=m?.measurementMethod||'';$('importance').value=m?.importance||'通常';$('note').value=m?.note||'';$('pageDisplay').value=m?.page||S.draft?.page||'';$('modal').classList.remove('hidden');setTimeout(()=>$('id').focus(),0)
   updateTolerancePreview();
 }
 function updateTolerancePreview(){
@@ -395,7 +495,8 @@ function cancelModal(){if($('modal').classList.contains('hidden'))return;if(!S.e
 $('form').addEventListener('submit',e=>{
   e.preventDefault();const id=$('id').value.trim();if(!id){msg('IDを入力してください');return $('id').focus()}
   if(S.markers.some(m=>m.id.toLowerCase()===id.toLowerCase()&&m.key!==S.editingKey)){msg('IDが重複しています');return $('id').focus()}
-  const values={id,dimensionText:$('dimensionText').value.trim(),nominal:toNum($('nominal').value),unit:$('unit').value.trim()||'mm',upperTolerance:toNum($('upperTolerance').value),lowerTolerance:toNum($('lowerTolerance').value),category:$('category').value.trim(),measurementMethod:$('measurementMethod').value.trim(),importance:$('importance').value,note:$('note').value.trim()};
+  const values={id,dimensionText:$('dimensionText').value.trim(),nominal:toNum($('nominal').value),unit:$('unit').value.trim()||'mm',upperTolerance:toNum($('upperTolerance').value),lowerTolerance:toNum($('lowerTolerance').value),category:$('category').value.trim(),confirmationCategory:$('confirmationCategory').value,measurementMethod:$('measurementMethod').value.trim(),importance:$('importance').value,note:$('note').value.trim()};
+  Object.assign(values,confirmationParts(values.confirmationCategory));values.confirmationMethod=values.method;values.measurementOrientation=values.orientation;delete values.method;delete values.orientation;
   if(values.upperTolerance!=null&&values.lowerTolerance!=null&&values.lowerTolerance>values.upperTolerance){msg('下公差は上公差以下にしてください');$('lowerTolerance').focus();return}
   if(S.editingKey){const m=S.markers.find(x=>x.key===S.editingKey);Object.assign(m,values);S.selectedKey=m.key}else{const maxOrder=Math.max(0,...S.markers.map(x=>x.order));const m=normalizeMarker({...values,key:uid(),order:maxOrder+1,page:S.draft.page,x:S.draft.x,y:S.draft.y,width:S.draft.width,height:S.draft.height});S.markers.push(m);S.selectedKey=m.key;S.draft=null}
   S.editingKey=null;$('modal').classList.add('hidden');recordHistory();renderMarkers();renderList();
@@ -413,18 +514,18 @@ function sortedMarkers(){
 }
 function renderList(){
   const q=$('search').value.trim().toLowerCase(),mode=$('sort').value,L=$('list');L.innerHTML='';
-  const items=sortedMarkers().filter(m=>[m.id,m.dimensionText,m.note,m.category,m.measurementMethod,m.importance].join(' ').toLowerCase().includes(q));
+  const items=sortedMarkers().filter(matchesConfirmation).filter(m=>[m.id,m.dimensionText,m.note,m.category,confirmationName(m),m.measurementMethod,m.importance].join(' ').toLowerCase().includes(q));
   items.forEach(m=>{
-    const b=document.createElement('div');b.className='row'+(m.key===S.selectedKey?' sel':'')+(mode==='manual'?' manual':'');b.draggable=mode==='manual';b.dataset.key=m.key;
+    const b=document.createElement('div');b.className='row'+(m.key===S.selectedKey?' sel':'')+(mode==='manual'?' manual':'');b.draggable=mode==='manual';b.dataset.key=m.key;b.style.borderLeft='5px solid '+confirmationColor(m);
     const imp=m.importance==='重要'?'<span class="badge important">重要</span>':m.importance!=='通常'?'<span class="badge">'+escapeHtml(m.importance)+'</span>':'';
     b.innerHTML='<div class="row-top"><div class="rid">'+(mode==='manual'?'☰ ':'')+escapeHtml(m.id)+'　P'+m.page+imp+'</div><div class="row-actions"><button type="button" class="btn small up" title="上へ">↑</button><button type="button" class="btn small down" title="下へ">↓</button></div></div><div class="row-sub"></div><small></small>';
     if(S.tableEdit){
       const editor=document.createElement('div');editor.className='inline-edit';
-      const fields=[['dimensionText','図面表記','text'],['nominal','基準値','number'],['upperTolerance','上公差','number'],['lowerTolerance','下公差','number'],['category','分類','text'],['measurementMethod','測定方法','text'],['importance','重要度','select'],['note','備考','text']];
-      fields.forEach(([key,placeholder,type])=>{let el;if(type==='select'){el=document.createElement('select');['通常','重要','参考'].forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;el.appendChild(o)})}else{el=document.createElement('input');el.type=type;el.step=type==='number'?'any':''}el.dataset.key=key;el.placeholder=placeholder;el.value=numText(m[key]);if(key==='importance')el.value=m.importance;el.title=placeholder;el.className=key==='note'||key==='measurementMethod'?'wide':'';el.addEventListener('click',e=>e.stopPropagation());el.addEventListener('change',()=>commitInlineField(m,key,el));editor.appendChild(el)});
+      const fields=[['dimensionText','図面表記','text'],['nominal','基準値','number'],['upperTolerance','上公差','number'],['lowerTolerance','下公差','number'],['category','寸法種別','text'],['confirmationCategory','確認方法','select'],['measurementMethod','測定器・詳細','text'],['importance','重要度','select'],['note','備考','text']];
+      fields.forEach(([key,placeholder,type])=>{let el;if(type==='select'){el=document.createElement('select');(key==='confirmationCategory'?[['','未設定'],...S.confirmationCategories.map(c=>[c.id,c.name])]:[['通常','通常'],['重要','重要'],['参考','参考']]).forEach(([v,label])=>{const o=document.createElement('option');o.value=v;o.textContent=label;el.appendChild(o)})}else{el=document.createElement('input');el.type=type;el.step=type==='number'?'any':''}el.dataset.key=key;el.placeholder=placeholder;el.value=numText(m[key]);if(key==='importance')el.value=m.importance;el.title=placeholder;el.className=key==='note'||key==='measurementMethod'?'wide':'';el.addEventListener('click',e=>e.stopPropagation());el.addEventListener('change',()=>commitInlineField(m,key,el));editor.appendChild(el)});
       b.querySelector('.row-sub').remove();b.querySelector('small').remove();b.appendChild(editor);const note=document.createElement('div');note.className='edit-note';note.textContent='セルを変更すると自動保存対象になります';b.appendChild(note);
     }else{
-      b.querySelector('.row-sub').textContent=m.dimensionText||'図面表記未入力';b.querySelector('small').textContent=[tolText(m),m.category,m.measurementMethod,m.note].filter(Boolean).join(' ／ ');
+      b.querySelector('.row-sub').textContent=m.dimensionText||'図面表記未入力';b.querySelector('small').textContent=[tolText(m),m.category,confirmationName(m),m.measurementMethod,m.note].filter(Boolean).join(' ／ ');
     }
     b.onclick=e=>{if(e.target.closest('button,input,select'))return;focusMarker(m)};b.ondblclick=e=>{if(S.tableEdit||e.target.closest('button,input,select'))return;e.preventDefault();openForm(m)};
     b.querySelector('.up').onclick=e=>{e.stopPropagation();moveOrder(m.key,-1)};b.querySelector('.down').onclick=e=>{e.stopPropagation();moveOrder(m.key,1)};
@@ -434,13 +535,13 @@ function renderList(){
     L.appendChild(b);
   });
   const missing=S.markers.filter(m=>m.upperTolerance==null&&m.lowerTolerance==null).length,important=S.markers.filter(m=>m.importance==='重要').length;
-  $('summary').innerHTML=`<span>全 <b>${S.markers.length}</b>件</span><span>表示 <b>${items.length}</b>件</span><span>公差未入力 <b>${missing}</b>件</span><span>重要 <b>${important}</b>件</span>`;updateControls();
+  $('summary').innerHTML=`<span>全 <b>${S.markers.length}</b>件</span><span>表示 <b>${items.length}</b>件</span><span>3次元 表 <b>${S.markers.filter(m=>confirmationId(m)==='cmm-front').length}</b>件</span><span>裏 <b>${S.markers.filter(m=>confirmationId(m)==='cmm-back').length}</b>件</span><span>公差未入力 <b>${missing}</b>件</span><span>重要 <b>${important}</b>件</span>`;refreshConfirmationFilter();updateControls();
 }
 function commitInlineField(m,key,el){
   const old=m[key],value=key==='nominal'||key==='upperTolerance'||key==='lowerTolerance'?toNum(el.value):el.value.trim();
   if((key==='nominal'||key==='upperTolerance'||key==='lowerTolerance')&&value!==null&&!Number.isFinite(value)){el.value=numText(old);msg('数値を入力してください');return}
   if(key==='importance'?false:key==='id'&&S.markers.some(x=>x!==m&&x.id.toLowerCase()===value.toLowerCase())){el.value=old??'';msg('IDが重複しています');return}
-  if(value===old)return;m[key]=value;recordHistory();renderMarkers();msg(m.id+' を更新しました');
+  if(value===old)return;m[key]=value;if(key==='confirmationCategory')Object.assign(m,normalizeMarker(m));recordHistory();renderMarkers();renderList();msg(m.id+' を更新しました');
 }
 function toggleTableEdit(){S.tableEdit=!S.tableEdit;const b=$('tableEdit');b.classList.toggle('active',S.tableEdit);b.setAttribute('aria-pressed',String(S.tableEdit));b.textContent=S.tableEdit?'一覧編集を終了':'一覧を直接編集';renderList();msg(S.tableEdit?'一覧のセルを直接編集できます':'一覧編集を終了しました')}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -462,15 +563,15 @@ async function saveJson(){if(!S.data)return msg('PDFを読み込んでくださ�
 async function loadJsonFile(f){if(!f)return;try{if(S.dirty&&!confirm('未保存の変更があります。JSONを読み込みますか？'))return;const p=JSON.parse(await f.text());const ok=await applyProject(p,true);if(ok)await idbDelete()}catch(e){console.error(e);msg('JSONを読み込めませんでした。元のデータは保持しています')}}
 function csvCell(v){const s=v==null?'':String(v);return /[",\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
 function exportCsv(){
-  if(!S.markers.length)return msg('出力するIDがありません');const header=['order','id','page','dimensionText','nominal','upperTolerance','lowerTolerance','unit','category','measurementMethod','importance','note','x','y','width','height','key'];
-  const rows=[header,...[...S.markers].sort((a,b)=>a.order-b.order).map(m=>header.map(k=>m[k]??''))];downloadBlob(new Blob(['\ufeff'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),baseName()+'_公差リスト.csv');msg('CSVを出力しました');
+  if(!S.markers.length)return msg('出力するIDがありません');const header=['order','id','page','dimensionText','nominal','upperTolerance','lowerTolerance','unit','category','measurementMethod','confirmationCategory','confirmationMethod','measurementOrientation','confirmationCategoryName','confirmationColor','importance','note','x','y','width','height','key'];
+  const rows=[header,...[...S.markers].sort((a,b)=>a.order-b.order).map(m=>header.map(k=>k==='confirmationCategoryName'?confirmationById(confirmationId(m))?.name||'':k==='confirmationColor'?confirmationById(confirmationId(m))?.color||'':m[k]??''))];downloadBlob(new Blob(['\ufeff'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),baseName()+'_公差リスト.csv');msg('CSVを出力しました');
 }
 function parseCsv(text){const rows=[];let row=[],cell='',q=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(q){if(c==='"'&&n==='"'){cell+='"';i++}else if(c==='"')q=false;else cell+=c}else if(c==='"')q=true;else if(c===','){row.push(cell);cell=''}else if(c==='\n'){row.push(cell.replace(/\r$/,''));rows.push(row);row=[];cell=''}else cell+=c}row.push(cell.replace(/\r$/,''));if(row.length>1||row[0])rows.push(row);return rows}
 async function importCsvFile(f){
   if(!f||!S.pdf)return msg('先にPDFを読み込んでください');try{const rows=parseCsv((await f.text()).replace(/^\ufeff/,''));if(rows.length<2)throw new Error('empty');const head=rows[0],idx=Object.fromEntries(head.map((h,i)=>[h.trim(),i]));if(idx.id==null)throw new Error('id missing');
     const raw=rows.slice(1).filter(r=>r.some(Boolean)),get=(r,key)=>idx[key]==null?null:(r[idx[key]]??'').trim(),mode=$('csvMode').value;
     const seen=new Set();for(const r of raw){const id=(get(r,'id')||'').toLowerCase();if(!id||seen.has(id))throw new Error('duplicate id');seen.add(id)}
-    const make=(r,i)=>normalizeMarker({key:get(r,'key')||uid(),order:get(r,'order')||i+1,id:get(r,'id'),page:get(r,'page')||1,dimensionText:get(r,'dimensionText')||'',nominal:get(r,'nominal'),upperTolerance:get(r,'upperTolerance'),lowerTolerance:get(r,'lowerTolerance'),unit:get(r,'unit')||'mm',category:get(r,'category')||'',measurementMethod:get(r,'measurementMethod')||'',importance:get(r,'importance')||'通常',note:get(r,'note')||'',x:get(r,'x')||0,y:get(r,'y')||0,width:get(r,'width')||.03,height:get(r,'height')||.02},i);
+    const make=(r,i)=>normalizeMarker({key:get(r,'key')||uid(),order:get(r,'order')||i+1,id:get(r,'id'),page:get(r,'page')||1,dimensionText:get(r,'dimensionText')||'',nominal:get(r,'nominal'),upperTolerance:get(r,'upperTolerance'),lowerTolerance:get(r,'lowerTolerance'),unit:get(r,'unit')||'mm',category:get(r,'category')||'',measurementMethod:get(r,'measurementMethod')||'',confirmationCategory:get(r,'confirmationCategory')||'',confirmationMethod:get(r,'confirmationMethod')||'',measurementOrientation:get(r,'measurementOrientation')||'',importance:get(r,'importance')||'通常',note:get(r,'note')||'',x:get(r,'x')||0,y:get(r,'y')||0,width:get(r,'width')||.03,height:get(r,'height')||.02},i);
     if(mode==='replace'){
       if(!confirm(`CSVの ${raw.length}件で現在のID一覧を全件置換します。枠位置も置き換わります。よろしいですか？`))return;
       S.markers=raw.map(make);normalizeOrders();S.selectedKey=null;
@@ -480,10 +581,10 @@ async function importCsvFile(f){
     }else{
       const byId=new Map(S.markers.map(m=>[m.id.toLowerCase(),m]));let updated=0,added=0;
       if(!confirm(`CSVの ${raw.length}件を既存IDの更新として読み込みます。枠位置・ページは維持します。よろしいですか？`))return;
-      raw.forEach((r,i)=>{const id=get(r,'id').toLowerCase();let m=byId.get(id);if(!m){m=make(r,i+S.markers.length);S.markers.push(m);byId.set(id,m);added++;}else{['dimensionText','nominal','upperTolerance','lowerTolerance','unit','category','measurementMethod','importance','note'].forEach(k=>{if(idx[k]!=null)m[k]=k==='nominal'||k==='upperTolerance'||k==='lowerTolerance'?toNum(get(r,k)):get(r,k)}) ;updated++}});normalizeOrders();
+      raw.forEach((r,i)=>{const id=get(r,'id').toLowerCase();let m=byId.get(id);if(!m){m=make(r,i+S.markers.length);S.markers.push(m);byId.set(id,m);added++;}else{['dimensionText','nominal','upperTolerance','lowerTolerance','unit','category','measurementMethod','confirmationCategory','confirmationMethod','measurementOrientation','importance','note'].forEach(k=>{if(idx[k]!=null)m[k]=k==='nominal'||k==='upperTolerance'||k==='lowerTolerance'?toNum(get(r,k)):get(r,k)});Object.assign(m,normalizeMarker(m));updated++}});normalizeOrders();
       msg(`CSVを更新しました（既存 ${updated}件／新規 ${added}件）`);
     }
-    recordHistory();renderMarkers();renderList();if(mode!=='update')msg(mode==='append'?'CSVを追加しました':'CSVで全件置換しました');
+    const imported=raw.map(r=>({id:get(r,'confirmationCategory'),name:get(r,'confirmationCategoryName'),color:get(r,'confirmationColor')})).filter(c=>c.id?.startsWith('custom-')&&c.name);S.confirmationCategories=normalizeConfirmations([...S.confirmationCategories,...imported]);renderConfirmationControls();recordHistory();renderMarkers();renderList();if(mode!=='update')msg(mode==='append'?'CSVを追加しました':'CSVで全件置換しました');
   }catch(e){console.error(e);msg(e.message==='duplicate id'?'CSV内に空IDまたは重複IDがあります':e.message==='existing id'?'既存IDが含まれています。更新モードを使用してください':'CSVを読み込めませんでした')}
 }
 
@@ -501,9 +602,9 @@ async function exportMarkedPdf(){
       const list=S.markers.filter(m=>m.page===i+1);if(!list.length)continue;
       const page=pages[i],pdfjsPage=await S.pdf.getPage(i+1),viewport=pdfjsPage.getViewport({scale:1});
       for(const m of list){
-        const r=pdfRectFromMarker(viewport,m),line=Math.max(0.8,Math.min(2.2,Math.max(r.width,r.height)/90)),fontSize=Math.max(7,Math.min(14,Math.max(7,r.height*.28))),label=pdfSafeText(m.id),labelW=font.widthOfTextAtSize(label,fontSize)+8,labelH=fontSize+5,labelY=r.y+r.height+2;
-        page.drawRectangle({x:r.x,y:r.y,width:r.width,height:r.height,borderColor:window.PDFLib.rgb(0.01,0.52,0.78),borderWidth:line,color:window.PDFLib.rgb(0.06,0.65,0.91),opacity:.14,borderOpacity:.95});
-        page.drawRectangle({x:r.x,y:labelY,width:labelW,height:labelH,color:window.PDFLib.rgb(0.01,0.52,0.78),opacity:.98});
+        const rgb=confirmationRgb(m),fill=window.PDFLib.rgb(rgb.r,rgb.g,rgb.b);const r=pdfRectFromMarker(viewport,m),line=Math.max(0.8,Math.min(2.2,Math.max(r.width,r.height)/90)),fontSize=Math.max(7,Math.min(14,Math.max(7,r.height*.28))),label=pdfSafeText(m.id),labelW=font.widthOfTextAtSize(label,fontSize)+8,labelH=fontSize+5,labelY=r.y+r.height+2;
+        page.drawRectangle({x:r.x,y:r.y,width:r.width,height:r.height,borderColor:fill,borderWidth:line,color:fill,opacity:.10,borderOpacity:.95});
+        page.drawRectangle({x:r.x,y:labelY,width:labelW,height:labelH,color:fill,opacity:.98});
         page.drawText(label,{x:r.x+4,y:labelY+2,font,size:fontSize,color:window.PDFLib.rgb(1,1,1),opacity:1});
       }
     }
@@ -547,7 +648,7 @@ $('search').oninput=renderList;$('sort').onchange=renderList;$('cancel').onclick
 ['nominal','upperTolerance','lowerTolerance','unit'].forEach(id=>$(id).addEventListener('input',updateTolerancePreview));
 
 async function boot(){
-  if(!ready())return;msg('PDF.js準備完了');setDirty(false);updateContinuousButton();renderList();
+  if(!ready())return;msg('PDF.js準備完了');setDirty(false);updateContinuousButton();renderConfirmationControls();renderList();
   try{const embedded=JSON.parse($('embedded').textContent);if(embedded?.data&&await applyProject(embedded,true))return}catch(e){console.error(e)}
   const auto=await idbGet();if(auto?.data&&confirm(`前回の復旧データ（${new Date(auto.savedAt).toLocaleString()}）を復元しますか？`)){const ok=await applyProject(auto,false);if(ok)msg('復旧データを読み込みました')}
 }
