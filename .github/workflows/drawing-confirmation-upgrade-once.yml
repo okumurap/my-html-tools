@@ -1,0 +1,102 @@
+name: One-time PDF confirmation-method category upgrade
+on:
+  push:
+    paths:
+      - '.github/workflows/drawing-confirmation-upgrade-once.yml'
+permissions:
+  contents: write
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Upgrade existing single-file application without replacing embedded PDF engines
+        run: |
+          python3 - <<'PY'
+          import base64,zlib
+          encoded='''
+          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
+          '''
+          exec(zlib.decompress(base64.b64decode(''.join(encoded.split()))).decode('utf-8'))
+          PY
+      - name: Validate patched HTML and JavaScript module syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('tools/drawing-pdf-dimension-manager/index.html').read_text(encoding='utf-8')
+          assert 'confirmation-upgrade-v1' in s
+          assert all(x in s for x in ['cmm-front','cmm-back','confirmationCategories','confirmationFilter','confirmationRgb','confirmationCategoryName','measurementOrientation'])
+          assert s.count('pdf-lib-bundle')==1
+          start=s.index('<script type="module">')+len('<script type="module">')
+          end=s.index('</script>',start)
+          Path('/tmp/dimension-manager-check.mjs').write_text(s[start:end],encoding='utf-8')
+          print('PASS: marker types, PDF bundle, CSV, JSON, and filtering code present')
+          PY
+          node --check /tmp/dimension-manager-check.mjs
+          git diff --check
+      - name: Commit validated changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tools/drawing-pdf-dimension-manager/index.html
+          git commit -m 'Add confirmation method colors and 3D front/back orientation to PDF dimension manager'
+          git push origin HEAD:main
