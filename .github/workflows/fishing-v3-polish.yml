@@ -1,0 +1,46 @@
+name: Fishing V3 one-time consistency fixes
+on:
+  push:
+    paths:
+      - '.github/workflows/fishing-v3-polish.yml'
+permissions:
+  contents: write
+jobs:
+  polish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply verified targeted gameplay fixes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('tools/sakamoto-kiss-fishing/game-v3.js')
+          text = p.read_text()
+          fixes = [
+            ("training=!data.tutorialDone;firstCatch=false", "training=!data.tutorialDone&&mode!=='daily';firstCatch=false"),
+            ("combo=0;fever=0;aim=55", "combo=0;maxCombo=0;fever=0;aim=55"),
+            ("combo++;const multi=", "combo++;maxCombo=Math.max(maxCombo,combo);const multi="),
+            ("${earned+bonus-earned+(count===2?0:0)+(missionDone&&kissCount===3?300:0)}", "${earned+(count===2?150:0)+(missionDone&&kissCount===3?300:0)}"),
+            ("function predicted(p){return clamp(15+85*p+wind*1.4,15,100)}", "function predicted(p){return clamp(15+85*p+wind*5.6*p*(1-p),15,100)}"),
+            ("if(mode==='free'&&fishes.filter(f=>f.alive).length<8&&schools.length<20){addSchool(20+rand()*72,3+Math.floor(rand()*3))}", "if(mode==='free'&&fishes.filter(f=>f.alive).length<8){schools=schools.filter(s=>s.members.some(f=>f.alive));fishes=fishes.filter(f=>f.alive);addSchool(20+rand()*72,3+Math.floor(rand()*3))}"),
+          ]
+          for old,new in fixes:
+            count=text.count(old)
+            if count != 1: raise SystemExit(f'Expected unique match, found {count}: {old[:65]}')
+            text=text.replace(old,new,1)
+          p.write_text(text)
+          print(f'Applied {len(fixes)} targeted fixes')
+          PY
+          node --check tools/sakamoto-kiss-fishing/game-v3.js
+      - name: Commit corrected game source
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tools/sakamoto-kiss-fishing/game-v3.js
+          git commit -m 'Fix combo records, scoring text, wind aim and endless replenishment'
+          git push origin HEAD:main
