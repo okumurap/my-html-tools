@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0b1930">
+<meta name="description" content="スマホを左右に傾けてコンテナの揺れを止め、正確に積み下ろす物理演算クレーンゲーム。">
+<title>ぐらぐらクレーン | GYRO CRANE</title>
+<link rel='stylesheet' href='./style.css'>
+</head>
+<body>
+<main class="app">
+<header class="top"><div class="brand">GYRO <span>CRANE</span> <span aria-hidden="true">▣</span></div><a class="home" href="../../index.html">ツール一覧へ</a></header>
+<section class="stage" id="stage" aria-label="クレーンゲーム画面"><canvas id="game" aria-label="クレーンと吊り荷、着地目標"></canvas>
+<div class="hud" id="hud" hidden><div class="hud-top"><div><small id="modeLabel">90秒チャレンジ</small><br><strong id="timeLabel">01:30</strong></div><div style="text-align:right"><small>SCORE</small><br><strong id="scoreLabel">0</strong></div><button type="button" id="pauseBtn" aria-label="一時停止">Ⅱ</button></div><div class="stats"><span id="countLabel">成功 0</span><span id="swingLabel">揺れ 0°</span><span id="windLabel">風 なし</span></div></div>
+<div class="message" id="message" aria-live="polite"></div><div class="overlay" id="overlay"><div class="panel" id="panel"></div></div><div class="landscape">スマホを縦向きに戻してください</div></section>
+<footer class="bottom"><div class="control-guide"><span id="sensorLabel">左右の傾き / ボタンで移動</span><span>逆向きに傾けて振れ止め！</span></div><div class="buttons"><button type="button" class="control" id="left" aria-label="左に移動">◀ 左</button><button type="button" class="control drop" id="drop" disabled>DROP !</button><button type="button" class="control" id="right" aria-label="右に移動">右 ▶</button></div></footer>
+</main>
+<script src='./game.js'></script>
+</body>
+</html>
