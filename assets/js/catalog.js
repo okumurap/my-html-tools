@@ -17,13 +17,14 @@
     ['investment-simulator', 'finance', '積立投資シミュレーター', '初期投資と毎月の積立から、将来資産・元本・運用益をグラフで試算します。', 'PC・スマートフォン対応・端末内計算', '試算する', '', '2026-09-19'],
     ['drawing-pdf-dimension-manager', 'work', '図面PDF 寸法ID管理', 'PDF図面へ寸法IDを配置し、公差・測定方法・重要度を管理します。', 'PC・スマートフォン対応・端末内処理', '管理する', '2026-09-17', '2026-09-18'],
     ['clamp-force-calculator', 'work', '型締力 Calculator', '形状・寸法から投影面積を算出し、射出成形金型の必要型締力を概算します。', 'PC・スマートフォン対応・端末内保存', '計算する', '2026-09-17', '2026-09-18'],
-    ['life-dashboard', 'utility', '人生ダッシュボード', '生年月日だけで人生を週単位で眺め、家族・イベント・毎週の充実度を記録します。', 'PC・スマートフォン対応・端末内保存', '開く', '', '2026-09-19']
+    ['life-dashboard', 'utility', '人生ダッシュボード', '生年月日だけで人生を週単位で眺め、家族・イベント・毎週の充実度を記録します。', 'PC・スマートフォン対応・端末内保存', '開く', '', '2026-09-19'],
+    ['gyro-rush', 'games', 'GYRO RUSH ジャイロ宇宙船', 'スマホを左右に傾けて隕石を回避。ニアミス・コンボ・ブーストで120秒のハイスコアを目指すゲームです。', 'スマートフォン・PC対応・端末内記録', '遊ぶ', '2026-09-19', '2026-09-19']
   ].map(([id, category, title, description, meta, action, created, updated]) =>
     ({ id, category, title, description, meta, action, created, updated, href: `./tools/${id}/` }));
   const categories = [
     ['all', 'すべて'], ['work', '仕事・設計'], ['utility', '編集・便利'],
     ['finance', 'お金・資産形成'], ['music', '音楽・学習'],
-    ['trains', '電車・子ども向け'], ['fishing', '釣り']
+    ['trains', '電車・子ども向け'], ['fishing', '釣り'], ['games', 'ゲーム']
   ];
   const byId = new Map(tools.map(tool => [tool.id, tool]));
   const KEYS = {
