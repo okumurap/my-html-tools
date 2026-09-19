@@ -5,11 +5,41 @@
   --color-text: #20252b;
   --color-muted: #66707b;
   --color-accent: #2563a9;
+  --color-accent-contrast: #ffffff;
   --color-accent-soft: #f3f7fb;
   --color-border: #dde2e7;
+  --color-hover-border: #aebfd2;
   --radius: 0.65rem;
   --space-page: clamp(1rem, 4vw, 1.5rem);
   --content-width: 56rem;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg: #101722;
+  --color-surface: #1b2635;
+  --color-text: #edf3fa;
+  --color-muted: #b0bfd1;
+  --color-accent: #94c5ff;
+  --color-accent-contrast: #102033;
+  --color-accent-soft: #273b51;
+  --color-border: #3a4b60;
+  --color-hover-border: #86a8cb;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --color-bg: #101722;
+    --color-surface: #1b2635;
+    --color-text: #edf3fa;
+    --color-muted: #b0bfd1;
+    --color-accent: #94c5ff;
+    --color-accent-contrast: #102033;
+    --color-accent-soft: #273b51;
+    --color-border: #3a4b60;
+    --color-hover-border: #86a8cb;
+  }
 }
 
 *,
@@ -55,6 +85,8 @@ a {
   display: flex;
   min-height: 3.5rem;
   align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
 .site-name {
@@ -64,8 +96,32 @@ a {
   text-decoration: none;
 }
 
+.theme-toggle {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 650;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.theme-toggle__icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
 .site-name:focus-visible,
-.tool-card:focus-visible {
+.tool-card:focus-visible,
+.theme-toggle:focus-visible {
   outline: 3px solid var(--color-accent);
   outline-offset: 3px;
 }
@@ -178,7 +234,12 @@ h2 {
 
 @media (hover: hover) {
   .tool-card:hover {
-    border-color: #aebfd2;
+    border-color: var(--color-hover-border);
+    background: var(--color-accent-soft);
+  }
+
+  .theme-toggle:hover {
+    border-color: var(--color-hover-border);
     background: var(--color-accent-soft);
   }
 }
