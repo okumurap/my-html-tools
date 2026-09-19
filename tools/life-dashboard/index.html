@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>人生ダッシュボード</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<main class="app">
+  <section id="panel-weeks" class="panel active">
+    <header class="app-header"><a href="../../index.html">← ツール一覧</a><h1>人生ダッシュボード</h1><p>これまでを眺めて、これからを大切に。</p></header>
+    <p id="saveStatus" class="small" role="status">入力内容はこのブラウザだけに保存されます。</p>
+    <div class="card settings-card start-card">
+      <h2>生年月日だけで、はじめられます</h2>
+      <label for="birthDate">あなたの生年月日</label><input id="birthDate" type="date">
+      <details><summary>見通しの年齢を変更する</summary>
+        <p class="small">初期値は90歳。寿命の予測ではなく、時間を眺めるための目安です。</p>
+        <input id="lifeYears" type="hidden" value="90"><input id="unitLabel" type="hidden" value="目安の年齢">
+        <div class="life-presets"><button data-years="80" data-label="目安の年齢">80歳</button><button data-years="90" data-label="目安の年齢">90歳</button><button data-years="100" data-label="目安の年齢">100歳</button></div>
+      </details>
+    </div>
+    <div class="card life-card">
+      <div class="remaining-row">
+        <div class="big-number"><span id="remainingWeeks">—</span><small>週</small></div>
+        <div class="remaining-caption"><span id="unitCaption">目標年齢</span>までの<br>残り週数</div>
+      </div>
+      <div class="progress"><div id="progressBar" class="progress-fill"></div><span id="percent" class="progress-value">—</span></div>
+      <div class="stats">
+        <div class="stat"><div class="stat-label">これまで</div><div class="stat-value"><span id="livedWeeks">—</span>週</div><div id="livedYearsText" class="stat-sub">—</div></div>
+        <div class="stat"><div class="stat-label">全期間</div><div class="stat-value"><span id="totalWeeks">—</span>週</div><div id="lifeTargetText" class="stat-sub">—</div></div>
+        <div class="stat"><div class="stat-label">今年の残り</div><div class="stat-value"><span id="healthWeeks">—</span>日</div><div class="stat-sub">今日を含む</div></div>
+        <div class="stat"><div class="stat-label">次の誕生日</div><div class="stat-value"><span id="birthdayDays">—</span>日</div><div id="birthdayText" class="stat-sub">—</div></div>
+      </div>
+      <div class="divider"></div>
+      <div class="calendar-head"><h2>人生カレンダー</h2></div><p class="small">1マス＝1週間 · 濃色：これまで / オレンジ枠：今週 / 淡色：これから<br>左の数字は誕生からの52週単位です（年齢とは少しずれます）。</p>
+      <div id="eventLegend" class="event-legend"></div>
+      <div id="calendarEmpty" class="empty">生年月日を入力してください</div>
+      <div id="canvasWrap" class="canvas-wrap" hidden><canvas id="lifeCanvas" role="img" aria-label="人生を1週間ずつ表示したカレンダー。週数は上の数値でも確認できます。"></canvas></div>
+    </div>
+
+  </section>
+
+  <section id="panel-family" class="panel">
+    <div class="card card-pad">
+      <h2>家族と過ごす時間</h2>
+      <div id="familyMetrics" class="metric-grid"></div>
+    </div>
+    <div class="card card-pad">
+      <h2>家族の年齢（各年の誕生日後）</h2>
+      <div style="overflow:auto"><table id="ageTable" class="age-table"></table></div>
+    </div>
+  </section>
+
+  <section id="panel-life" class="panel">
+    <div class="card card-pad">
+      <h2>残り回数</h2>
+      <div id="remainingCounts" class="metric-grid"></div>
+    </div>
+    <div class="card card-pad">
+      <h2>人生の季節</h2>
+      <div id="seasonBar" class="season-bar"></div>
+      <div id="seasonCurrent" class="season-current"></div>
+    </div>
+    <div class="card card-pad">
+      <div class="timeline-head">
+        <div>
+          <h2>人生イベント</h2>
+          <div class="small">過去と予定を同じ時間軸に表示</div>
+        </div>
+        <div class="timeline-filters">
+          <button class="timeline-filter active" data-filter="all">すべて</button>
+          <button class="timeline-filter" data-filter="past">過去</button>
+          <button class="timeline-filter" data-filter="future">予定</button>
+        </div>
+      </div>
+
+      <div class="timeline-key">
+        <span><i class="key-bar past"></i>過去の期間</span>
+        <span><i class="key-bar future"></i>予定の期間</span>
+        <span><i class="key-dot past"></i>過去の出来事</span>
+        <span><i class="key-dot future"></i>予定</span>
+      </div>
+
+      <div id="timelineAxis" class="timeline-axis"></div>
+      <div id="eventTimeline" class="event-timeline"></div>
+
+      <div class="timeline-list-head">
+        <strong>イベント一覧</strong>
+        <span id="timelineCount" class="small"></span>
+      </div>
+      <div id="eventMiniList" class="event-list-mini"></div>
+    </div>
+  </section>
+
+  <section id="panel-year" class="panel">
+    <div class="card card-pad">
+      <div class="year-head"><h2><span id="heatYear"></span>年の週の記録</h2><div id="heatTotal" class="year-total"></div></div>
+      <div class="year-controls"><button id="prevYear">← 前の年</button><button id="nextYear">次の年 →</button></div><p class="small">1月1日から7日ずつ。最後の週は残りの日数です。</p>
+      <div id="heatmap" class="heatmap"></div>
+      <div class="heat-legend"><span>週をタップして充実度を記録（未記録 → 1〜4）</span><span class="heat-scale"><i></i><i></i><i></i><i></i><i></i></span></div>
+    </div>
+  </section>
+
+  <section id="panel-edit" class="panel">
+    <div class="card card-pad">
+      <div class="edit-section">
+        <h2>家族を編集</h2>
+        <div id="memberEditor" class="editor-list"></div>
+        <button id="addMember" class="add-btn">＋ 家族を追加</button>
+      </div>
+      <div class="edit-section">
+        <h2>人生イベントを編集</h2>
+        <div id="eventEditor" class="editor-list"></div>
+        <button id="addEvent" class="add-btn">＋ イベントを追加</button>
+      </div>
+      <div class="edit-section"><button id="resetData" class="reset-btn">保存データをすべて削除</button></div>
+    </div>
+  </section>
+</main>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-panel="weeks">ホーム</button>
+  <button class="nav-btn" data-panel="family">家族</button>
+  <button class="nav-btn" data-panel="life">人生</button>
+  <button class="nav-btn" data-panel="year">今年</button>
+  <button class="nav-btn" data-panel="edit">編集</button>
+</nav>
+<div id="tooltip" class="tooltip"></div>
+
+<script src="./script.js"></script>
+</body>
+</html>
