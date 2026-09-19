@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="13種類の文字列変換、検索・お気に入り・連続変換・変換前後比較ができる端末内完結ツール。">
+  <title>文字列整形アプリ v7 | My HTML Tools</title>
+  <script>
+    try {
+      const saved = localStorage.getItem('text-formatter-v7:settings');
+      const theme = saved && JSON.parse(saved).theme;
+      if (theme === 'dark' || theme === 'light') document.documentElement.dataset.theme = theme;
+    } catch (_) { /* ストレージ無効時はOSの設定を使用 */ }
+  </script>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="back" href="../../index.html">← ツール一覧</a>
+    <label class="theme-field" for="theme">テーマ
+      <select id="theme"><option value="auto">自動</option><option value="light">ライト</option><option value="dark">ダーク</option></select>
+    </label>
+  </header>
+  <main class="container">
+    <div class="heading"><div><span class="eyebrow">TEXT UTILITIES · v7</span><h1>文字列整形アプリ</h1><p>入力すると13種類を即時変換。必要な結果だけ探してコピーできます。</p></div><span class="local-badge">端末内で処理</span></div>
+    <section class="panel editor-panel" aria-labelledby="editor-heading">
+      <div class="panel-heading"><h2 id="editor-heading">入力テキスト</h2><span id="input-count" class="count">0文字 · 0行</span></div>
+      <label class="sr-only" for="input">変換する文字列</label>
+      <textarea id="input" rows="5" spellcheck="false" autocomplete="off" placeholder="ここに文字列を入力・貼り付け"></textarea>
+      <div class="editor-actions">
+        <button type="button" id="paste">貼り付け</button>
+        <button type="button" id="select-all">全選択</button>
+        <button type="button" id="copy-input">入力をコピー</button>
+        <button type="button" id="clear" class="danger">消去</button>
+      </div>
+    </section>
+    <section class="panel pipeline-panel" aria-labelledby="pipeline-heading">
+      <div class="panel-heading"><div><span class="eyebrow">CHAIN</span><h2 id="pipeline-heading">連続変換</h2></div><span class="mini">上から順番に適用</span></div>
+      <p class="subtle">例：半角化 → 空白整理 → カンマ区切り。順番は上下ボタンで変更できます。</p>
+      <ol id="pipeline-steps" class="pipeline-steps" aria-label="連続変換の手順"></ol>
+      <div class="pipeline-add"><label for="pipeline-picker">変換を追加</label><select id="pipeline-picker"></select><button id="add-step" type="button" class="primary">＋ 追加</button></div>
+      <div class="pipeline-result"><div class="panel-heading"><h3>連続変換の結果</h3><span id="pipeline-count" class="count">未設定</span></div><pre id="pipeline-output" class="preview" aria-label="連続変換の結果">変換を追加すると、ここに結果を表示します。</pre>
+        <div class="result-actions"><button type="button" id="pipeline-compare" disabled>比較</button><button type="button" id="pipeline-apply" disabled>入力に反映</button><button type="button" id="pipeline-copy" class="primary" disabled>コピー</button></div></div>
+    </section>
+    <section class="compare panel" id="compare-section" aria-labelledby="compare-heading" hidden>
+      <div class="panel-heading"><div><span class="eyebrow">DIFF</span><h2 id="compare-heading">変換前後の比較</h2></div><button type="button" id="close-compare">閉じる ×</button></div>
+      <p id="compare-summary" class="subtle"></p><div class="compare-grid"><div><h3>変換前</h3><pre id="before-output" class="preview"></pre></div><div><h3>変換後</h3><pre id="after-output" class="preview"></pre></div></div>
+      <p class="subtle note">変更箇所を強調表示します（共通の先頭・末尾を除いた範囲）。</p>
+    </section>
+    <section id="favorites-section" class="favorites-section" aria-labelledby="favorites-heading" hidden>
+      <div class="section-heading"><div><span class="eyebrow">SHORTCUTS</span><h2 id="favorites-heading">★ お気に入り</h2></div><span class="mini">カードを上部に固定</span></div>
+      <div id="favorite-list" class="card-grid"></div>
+    </section>
+    <section class="results-section" aria-labelledby="results-heading">
+      <div class="section-heading"><div><span class="eyebrow">TRANSFORMS</span><h2 id="results-heading">すべての変換</h2></div><span id="match-count" class="mini" role="status" aria-live="polite"></span></div>
+      <label class="search-label" for="search">変換機能を検索 <input id="search" type="search" placeholder="例：半角、CSV、改行" autocomplete="off"></label>
+      <div id="filters" class="filters" role="group" aria-label="変換カテゴリー"></div>
+      <div id="result-list" class="card-grid"></div>
+      <p id="empty" class="empty" hidden>一致する変換がありません。検索語やカテゴリーを変更してください。</p>
+    </section>
+    <p class="footnote">入力内容と変換結果は保存しません。お気に入り・テーマ・表示設定のみ、この端末のブラウザに保存します。機密情報を使うときは共有端末に注意してください。</p>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  <script src="./transforms.js"></script><script src="./app.js"></script>
+</body>
+</html>
