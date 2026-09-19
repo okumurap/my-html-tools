@@ -1,0 +1,32 @@
+name: Fishing game checks
+on:
+  push:
+    paths:
+      - 'tools/sakamoto-kiss-fishing/**'
+      - '.github/workflows/fishing-v3-check.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: node --check tools/sakamoto-kiss-fishing/game-v3.js
+      - name: Check entrypoint and supporting assets
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          root = Path('tools/sakamoto-kiss-fishing')
+          html = (root / 'index.html').read_text()
+          js = (root / 'game-v3.js').read_text()
+          assert 'src="./game-v3.js"' in html
+          assert (root / 'style-v3.css').is_file()
+          for name in ('quick', 'challenge', 'daily', 'free', 'triggerFever', 'tutori' ,'rivalScore', 'combo', 'giant', 'pointercancel'):
+              assert name in js, name
+          print('Entrypoint, assets and key feature identifiers: OK')
+          PY
