@@ -6,144 +6,76 @@
   <meta name="description" content="ブラウザだけで使える、小さく便利なHTMLツール集です。">
   <title>My HTML Tools</title>
   <script>
+    // CSSの読み込み前に保存済みの手動テーマを適用し、表示時のちらつきを防ぐ。
     try {
       const savedTheme = localStorage.getItem('my-html-tools:theme');
       if (savedTheme === 'light' || savedTheme === 'dark') {
         document.documentElement.dataset.theme = savedTheme;
       }
     } catch (_) {
-      // 保存が使えない環境ではOSの設定を使用します。
+      // 保存不可のブラウザはOSのテーマに従う。
     }
   </script>
   <link rel="stylesheet" href="./assets/css/style.css">
-  <style>
-    .catalog-controls { display: grid; gap: 1rem; margin-bottom: 1.25rem; }
-    .catalog-search { display: grid; gap: 0.35rem; font-size: 0.9rem; font-weight: 650; }
-    .catalog-search input {
-      width: 100%; min-height: 48px; padding: 0.7rem 0.9rem;
-      border: 1px solid var(--color-border); border-radius: var(--radius);
-      background: var(--color-surface); color: var(--color-text);
-      font: inherit; font-size: 16px;
-    }
-    .catalog-search input::placeholder { color: var(--color-muted); font-weight: 400; }
-    .category-filters { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-    .category-filter {
-      min-height: 44px; padding: 0.55rem 0.85rem;
-      border: 1px solid var(--color-border); border-radius: 999px;
-      background: var(--color-surface); color: var(--color-text);
-      font: inherit; font-size: 0.85rem; font-weight: 650;
-      cursor: pointer; touch-action: manipulation;
-    }
-    .category-filter[aria-pressed="true"] {
-      border-color: var(--color-accent); background: var(--color-accent); color: var(--color-accent-contrast);
-    }
-    .category-filter:focus-visible, .catalog-search input:focus-visible {
-      outline: 3px solid var(--color-accent); outline-offset: 3px;
-    }
-    .tool-card__category { color: var(--color-accent); font-size: 0.75rem; font-weight: 700; }
-    .catalog-empty {
-      padding: 1.5rem; border: 1px dashed var(--color-border);
-      border-radius: var(--radius); color: var(--color-muted); text-align: center;
-      background: var(--color-surface);
-    }
-    .catalog-empty[hidden], .tool-grid > li[hidden] { display: none; }
-  </style>
+  <link rel="stylesheet" href="./assets/css/home.css">
 </head>
 <body>
-  <header class="site-header"><div class="container"><a class="site-name" href="./index.html" aria-label="My HTML Tools ホーム">My HTML Tools</a><button id="theme-toggle" class="theme-toggle" type="button" aria-label="ダークモードに切り替える"><span class="theme-toggle__icon" aria-hidden="true">☾</span><span class="theme-toggle__label">ダーク</span></button></div></header>
-  <main>
-    <section class="hero" aria-labelledby="page-title"><div class="container"><h1 id="page-title">ブラウザで使えるツール</h1><p class="lead">インストール不要。PCでもスマートフォンでも、必要なときにすぐ使えます。</p></div></section>
-    <section class="tools-section" aria-labelledby="tools-title"><div class="container">
-      <div class="section-heading"><h2 id="tools-title">ツール一覧</h2><span id="result-count" class="tool-count" role="status" aria-live="polite">13件表示 / 全13件</span></div>
-      <div class="catalog-controls">
-        <label class="catalog-search" for="tool-search">ツールを検索<input id="tool-search" type="search" placeholder="名前や説明で検索" autocomplete="off" aria-controls="tool-list"></label>
-        <div class="category-filters" role="group" aria-label="カテゴリーで絞り込み">
-          <button class="category-filter" type="button" data-filter="all" aria-pressed="true" aria-controls="tool-list">すべて 13</button>
-          <button class="category-filter" type="button" data-filter="work" aria-pressed="false" aria-controls="tool-list">仕事・設計 5</button>
-          <button class="category-filter" type="button" data-filter="utility" aria-pressed="false" aria-controls="tool-list">編集・便利 1</button>
-          <button class="category-filter" type="button" data-filter="finance" aria-pressed="false" aria-controls="tool-list">お金・資産形成 1</button>
-          <button class="category-filter" type="button" data-filter="music" aria-pressed="false" aria-controls="tool-list">音楽・学習 1</button>
-          <button class="category-filter" type="button" data-filter="trains" aria-pressed="false" aria-controls="tool-list">電車・子ども向け 3</button>
-          <button class="category-filter" type="button" data-filter="fishing" aria-pressed="false" aria-controls="tool-list">釣り 2</button>
-        </div>
+  <header class="site-header">
+    <div class="container">
+      <a class="site-name" href="./index.html" aria-label="My HTML Tools ホーム">My HTML Tools</a>
+      <div class="home-header-actions">
+        <label class="theme-field" for="theme-select">表示
+          <select id="theme-select" class="theme-select" aria-label="表示テーマ">
+            <option value="auto">自動</option>
+            <option value="light">ライト</option>
+            <option value="dark">ダーク</option>
+          </select>
+        </label>
       </div>
-      <ol id="tool-list" class="tool-grid">
-        <li data-category="work"><a class="tool-card" href="./tools/offset-capability-lab/"><span class="tool-number">001</span><span class="tool-card__content"><span class="tool-card__title">Offset Capability Lab</span><span class="tool-card__description">工程能力指数（Cp・Cpk）とヒストグラムを比較します。</span><span class="tool-card__category">仕事・設計</span><span class="tool-card__meta">PC・スマートフォン対応</span></span><span class="tool-card__arrow" aria-hidden="true">開く →</span></a></li>
-        <li data-category="work"><a class="tool-card" href="./tools/drawing-annotation/"><span class="tool-number">002</span><span class="tool-card__content"><span class="tool-card__title">図面注釈ツール</span><span class="tool-card__description">画像や図面に注釈を書き込み、PNGで出力します。</span><span class="tool-card__category">仕事・設計</span><span class="tool-card__meta">PC・スマートフォン・ペン対応</span></span><span class="tool-card__arrow" aria-hidden="true">開く →</span></a></li>
-        <li data-category="work"><a class="tool-card" href="./tools/screw-diameter-comparator/"><span class="tool-number">003</span><span class="tool-card__content"><span class="tool-card__title">スクリュ径A/B比較ツール</span><span class="tool-card__description">射出成形機のスクリュ径による流量・充填体積・必要ストロークの違いを比較します。</span><span class="tool-card__category">仕事・設計</span><span class="tool-card__meta">PC・スマートフォン対応</span></span><span class="tool-card__arrow" aria-hidden="true">開く →</span></a></li>
-        <li data-category="trains"><a class="tool-card" href="./tools/train-crossing/"><span class="tool-number">004</span><span class="tool-card__content"><span class="tool-card__title">でんしゃを走らせよう！</span><span class="tool-card__description">タップで電車を走らせ、踏切とトンネルを越えて次の駅を目指すミニゲームです。</span><span class="tool-card__category">電車・子ども向け</span><span class="tool-card__meta">PC・スマートフォン対応</span></span><span class="tool-card__arrow" aria-hidden="true">開く →</span></a></li>
-        <li data-category="trains"><a class="tool-card" href="./tools/sakamoto-railway/"><span class="tool-number">005</span><span class="tool-card__content"><span class="tool-card__title">坂本電鉄 海岸線</span><span class="tool-card__description">マスコン、ブレーキ、ドア、車内放送を操作して終点を目指す電車運転ゲームです。</span><span class="tool-card__category">電車・子ども向け</span><span class="tool-card__meta">PWA・スマートフォン対応</span></span><span class="tool-card__arrow" aria-hidden="true">運転する →</span></a></li>
-        <li data-category="fishing"><a class="tool-card" href="./tools/sakamoto-kiss-navi/"><span class="tool-number">006</span><span class="tool-card__content"><span class="tool-card__title">坂本キスナビ</span><span class="tool-card__description">キスの釣果、潮、風、投げた方向と距離を記録し、着水点をヒートマップで振り返ります。</span><span class="tool-card__category">釣り</span><span class="tool-card__meta">スマートフォン対応・端末内保存</span></span><span class="tool-card__arrow" aria-hidden="true">記録する →</span></a></li>
-        <li data-category="trains"><a class="tool-card" href="./tools/plarail-layout/"><span class="tool-number">007</span><span class="tool-card__content"><span class="tool-card__title">レールタウン・レイアウト</span><span class="tool-card__description">線路、駅、踏切、ポイントを自由に配置して、電車を走らせるレイアウトゲームです。</span><span class="tool-card__category">電車・子ども向け</span><span class="tool-card__meta">PC・スマートフォン対応・端末内保存</span></span><span class="tool-card__arrow" aria-hidden="true">遊ぶ →</span></a></li>
-        <li data-category="fishing"><a class="tool-card" href="./tools/sakamoto-kiss-fishing/"><span class="tool-number">008</span><span class="tool-card__content"><span class="tool-card__title">坂本のキス釣り</span><span class="tool-card__description">投げて、海底をさびいて、アタリに合わせる3分間のキス釣りゲームです。</span><span class="tool-card__category">釣り</span><span class="tool-card__meta">PC・スマートフォン対応・端末内記録</span></span><span class="tool-card__arrow" aria-hidden="true">釣る →</span></a></li>
-        <li data-category="utility"><a class="tool-card" href="./tools/table-editor/"><span class="tool-number">009</span><span class="tool-card__content"><span class="tool-card__title">表整形・編集ツール</span><span class="tool-card__description">Markdown・CSV・TSVの表を読み込み、並べ替えや編集、コピーができます。</span><span class="tool-card__category">編集・便利</span><span class="tool-card__meta">PC・スマートフォン対応・端末内処理</span></span><span class="tool-card__arrow" aria-hidden="true">編集する →</span></a></li>
-        <li data-category="music"><a class="tool-card" href="./tools/chord-piano/"><span class="tool-number">010</span><span class="tool-card__content"><span class="tool-card__title">コード鍵盤</span><span class="tool-card__description">鍵盤を見て・聴いて・押しながら、ピアノコードの構成音を練習します。</span><span class="tool-card__category">音楽・学習</span><span class="tool-card__meta">PC・スマートフォン対応・Web Audio</span></span><span class="tool-card__arrow" aria-hidden="true">練習する →</span></a></li>
-        <li data-category="finance"><a class="tool-card" href="./tools/investment-simulator/"><span class="tool-number">011</span><span class="tool-card__content"><span class="tool-card__title">積立投資シミュレーター</span><span class="tool-card__description">初期投資と毎月の積立から、将来資産・元本・運用益をグラフで試算します。</span><span class="tool-card__category">お金・資産形成</span><span class="tool-card__meta">PC・スマートフォン対応・端末内計算</span></span><span class="tool-card__arrow" aria-hidden="true">試算する →</span></a></li>
-              <li data-category="work"><a class="tool-card" href="./tools/drawing-pdf-dimension-manager/"><span class="tool-number">012</span><span class="tool-card__content"><span class="tool-card__title">図面PDF 寸法ID管理</span><span class="tool-card__description">PDF図面へ寸法IDを配置し、公差・測定方法・重要度を管理します。</span><span class="tool-card__category">仕事・設計</span><span class="tool-card__meta">PC・スマートフォン対応・端末内処理</span></span><span class="tool-card__arrow" aria-hidden="true">管理する →</span></a></li>
-        <li data-category="work"><a class="tool-card" href="./tools/clamp-force-calculator/"><span class="tool-number">013</span><span class="tool-card__content"><span class="tool-card__title">型締力 Calculator</span><span class="tool-card__description">形状・寸法から投影面積を算出し、射出成形金型の必要型締力を概算します。</span><span class="tool-card__category">仕事・設計</span><span class="tool-card__meta">PC・スマートフォン対応・端末内保存</span></span><span class="tool-card__arrow" aria-hidden="true">計算する →</span></a></li>
-      </ol>
-      <p id="catalog-empty" class="catalog-empty" hidden>該当するツールがありません。検索語やカテゴリーを変更してください。</p>
-    </div></section>
+    </div>
+  </header>
+  <main>
+    <section class="hero" aria-labelledby="page-title">
+      <div class="container">
+        <h1 id="page-title">ブラウザで使えるツール</h1>
+        <p class="lead">インストール不要。PCでもスマートフォンでも、必要なときにすぐ使えます。</p>
+      </div>
+    </section>
+    <section class="tools-section" aria-label="ツールを探す">
+      <div class="container">
+        <div class="catalog-controls">
+          <label class="catalog-search" for="tool-search">ツールを検索
+            <input id="tool-search" type="search" placeholder="名前や説明で検索" autocomplete="off" aria-controls="tool-list">
+          </label>
+          <div id="category-filters" class="category-filters" role="group" aria-label="カテゴリーで絞り込み"></div>
+          <label class="mobile-filter" for="mobile-category">カテゴリーで絞り込み
+            <select id="mobile-category" class="mobile-category" aria-controls="tool-list"></select>
+          </label>
+        </div>
+        <section id="favorites-section" class="catalog-group" aria-labelledby="favorites-title" hidden>
+          <div class="section-heading"><h2 id="favorites-title">★ お気に入り</h2></div>
+          <ul id="favorites-list" class="quick-list"></ul>
+        </section>
+        <section id="recent-section" class="catalog-group" aria-labelledby="recent-title" hidden>
+          <div class="section-heading"><h2 id="recent-title">最近使ったツール</h2></div>
+          <ul id="recent-list" class="quick-list"></ul>
+        </section>
+        <section class="catalog-group" aria-labelledby="tools-title">
+          <div class="section-heading">
+            <h2 id="tools-title">すべてのツール</h2>
+            <div class="section-heading__actions">
+              <span id="result-count" class="tool-count" role="status" aria-live="polite">ツールを読み込み中</span>
+              <button id="compact-toggle" class="compact-toggle" type="button" aria-pressed="false">コンパクト表示</button>
+            </div>
+          </div>
+          <ol id="tool-list" class="tool-grid"></ol>
+          <p id="catalog-empty" class="catalog-empty" hidden>該当するツールがありません。検索語やカテゴリーを変更してください。</p>
+          <noscript><p class="catalog-empty">ツール一覧の表示にはJavaScriptが必要です。ブラウザの設定を確認してください。</p></noscript>
+        </section>
+      </div>
+    </section>
   </main>
   <footer class="site-footer"><div class="container"><p>&copy; My HTML Tools</p></div></footer>
-  <script>
-    (() => {
-      const themeButton = document.getElementById('theme-toggle');
-      const themeIcon = themeButton.querySelector('.theme-toggle__icon');
-      const themeLabel = themeButton.querySelector('.theme-toggle__label');
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
-      const activeTheme = () => document.documentElement.dataset.theme || (systemTheme.matches ? 'dark' : 'light');
-      const updateThemeButton = () => {
-        const isDark = activeTheme() === 'dark';
-        themeIcon.textContent = isDark ? '☀' : '☾';
-        themeLabel.textContent = isDark ? 'ライト' : 'ダーク';
-        themeButton.setAttribute('aria-label', isDark ? 'ライトモードに切り替える' : 'ダークモードに切り替える');
-      };
-      themeButton.addEventListener('click', () => {
-        const nextTheme = activeTheme() === 'dark' ? 'light' : 'dark';
-        document.documentElement.dataset.theme = nextTheme;
-        try {
-          localStorage.setItem('my-html-tools:theme', nextTheme);
-        } catch (_) {
-          // 保存できなくても現在の画面では切り替えられます。
-        }
-        updateThemeButton();
-      });
-      if (systemTheme.addEventListener) {
-        systemTheme.addEventListener('change', updateThemeButton);
-      } else if (systemTheme.addListener) {
-        systemTheme.addListener(updateThemeButton);
-      }
-      updateThemeButton();
-
-      const search = document.getElementById('tool-search');
-      const items = Array.from(document.querySelectorAll('#tool-list > li'));
-      const buttons = Array.from(document.querySelectorAll('.category-filter'));
-      const count = document.getElementById('result-count');
-      const empty = document.getElementById('catalog-empty');
-      let activeCategory = 'all';
-      function updateResults() {
-        const query = search.value.normalize('NFKC').toLocaleLowerCase('ja').trim();
-        let visible = 0;
-        items.forEach((item) => {
-          const matchesCategory = activeCategory === 'all' || item.dataset.category === activeCategory;
-          const matchesSearch = item.textContent.normalize('NFKC').toLocaleLowerCase('ja').includes(query);
-          item.hidden = !(matchesCategory && matchesSearch);
-          if (!item.hidden) visible++;
-        });
-        count.textContent = `${visible}件表示 / 全${items.length}件`;
-        empty.hidden = visible !== 0;
-      }
-      buttons.forEach((button) => {
-        button.addEventListener('click', () => {
-          activeCategory = button.dataset.filter;
-          buttons.forEach(candidate => candidate.setAttribute('aria-pressed', String(candidate === button)));
-          updateResults();
-        });
-      });
-      search.addEventListener('input', updateResults);
-      updateResults();
-    })();
-  </script>
+  <script src="./assets/js/catalog.js"></script>
 </body>
 </html>
