@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="ブラウザだけで使える、小さく便利なHTMLツール集です。">
   <title>My HTML Tools</title>
+  <script>
+    try {
+      const savedTheme = localStorage.getItem('my-html-tools:theme');
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        document.documentElement.dataset.theme = savedTheme;
+      }
+    } catch (_) {
+      // 保存が使えない環境ではOSの設定を使用します。
+    }
+  </script>
   <link rel="stylesheet" href="./assets/css/style.css">
   <style>
     .catalog-controls { display: grid; gap: 1rem; margin-bottom: 1.25rem; }
@@ -25,7 +35,7 @@
       cursor: pointer; touch-action: manipulation;
     }
     .category-filter[aria-pressed="true"] {
-      border-color: var(--color-accent); background: var(--color-accent); color: #fff;
+      border-color: var(--color-accent); background: var(--color-accent); color: var(--color-accent-contrast);
     }
     .category-filter:focus-visible, .catalog-search input:focus-visible {
       outline: 3px solid var(--color-accent); outline-offset: 3px;
@@ -40,7 +50,7 @@
   </style>
 </head>
 <body>
-  <header class="site-header"><div class="container"><a class="site-name" href="./index.html" aria-label="My HTML Tools ホーム">My HTML Tools</a></div></header>
+  <header class="site-header"><div class="container"><a class="site-name" href="./index.html" aria-label="My HTML Tools ホーム">My HTML Tools</a><button id="theme-toggle" class="theme-toggle" type="button" aria-label="ダークモードに切り替える"><span class="theme-toggle__icon" aria-hidden="true">☾</span><span class="theme-toggle__label">ダーク</span></button></div></header>
   <main>
     <section class="hero" aria-labelledby="page-title"><div class="container"><h1 id="page-title">ブラウザで使えるツール</h1><p class="lead">インストール不要。PCでもスマートフォンでも、必要なときにすぐ使えます。</p></div></section>
     <section class="tools-section" aria-labelledby="tools-title"><div class="container">
@@ -78,6 +88,34 @@
   <footer class="site-footer"><div class="container"><p>&copy; My HTML Tools</p></div></footer>
   <script>
     (() => {
+      const themeButton = document.getElementById('theme-toggle');
+      const themeIcon = themeButton.querySelector('.theme-toggle__icon');
+      const themeLabel = themeButton.querySelector('.theme-toggle__label');
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+      const activeTheme = () => document.documentElement.dataset.theme || (systemTheme.matches ? 'dark' : 'light');
+      const updateThemeButton = () => {
+        const isDark = activeTheme() === 'dark';
+        themeIcon.textContent = isDark ? '☀' : '☾';
+        themeLabel.textContent = isDark ? 'ライト' : 'ダーク';
+        themeButton.setAttribute('aria-label', isDark ? 'ライトモードに切り替える' : 'ダークモードに切り替える');
+      };
+      themeButton.addEventListener('click', () => {
+        const nextTheme = activeTheme() === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = nextTheme;
+        try {
+          localStorage.setItem('my-html-tools:theme', nextTheme);
+        } catch (_) {
+          // 保存できなくても現在の画面では切り替えられます。
+        }
+        updateThemeButton();
+      });
+      if (systemTheme.addEventListener) {
+        systemTheme.addEventListener('change', updateThemeButton);
+      } else if (systemTheme.addListener) {
+        systemTheme.addListener(updateThemeButton);
+      }
+      updateThemeButton();
+
       const search = document.getElementById('tool-search');
       const items = Array.from(document.querySelectorAll('#tool-list > li'));
       const buttons = Array.from(document.querySelectorAll('.category-filter'));
