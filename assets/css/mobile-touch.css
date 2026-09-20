@@ -1,5 +1,4 @@
-/* Mobile-first game interactions: stop accidental selection and double-tap zoom,
-   while retaining pinch zoom, native scrolling, and editable text selection. */
+/* Game-only mobile gesture guard. Keep pinch zoom and editable text available. */
 @media (pointer: coarse) {
   html { touch-action: manipulation; }
 
@@ -23,6 +22,12 @@
   body.mobile-touch-game input[type="range"] {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Never turn the continuous pointer/hold controls into scroll gestures. */
+  body.mobile-touch-game .action,
+  body.mobile-touch-game .control {
+    touch-action: none;
   }
 
   body.mobile-touch-game button,
