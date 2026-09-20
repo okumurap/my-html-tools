@@ -1,0 +1,35 @@
+/* Mobile-first game interactions: stop accidental selection and double-tap zoom,
+   while retaining pinch zoom, native scrolling, and editable text selection. */
+@media (pointer: coarse) {
+  html { touch-action: manipulation; }
+
+  body.mobile-touch-game,
+  body.mobile-touch-game *:not(input):not(textarea):not([contenteditable="true"]):not(.allow-text-selection) {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  body.mobile-touch-game input:not([type="range"]):not([type="checkbox"]),
+  body.mobile-touch-game textarea,
+  body.mobile-touch-game [contenteditable="true"],
+  body.mobile-touch-game .allow-text-selection {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  body.mobile-touch-game button,
+  body.mobile-touch-game a,
+  body.mobile-touch-game [role="button"],
+  body.mobile-touch-game input[type="range"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body.mobile-touch-game button,
+  body.mobile-touch-game canvas,
+  body.mobile-touch-game img,
+  body.mobile-touch-game svg {
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+  }
+}
