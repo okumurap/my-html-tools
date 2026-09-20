@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="金型とインサートの温度差・寸法公差から最悪すきまを計算するブラウザ内ツール">
+<title>金型の熱膨張 × 公差マップ</title>
+<style>
+:root{color-scheme:light;--bg:#f3f6fa;--panel:#fff;--ink:#182538;--muted:#53657c;--line:#d6e0eb;--accent:#155f9e;--soft:#eaf3fc;--red:#c43c45;--amber:#a76a03;--blue:#286ab4;--green:#167750;--shadow:0 7px 24px #18355010}
+@media(prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#101824;--panel:#192534;--ink:#eef4fb;--muted:#b1c0d1;--line:#34465c;--accent:#8ac4ff;--soft:#253b50;--red:#ff858e;--amber:#ffc76a;--blue:#8dbfff;--green:#7bdfa9;--shadow:none}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;line-height:1.55}a{color:var(--accent)}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}.wrap{max-width:1160px;margin:auto;padding:18px 14px 60px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.back{font-size:.87rem;text-decoration:none}.eyebrow{font-size:.77rem;font-weight:800;letter-spacing:.12em;color:var(--accent)}h1{font-size:clamp(1.5rem,4vw,2.25rem);margin:5px 0}h2{font-size:1.15rem;margin:0 0 12px}h3{font-size:1rem;margin:0 0 10px}.intro{color:var(--muted);margin:0 0 20px;font-size:.92rem}.layout{display:grid;grid-template-columns:minmax(290px,390px) minmax(0,1fr);gap:16px;align-items:start}.stack{display:grid;gap:16px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:17px;box-shadow:var(--shadow);min-width:0}.panelhead{display:flex;justify-content:space-between;gap:10px;align-items:center}.tag{display:inline-block;border:1px solid var(--line);background:var(--soft);padding:3px 9px;border-radius:99px;font-size:.72rem;font-weight:700;color:var(--accent)}.hint,.footnote{font-size:.78rem;color:var(--muted);margin:8px 0 0}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:12px}.field{display:flex;flex-direction:column;min-width:0;gap:4px}.field.wide{grid-column:1/-1}.field label{font-weight:650;font-size:.8rem}.field input,.field select{width:100%;min-width:0;min-height:44px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--ink);padding:8px 10px;font-variant-numeric:tabular-nums}.unit{color:var(--muted);font-size:.74rem}.split{border-top:1px dashed var(--line);margin:14px 0}.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.btn{border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--ink);padding:10px 13px;min-height:43px;font-weight:700}.btn.primary{background:var(--accent);color:var(--bg);border-color:var(--accent)}.btn.small{padding:7px 10px;min-height:38px;font-size:.85rem}.btn:disabled{opacity:.5;cursor:not-allowed}.error{border:1px solid var(--red);border-radius:10px;padding:11px;color:var(--red);background:var(--panel);margin-bottom:15px}.error[hidden],[hidden]{display:none!important}.summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.metric{border:1px solid var(--line);border-radius:11px;padding:12px;min-width:0}.metric small{display:block;color:var(--muted)}.metric strong{display:block;font-size:clamp(1.13rem,2.8vw,1.6rem);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.state{font-size:.73rem;font-weight:800;padding:4px 8px;border-radius:7px;display:inline-block}.state.interference{background:#c43c4525;color:var(--red)}.state.mixed{background:#dba12830;color:var(--amber)}.state.small{background:#286ab428;color:var(--blue)}.state.pass{background:#16775024;color:var(--green)}.condition-list{display:grid;gap:9px}.condition{border:1px solid var(--line);border-radius:12px;padding:12px}.condition-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.condition-top strong{font-size:.92rem}.condition-result{font-size:1.07rem;font-weight:800;font-variant-numeric:tabular-nums;margin:8px 0 2px}.condition-sub{color:var(--muted);font-size:.79rem}.condition-edit{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.condition-edit label{font-size:.75rem;color:var(--muted);display:block}.condition-edit input{width:100%;min-width:0;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:6px;min-height:40px}.maptools{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.maptools .field{width:110px}.legend{display:flex;flex-wrap:wrap;gap:7px 14px;font-size:.76rem;color:var(--muted);margin:14px 0}.swatch{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:4px}.mapframe{display:grid;grid-template-columns:25px minmax(0,1fr);gap:5px}.ylabel{writing-mode:vertical-rl;transform:rotate(180deg);text-align:center;color:var(--muted);font-size:.72rem}.heatmap{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:2px;touch-action:manipulation}.mapcell{border:1px solid transparent;aspect-ratio:1;min-height:10px;min-width:0;border-radius:2px;padding:0}.mapcell.selected{outline:3px solid var(--ink);outline-offset:-1px;z-index:1}.mapcell:focus-visible{outline:3px solid var(--ink)}.interference.mapcell,.swatch.interference{background:#c83e49}.mixed.mapcell,.swatch.mixed{background:#dfab35}.small.mapcell,.swatch.small{background:#4d8dcf}.pass.mapcell,.swatch.pass{background:#249968}.xaxis{display:flex;justify-content:space-between;color:var(--muted);font-size:.72rem;margin:4px 0 0 30px}.axis-caption{text-align:center;font-size:.76rem;color:var(--muted)}.mapdetail{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:12px;font-size:.88rem}.inverse-box{border-left:4px solid var(--accent);background:var(--soft);padding:13px;border-radius:0 10px 10px 0;margin:14px 0}.inverse-box strong{font-variant-numeric:tabular-nums;font-size:clamp(1.25rem,3.3vw,1.75rem);display:block;overflow-wrap:anywhere}.tablewrap{overflow-x:auto}.results-table{width:100%;border-collapse:collapse;font-size:.82rem;white-space:nowrap}.results-table th,.results-table td{border-bottom:1px solid var(--line);padding:9px 7px;text-align:right;font-variant-numeric:tabular-nums}.results-table th:first-child,.results-table td:first-child{text-align:left}.storage{display:grid;gap:10px}.storage select,.storage input{width:100%;min-height:44px;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}.notice{border:1px solid var(--line);border-radius:12px;padding:15px;font-size:.82rem;color:var(--muted);background:var(--panel);margin-top:16px}.notice p{margin:6px 0}.statusline{min-height:1.3em;font-size:.78rem;color:var(--muted)}@media(max-width:790px){.layout{grid-template-columns:1fr}.panel{padding:14px}.wrap{padding:13px 11px 45px}}@media(max-width:370px){.summary{grid-template-columns:1fr}.condition-result{font-size:1rem}.heatmap{gap:1px}.mapframe{grid-template-columns:18px minmax(0,1fr)}}@media print{body{background:#fff;color:#111}.layout{display:block}.panel{box-shadow:none;break-inside:avoid;margin:12px 0}.back,.storage,.maptools button,.notice{display:none!important}}
+</style>
+</head>
+<body>
+<main class="wrap">
+ <div class="top"><a class="back" href="../../index.html">← ツール一覧</a><span class="tag">ブラウザ内で計算・保存</span></div>
+ <div class="eyebrow">THERMAL FIT / TOLERANCE</div>
+ <h1>金型の熱膨張 × 公差マップ</h1>
+ <p class="intro">20℃での図面寸法から、穴側と軸側の温度を別々に指定して直径すきまを算出します。すきま＝穴径－軸径。マイナスは自由膨張計算上の干渉です。</p>
+ <div id="errors" class="error" role="alert" hidden></div>
+ <div class="layout">
+  <div class="stack">
+   <section class="panel" aria-labelledby="hole-title"><div class="panelhead"><h2 id="hole-title">① インサート・穴側</h2><span class="tag">内径</span></div>
+    <div class="fields"><div class="field wide"><label for="holeMaterial">材質</label><select id="holeMaterial"><option value="scm">SCM440H（参考値）</option><option value="nak">NAK55（参考値）</option><option value="custom">任意材質</option></select></div>
+     <div class="field"><label for="holeNom">基準内径 <span class="unit">mm / 20℃</span></label><input id="holeNom" type="number" step="any" value="32"></div>
+     <div class="field"><label for="holeAlpha">線膨張係数 <span class="unit">×10⁻⁶/K</span></label><input id="holeAlpha" type="number" step="any" min="0" max="100" value="12"></div>
+     <div class="field"><label for="holeLower">下限偏差 <span class="unit">mm</span></label><input id="holeLower" type="number" step="any" value="-0.030"></div>
+     <div class="field"><label for="holeUpper">上限偏差 <span class="unit">mm</span></label><input id="holeUpper" type="number" step="any" value="-0.008"></div></div>
+    <p class="hint" id="holeBounds">20℃ 内径：31.970 ～ 31.992 mm</p>
+   </section>
+   <section class="panel" aria-labelledby="shaft-title"><div class="panelhead"><h2 id="shaft-title">② 金型・軸側</h2><span class="tag">凸径</span></div>
+    <div class="fields"><div class="field wide"><label for="shaftMaterial">材質</label><select id="shaftMaterial"><option value="nak">NAK55（参考値）</option><option value="scm">SCM440H（参考値）</option><option value="custom">任意材質</option></select></div>
+     <div class="field"><label for="shaftNom">基準凸径 <span class="unit">mm / 20℃</span></label><input id="shaftNom" type="number" step="any" value="32"></div>
+     <div class="field"><label for="shaftAlpha">線膨張係数 <span class="unit">×10⁻⁶/K</span></label><input id="shaftAlpha" type="number" step="any" min="0" max="100" value="12.5"></div>
+     <div class="field"><label for="shaftLower">下限偏差 <span class="unit">mm</span></label><input id="shaftLower" type="number" step="any" value="0"></div>
+     <div class="field"><label for="shaftUpper">上限偏差 <span class="unit">mm</span></label><input id="shaftUpper" type="number" step="any" value="0"></div></div>
+    <p class="hint" id="shaftBounds">20℃ 凸径：32.000 ～ 32.000 mm</p>
+   </section>
+   <section class="panel" aria-labelledby="cond-title"><h2 id="cond-title">③ 温度条件</h2><p class="hint">左がインサート温度、右が金型凸部の実体温度。条件ごとに編集できます。</p><div id="conditionInputs" class="condition-list" style="margin-top:12px"></div>
+    <div class="split"></div><div class="field"><label for="target">必要な最小直径すきま <span class="unit">mm</span></label><input id="target" type="number" step="any" min="0" value="0.010"></div>
+   </section>
+   <section class="panel storage" aria-labelledby="save-title"><h2 id="save-title">条件保存・出力</h2><div class="field"><label for="caseName">保存名</label><input id="caseName" maxlength="60" placeholder="例：インサート組付け条件"></div><div class="row"><button type="button" class="btn primary" id="save">端末に保存</button><button type="button" class="btn" id="reset">例に戻す</button></div>
+    <div class="field"><label for="savedCases">保存した条件（最大12件）</label><select id="savedCases"><option value="">保存データを選択</option></select></div><div class="row"><button type="button" class="btn small" id="load">読み込む</button><button type="button" class="btn small" id="remove">削除</button><button type="button" class="btn small" id="csv">結果CSV</button></div><p id="saveStatus" class="statusline" role="status"></p><p class="hint">保存データはこの端末・ブラウザ内だけに残ります。入力値は送信しません。</p>
+   </section>
+  </div>
+  <div class="stack">
+   <section class="panel" aria-labelledby="summary-title"><div class="panelhead"><h2 id="summary-title">判定サマリー</h2><span class="tag">最悪公差で評価</span></div><div id="summary" class="summary" aria-live="polite"></div><p class="hint">最小すきま＝穴の下限－軸の上限。最大すきま＝穴の上限－軸の下限。</p></section>
+   <section class="panel" aria-labelledby="states-title"><h2 id="states-title">温度条件ごとの計算結果</h2><div id="conditionResults" class="condition-list"></div></section>
+   <section class="panel" aria-labelledby="map-title"><div class="panelhead"><h2 id="map-title">温度 × 公差マップ</h2><span class="tag">セルをタップ</span></div><div class="maptools"><div class="field"><label for="mapMin">温度下限 ℃</label><input id="mapMin" type="number" step="10" value="20"></div><div class="field"><label for="mapMax">温度上限 ℃</label><input id="mapMax" type="number" step="10" value="170"></div></div>
+    <div class="legend"><span><i class="swatch interference"></i>干渉確定</span><span><i class="swatch mixed"></i>公差次第</span><span><i class="swatch small"></i>目標未満</span><span><i class="swatch pass"></i>目標達成</span></div>
+    <div class="mapframe"><div class="ylabel">インサート温度（上＝高温）</div><div id="heatmap" class="heatmap" role="group" aria-label="温度別すきまマップ"></div></div><div class="xaxis"><span id="xMin">20℃</span><span id="xMax">170℃</span></div><div class="axis-caption">金型温度 →</div>
+    <div id="mapDetail" class="mapdetail" role="status">セルをタップすると最小・最大すきまを表示します。</div><p class="hint">各軸16分割、計256点。セルの色はすきまの公差範囲と設定した目標値から判定します。</p>
+   </section>
+   <section class="panel" aria-labelledby="inverse-title"><h2 id="inverse-title">寸法・必要加熱温度を逆算</h2><div class="field"><label for="inverseCondition">評価する条件</label><select id="inverseCondition"><option value="all">全4条件で目標すきまを保証</option></select></div><div id="inverseResult" class="inverse-box" aria-live="polite"></div><p class="hint">凸径の上限を20℃基準で逆算します。公差幅を維持する場合は基準寸法を同じ量だけ変更してください。</p><div class="split"></div><div class="field"><label for="heatCondition">インサート必要温度を求める条件</label><select id="heatCondition"></select></div><div id="heatResult" class="inverse-box" aria-live="polite"></div></section>
+   <section class="panel" aria-labelledby="table-title"><h2 id="table-title">詳細数値</h2><div class="tablewrap"><table class="results-table"><thead><tr><th>条件</th><th>穴 下限</th><th>穴 上限</th><th>軸 下限</th><th>軸 上限</th><th>最小すきま</th><th>最大すきま</th></tr></thead><tbody id="detailRows"></tbody></table></div><p class="hint">単位：すべて mm。各温度の自由膨張寸法を表示。</p></section>
+  </div>
+ </div>
+ <aside class="notice"><strong>計算上の前提・注意</strong><p>寸法は20℃基準。各部品が一様な指定温度になり、一定の平均線膨張係数で自由膨張すると仮定した直径方向の一次近似です。接触変形、はめあい応力、熱伝達、温度むら、真円度、表面粗さ、測定誤差などは含みません。「干渉確定」は組付け不可を意味せず、「目標達成」も実組付けの保証ではありません。</p><p>初期値 SCM440H＝12.0、NAK55＝12.5（単位：×10⁻⁶/K）は<strong>計算例の仮値</strong>であり、材質の保証値ではありません。NAK55はメーカー資料に温度範囲ごとの平均係数が掲載されており、用途の温度範囲・ロット・熱処理条件に合う物性値を確認して上書きしてください。<a href="https://www.daido.co.jp/products/tool/nak55" target="_blank" rel="noopener noreferrer">NAK55 メーカー資料</a></p></aside>
+</main>
+<script>
+(() => {
+ 'use strict';
+ const KEY='thermal-fit-map:cases:v1';
+ const PRESETS={scm:12,nak:12.5};
+ const DEFAULT={holeMaterial:'scm',holeNom:32,holeAlpha:12,holeLower:-0.030,holeUpper:-0.008,shaftMaterial:'nak',shaftNom:32,shaftAlpha:12.5,shaftLower:0,shaftUpper:0,target:0.010,mapMin:20,mapMax:170,conditions:[{name:'常温',hole:20,shaft:20},{name:'組付け',hole:70,shaft:20},{name:'温度差あり',hole:70,shaft:120},{name:'成形・均熱',hole:120,shaft:120}]};
+ const $=id=>document.getElementById(id);
+ const inputs=['holeMaterial','holeNom','holeAlpha','holeLower','holeUpper','shaftMaterial','shaftNom','shaftAlpha','shaftLower','shaftUpper','target','mapMin','mapMax'];
+ const numeric=inputs.filter(id=>!id.endsWith('Material'));
+ const clone=value=>JSON.parse(JSON.stringify(value));
+ const fmt=(n,d=4)=>Number.isFinite(n)?(Math.abs(n)<0.5*10**-d?0:n).toFixed(d):'—';
+ const signed=n=>`${n>=0?'+':''}${fmt(n)}`;
+ const escapeCSV=value=>`"${String(value).replace(/"/g,'""')}"`;
+ const names=DEFAULT.conditions.map(c=>c.name);
+ const numericRange=(v,low,high)=>Number.isFinite(v)&&v>=low&&v<=high;
+ let selectedMap=null;
+ function initConditions(){
+  $('conditionInputs').replaceChildren();
+  names.forEach((name,i)=>{
+   const card=document.createElement('div');card.className='condition';
+   const strong=document.createElement('strong');strong.textContent=name;
+   const grid=document.createElement('div');grid.className='condition-edit';
+   [['hole','インサート ℃'],['shaft','金型 ℃']].forEach(([side,label])=>{
+    const wrap=document.createElement('div');const lab=document.createElement('label');const id=`t-${side}-${i}`;lab.htmlFor=id;lab.textContent=label;
+    const input=document.createElement('input');input.type='number';input.step='any';input.id=id;input.value=DEFAULT.conditions[i][side];input.addEventListener('input',render);
+    wrap.append(lab,input);grid.append(wrap);
+   });card.append(strong,grid);$('conditionInputs').append(card);
+   for(const selectId of ['inverseCondition','heatCondition']){
+    const option=document.createElement('option');option.value=String(i);option.textContent=name;$(selectId).append(option);
+   }
+  });$('heatCondition').value='1';
+ }
+ function restore(form){
+  inputs.forEach(id=>{$(id).value=form[id]});names.forEach((_,i)=>['hole','shaft'].forEach(side=>{$(`t-${side}-${i}`).value=form.conditions[i][side]}));
+  selectedMap=null;render();
+ }
+ function read(){
+  const data={};inputs.forEach(id=>data[id]=numeric.includes(id)?Number($(id).value):$(id).value);
+  data.conditions=names.map((name,i)=>({name,hole:Number($(`t-hole-${i}`).value),shaft:Number($(`t-shaft-${i}`).value)}));return data;
+ }
+ function validate(){
+  const errors=[];
+  const field=(id,min,max)=>{const e=$(id);const n=Number(e.value);if(e.value.trim()===''||!numericRange(n,min,max))errors.push(`${e.labels?.[0]?.textContent.trim()||id}は${min}～${max}の数値を入力してください。`)};
+  field('holeNom',0.001,10000);field('shaftNom',0.001,10000);
+  for(const id of ['holeAlpha','shaftAlpha'])field(id,0,100);
+  for(const id of ['holeLower','holeUpper','shaftLower','shaftUpper'])field(id,-100,100);
+  field('target',0,100);field('mapMin',-50,300);field('mapMax',-50,300);
+  names.forEach((name,i)=>['hole','shaft'].forEach(side=>{const id=`t-${side}-${i}`;field(id,-50,300)}));
+  const v=read();
+  if(v.holeLower>v.holeUpper)errors.push('穴側の下限偏差が上限偏差を超えています。');
+  if(v.shaftLower>v.shaftUpper)errors.push('軸側の下限偏差が上限偏差を超えています。');
+  if(v.holeNom+v.holeLower<=0||v.shaftNom+v.shaftLower<=0)errors.push('公差下限の直径は正である必要があります。');
+  if(v.mapMin>=v.mapMax)errors.push('マップの温度上限は下限より大きくしてください。');
+  return errors;
+ }
+ const factor=(alpha,temp)=>1+alpha*1e-6*(temp-20);
+ function calculate(v,th,ts){
+  const holeFactor=factor(v.holeAlpha,th),shaftFactor=factor(v.shaftAlpha,ts);
+  const hLow=(v.holeNom+v.holeLower)*holeFactor,hHigh=(v.holeNom+v.holeUpper)*holeFactor;
+  const sLow=(v.shaftNom+v.shaftLower)*shaftFactor,sHigh=(v.shaftNom+v.shaftUpper)*shaftFactor;
+  const min=hLow-sHigh,max=hHigh-sLow;
+  const kind=max < -1e-10?'interference':min < -1e-10?'mixed':min < v.target-1e-10?'small':'pass';
+  return{hLow,hHigh,sLow,sHigh,min,max,kind};
+ }
+ const stateLabels={interference:'干渉確定',mixed:'公差次第',small:'目標未満',pass:'目標達成'};
+ function statusSpan(kind){const badge=document.createElement('span');badge.className=`state ${kind}`;badge.textContent=stateLabels[kind];return badge;}
+ const text=(tag,value,className)=>{const el=document.createElement(tag);el.textContent=value;if(className)el.className=className;return el};
+ function render(){
+  const errors=validate();$('errors').hidden=errors.length===0;$('errors').textContent=errors.join(' ');
+  const outputs=['summary','conditionResults','heatmap','detailRows','inverseResult','heatResult'];
+  if(errors.length){outputs.forEach(id=>$(id).replaceChildren());$('mapDetail').textContent='入力値を確認してください。';return;}
+  const v=read();
+  $('holeBounds').textContent=`20℃ 内径：${fmt(v.holeNom+v.holeLower)} ～ ${fmt(v.holeNom+v.holeUpper)} mm`;
+  $('shaftBounds').textContent=`20℃ 凸径：${fmt(v.shaftNom+v.shaftLower)} ～ ${fmt(v.shaftNom+v.shaftUpper)} mm`;
+  const rows=v.conditions.map(c=>({...c,...calculate(v,c.hole,c.shaft)}));
+  renderSummary(rows,v);renderConditions(rows);renderMap(v);renderInverse(v,rows);renderTable(rows);
+ }
+ function renderSummary(rows,v){
+  const el=$('summary');el.replaceChildren();
+  const overview=[['常温 最小すきま',`${signed(rows[0].min)} mm`],['組付け 最小すきま',`${signed(rows[1].min)} mm`],['必要最小すきま',`${fmt(v.target)} mm`],['目標達成条件数',`${rows.filter(r=>r.kind==='pass').length} / ${rows.length}`]];
+  overview.forEach(([label,value])=>{const card=text('div','','metric');card.append(text('small',label),text('strong',value));el.append(card)});
+ }
+ function renderConditions(rows){
+  const root=$('conditionResults');root.replaceChildren();
+  rows.forEach(r=>{const card=text('div','','condition');const top=text('div','','condition-top');top.append(text('strong',r.name),statusSpan(r.kind));
+   card.append(top,text('div',`${signed(r.min)} ～ ${signed(r.max)} mm`,'condition-result'),text('div',`インサート ${fmt(r.hole,1)}℃ / 金型 ${fmt(r.shaft,1)}℃ · 直径すきま範囲`,'condition-sub'));root.append(card);
+  });
+ }
+ function renderMap(v){
+  const root=$('heatmap');root.replaceChildren();const fragment=document.createDocumentFragment();
+  for(let yi=15;yi>=0;yi--){for(let xi=0;xi<16;xi++){
+   const th=v.mapMin+(v.mapMax-v.mapMin)*yi/15,ts=v.mapMin+(v.mapMax-v.mapMin)*xi/15;
+   const r=calculate(v,th,ts);const cell=document.createElement('button');cell.type='button';cell.className=`mapcell ${r.kind}`;
+   cell.setAttribute('aria-label',`インサート${fmt(th,1)}度、金型${fmt(ts,1)}度、${stateLabels[r.kind]}`);
+   const isSelected=selectedMap&&Math.abs(selectedMap.hole-th)<1e-8&&Math.abs(selectedMap.shaft-ts)<1e-8;
+   if(isSelected)cell.classList.add('selected');
+   cell.addEventListener('click',()=>{selectedMap={hole:th,shaft:ts};root.querySelector('.selected')?.classList.remove('selected');cell.classList.add('selected');mapDetail(v,th,ts)});
+   fragment.append(cell);
+  }}root.append(fragment);$('xMin').textContent=`${v.mapMin}℃`;$('xMax').textContent=`${v.mapMax}℃`;
+  if(selectedMap&&selectedMap.hole>=v.mapMin&&selectedMap.hole<=v.mapMax&&selectedMap.shaft>=v.mapMin&&selectedMap.shaft<=v.mapMax){mapDetail(v,selectedMap.hole,selectedMap.shaft)}else{$('mapDetail').textContent='セルをタップすると最小・最大すきまを表示します。';}
+ }
+ function mapDetail(v,th,ts){const r=calculate(v,th,ts);$('mapDetail').textContent=`インサート ${fmt(th,1)}℃ / 金型 ${fmt(ts,1)}℃｜${stateLabels[r.kind]}｜最小 ${signed(r.min)} mm ～ 最大 ${signed(r.max)} mm`;}
+ function renderInverse(v,rows){
+  const choice=$('inverseCondition').value;const targets=choice==='all'?rows:[rows[Number(choice)]].filter(Boolean);
+  const limits=targets.map(c=>({name:c.name,value:((v.holeNom+v.holeLower)*factor(v.holeAlpha,c.hole)-v.target)/factor(v.shaftAlpha,c.shaft)}));
+  const restrictive=limits.reduce((a,b)=>a.value<b.value?a:b);
+  const current=v.shaftNom+v.shaftUpper;const delta=current-restrictive.value;
+  const node=$('inverseResult');node.replaceChildren(text('div',`20℃ 凸径上限｜制約条件：${restrictive.name}`),text('strong',`φ ${fmt(restrictive.value,5)} mm 以下`),text('div',delta>1e-10?`現状上限 φ${fmt(current,5)} mm から ${fmt(delta,5)} mm 以上の径縮小が必要です。`:`現状上限 φ${fmt(current,5)} mm はこの条件を満たします。`));
+  const heat=v.conditions[Number($('heatCondition').value)]||v.conditions[1];const heater=$('heatResult');heater.replaceChildren();
+  const denominator=(v.holeNom+v.holeLower)*v.holeAlpha*1e-6;
+  const requireShaft=(v.shaftNom+v.shaftUpper)*factor(v.shaftAlpha,heat.shaft)+v.target;
+  if(denominator<=0){heater.append(text('div','穴側の熱膨張が0のため、加熱温度ではすきまを増やせません。'));return;}
+  const temp=20+(requireShaft-(v.holeNom+v.holeLower))/denominator;
+  heater.append(text('div',`${heat.name}：金型温度 ${fmt(heat.shaft,1)}℃ を固定`),text('strong',`インサート ${fmt(temp,2)}℃ 以上`));
+  if(temp>300||temp< -50)heater.append(text('div','必要温度が画面で設定できる温度範囲（−50～300℃）外です。材料・工程の温度許容範囲も別途確認してください。'));
+  else heater.append(text('div',`現設定 ${fmt(heat.hole,1)}℃ に対して ${temp>heat.hole?`${fmt(temp-heat.hole,2)}℃ 以上の追加加熱が必要です。`:'温度条件を満たします。'}`));
+ }
+ function renderTable(rows){const root=$('detailRows');root.replaceChildren();rows.forEach(r=>{const tr=document.createElement('tr');[r.name,r.hLow,r.hHigh,r.sLow,r.sHigh,r.min,r.max].forEach((value,i)=>tr.append(text('td',i===0?value:fmt(value,5))));root.append(tr)});}
+ function saved(){try{const parsed=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(parsed)?parsed.filter(x=>x&&typeof x.name==='string'&&x.data):[];}catch{return[]}}
+ function saveList(items){try{localStorage.setItem(KEY,JSON.stringify(items));return true}catch{$('saveStatus').textContent='保存できません。ブラウザの保存制限・空き容量を確認してください。';return false}}
+ function refreshSaved(){const select=$('savedCases'),previous=select.value;select.replaceChildren(new Option('保存データを選択',''));saved().forEach(item=>select.add(new Option(item.name,item.name)));select.value=previous;}
+ function doSave(){if(validate().length){$('saveStatus').textContent='入力エラーがあるため保存できません。';return}const name=$('caseName').value.trim();if(!name){$('saveStatus').textContent='保存名を入力してください。';$('caseName').focus();return}
+  const items=saved().filter(x=>x.name!==name);items.unshift({name,data:read()});if(items.length>12)items.length=12;
+  if(saveList(items)){$('saveStatus').textContent=`「${name}」を保存しました。`;refreshSaved();$('savedCases').value=name;}
+ }
+ function validStored(data){return data&&inputs.every(id=>Object.hasOwn(data,id))&&Array.isArray(data.conditions)&&data.conditions.length===4&&data.conditions.every(c=>c&&Number.isFinite(c.hole)&&Number.isFinite(c.shaft));}
+ function doLoad(){const item=saved().find(x=>x.name===$('savedCases').value);if(!item){$('saveStatus').textContent='読み込む保存データを選択してください。';return}if(!validStored(item.data)){$('saveStatus').textContent='保存データの形式が不正です。';return}restore(item.data);$('caseName').value=item.name;$('saveStatus').textContent=`「${item.name}」を読み込みました。`}
+ function doRemove(){const name=$('savedCases').value;if(!name){$('saveStatus').textContent='削除する保存データを選択してください。';return}if(!window.confirm(`「${name}」を削除しますか？`))return;const items=saved().filter(x=>x.name!==name);if(saveList(items)){refreshSaved();$('saveStatus').textContent=`「${name}」を削除しました。`}}
+ function downloadCSV(){if(validate().length){$('saveStatus').textContent='入力エラーを修正してから出力してください。';return}const v=read();const rows=[['金型の熱膨張 × 公差マップ','20℃基準・直径すきま(mm)'],['項目','値'],...inputs.filter(x=>!['mapMin','mapMax'].includes(x)).map(id=>[id,v[id]]),[],['条件','穴温度(℃)','軸温度(℃)','穴下限(mm)','穴上限(mm)','軸下限(mm)','軸上限(mm)','最小すきま(mm)','最大すきま(mm)','判定']];
+  v.conditions.forEach(c=>{const r=calculate(v,c.hole,c.shaft);rows.push([c.name,c.hole,c.shaft,r.hLow,r.hHigh,r.sLow,r.sHigh,r.min,r.max,stateLabels[r.kind]])});
+  const csv='\ufeff'+rows.map(row=>row.map((cell,i)=>escapeCSV(typeof cell==='string'&&i===0&&/^[=+@]/.test(cell)?`'${cell}`:cell)).join(',')).join('\r\n');
+  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download='thermal-fit-results.csv';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);$('saveStatus').textContent='計算結果をCSVで出力しました。';
+ }
+ initConditions();restore(DEFAULT);refreshSaved();
+ for(const id of inputs){$(id).addEventListener('input',render)}
+ for(const side of ['hole','shaft']){$(`${side}Material`).addEventListener('change',()=>{const key=$(`${side}Material`).value;if(key!=='custom')$(`${side}Alpha`).value=PRESETS[key];render()});$(`${side}Alpha`).addEventListener('input',()=>{$(`${side}Material`).value='custom';render()});}
+ ['inverseCondition','heatCondition'].forEach(id=>$(id).addEventListener('change',render));
+ $('save').addEventListener('click',doSave);$('load').addEventListener('click',doLoad);$('remove').addEventListener('click',doRemove);$('csv').addEventListener('click',downloadCSV);
+ $('reset').addEventListener('click',()=>{restore(DEFAULT);$('saveStatus').textContent='例の条件に戻しました。保存データは削除していません。'});
+})();
+</script>
+</body>
+</html>
