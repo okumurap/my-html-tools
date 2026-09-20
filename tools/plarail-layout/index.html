@@ -34,6 +34,7 @@
 const cv=document.querySelector('#cv'),ctx=cv.getContext('2d'),stage=document.querySelector('#stage');
 const COLS=12,ROWS=8,DIRS=['N','E','S','W'],V={N:[0,-1],E:[1,0],S:[0,1],W:[-1,0]},OPP={N:'S',E:'W',S:'N',W:'E'};
 let grid=makeGrid(),trains=[],tool='straight',mode='edit',running=false,speed=1,history=[],view={},dpr=1,lastTime=performance.now(),soundOn=true,audio=null,toastTimer=0;
+const crossingGates=new Map();let lastCrossingChime=0;
 let pointer={down:false,startX:0,startY:0,startTime:0,lastCell:'',longTimer:null,longDone:false,moved:false};
 function makeGrid(){return Array.from({length:ROWS},()=>Array(COLS).fill(null))}
 function cloneState(){return JSON.parse(JSON.stringify({grid,trains}))}
@@ -47,13 +48,111 @@ function resize(){const r=stage.getBoundingClientRect();dpr=Math.min(devicePixel
 function cellFromEvent(e){const r=cv.getBoundingClientRect(),x=Math.floor((e.clientX-r.left-view.ox)/view.c),y=Math.floor((e.clientY-r.top-view.oy)/view.c);return inside(x,y)?{x,y}:null}
 function endpoints(x,y){const c=view.c,l=view.ox+x*c,t=view.oy+y*c,mx=l+c/2,my=t+c/2;return{N:[mx,t],E:[l+c,my],S:[mx,t+c],W:[l,my],M:[mx,my],l,t,mx,my,c}}
 function railLine(a,b,e){ctx.beginPath();ctx.moveTo(...e[a]);ctx.lineTo(e.mx,e.my);ctx.lineTo(...e[b]);ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#756958';ctx.lineWidth=e.c*.25;ctx.stroke();ctx.strokeStyle='#e3dccd';ctx.lineWidth=e.c*.13;ctx.stroke();ctx.strokeStyle='#8a7e6e';ctx.lineWidth=2;ctx.setLineDash([3,5]);ctx.stroke();ctx.setLineDash([])}
-function drawPiece(x,y,p){if(!p)return;const e=endpoints(x,y);if(p.t==='switch'){const routes=switchRoutes(p);railLine(...routes[0],e);railLine(...routes[1],e);ctx.fillStyle=p.a?'#ef604d':'#2d82c5';ctx.beginPath();ctx.arc(e.mx,e.my,e.c*.095,0,Math.PI*2);ctx.fill()}else{const c=connections(p);railLine(c[0],c[1],e)}if(p.t==='station'){ctx.fillStyle='#fffaf0';ctx.fillRect(e.l+e.c*.1,e.t+e.c*.08,e.c*.8,e.c*.19);ctx.fillStyle='#ef604d';ctx.fillRect(e.l+e.c*.1,e.t+e.c*.08,e.c*.8,e.c*.045)}if(p.t==='crossing'){const near=trains.some(t=>Math.abs(t.x-x)+Math.abs(t.y-y)<=1.4);ctx.save();ctx.translate(e.mx,e.my);ctx.rotate((p.r%2)*Math.PI/2);ctx.strokeStyle='#303434';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-e.c*.3,-e.c*.2);ctx.lineTo(e.c*.3,e.c*.2);ctx.moveTo(-e.c*.3,e.c*.2);ctx.lineTo(e.c*.3,-e.c*.2);ctx.stroke();ctx.strokeStyle='#e74d3c';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(near?0:-e.c*.3,near?e.c*.3:-e.c*.22);ctx.stroke();ctx.restore()}}
+// A Japanese level crossing: asphalt runs perpendicular to the track.
+function drawCrossingRoad(e,verticalTrack){
+  const c=e.c;
+  ctx.save();ctx.translate(e.mx,e.my);ctx.rotate(verticalTrack?Math.PI/2:0);
+  ctx.fillStyle='#858987';ctx.fillRect(-c*.24,-c*.5,c*.48,c);
+  ctx.fillStyle='#f9f5e9';
+  for(const y of [-c*.32,c*.32])ctx.fillRect(-c*.23,y,c*.46,Math.max(1,c*.026));
+  ctx.restore();
+}
+function stripedArm(x,y,dx,dy,c){
+  ctx.save();ctx.lineCap='butt';ctx.lineWidth=Math.max(2,c*.075);
+  ctx.strokeStyle='#201e1a';ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+dx,y+dy);ctx.stroke();
+  ctx.lineWidth=Math.max(1.5,c*.052);ctx.strokeStyle='#f8d63e';ctx.stroke();
+  ctx.strokeStyle='#29251c';ctx.setLineDash([Math.max(2,c*.08),Math.max(2,c*.085)]);ctx.stroke();
+  ctx.setLineDash([]);ctx.restore();
+}
+function crossingCrossbuck(x,y,c){
+  ctx.save();ctx.translate(x,y);ctx.rotate(Math.PI/4);
+  for(let i=0;i<2;i++){
+    ctx.fillStyle='#232323';ctx.fillRect(-c*.13,-c*.034,c*.26,c*.068);
+    ctx.fillStyle='#f8d63e';ctx.fillRect(-c*.12,-c*.022,c*.24,c*.044);
+    ctx.rotate(Math.PI/2);
+  }
+  ctx.restore();
+}
+function drawJapaneseCrossing(e,p,gate,now){
+  const c=e.c;ctx.save();ctx.translate(e.mx,e.my);
+  ctx.rotate((p.r||0)%2?Math.PI/2:0);
+  const lit=Math.floor(now/270)%2===0;
+  for(const side of [-1,1]){
+    const x=side*c*.33,y=side*c*.34;
+    ctx.fillStyle='#222';ctx.fillRect(x-c*.033,y-c*.16,c*.066,c*.27);
+    ctx.fillStyle='#f6d439';ctx.fillRect(x-c*.033,y+c*.005,c*.066,c*.045);
+    crossingCrossbuck(x,y-c*.19,c);
+    for(const lamp of [-1,1]){
+      const lx=x+lamp*c*.105,ly=y-c*.066;
+      ctx.fillStyle='#212121';ctx.beginPath();ctx.arc(lx,ly,c*.074,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=gate.alarm&&lit===(lamp===-1)?'#ff3434':'#651c1c';
+      ctx.beginPath();ctx.arc(lx,ly,c*.051,0,Math.PI*2);ctx.fill();
+    }
+    const toCenter=-side*c*.56*gate.closed;
+    const upright=-side*c*.48*(1-gate.closed);
+    stripedArm(x,y+c*.07,toCenter,upright,c);
+    ctx.fillStyle='#232323';ctx.beginPath();ctx.arc(x,y+c*.07,c*.052,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
+// Follow each train's connected route rather than using Manhattan distance:
+// nearby tracks that do not lead through this crossing must not activate it.
+function trainApproachesCrossing(t,targetX,targetY){
+  let x=t.x,y=t.y,exit=t.exit;
+  for(let step=0;step<=3;step++){
+    if(x===targetX&&y===targetY)return step===0||step-t.p<=2.6;
+    if(step===3||!V[exit])return false;
+    const [dx,dy]=V[exit],nx=x+dx,ny=y+dy,next=at(nx,ny);
+    if(!next)return false;
+    const nextExit=exitDir(next,OPP[exit]);
+    if(!nextExit)return false;
+    x=nx;y=ny;exit=nextExit;
+  }
+  return false;
+}
+function updateCrossings(dt,now){
+  let anyAlarm=false;
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+    if(at(x,y)?.t!=='crossing')continue;
+    const key=`${x},${y}`;
+    let gate=crossingGates.get(key);
+    if(!gate){gate={closed:0,alarm:false};crossingGates.set(key,gate)}
+    gate.alarm=running&&trains.some(t=>trainApproachesCrossing(t,x,y));
+    gate.closed=Math.max(0,Math.min(1,gate.closed+(gate.alarm?1.4:-1.6)*dt));
+    anyAlarm ||=gate.alarm;
+  }
+  if(!anyAlarm){lastCrossingChime=0;return}
+  if(soundOn&&(!lastCrossingChime||now-lastCrossingChime>=680)){
+    lastCrossingChime=now;
+    tone(810,.11);
+    setTimeout(()=>{if(running&&soundOn)tone(580,.12)},140);
+  }
+}
+function drawPiece(x,y,p){
+  if(!p)return;
+  const e=endpoints(x,y);
+  if(p.t==='crossing')drawCrossingRoad(e,(p.r||0)%2===1);
+  if(p.t==='switch'){
+    const routes=switchRoutes(p);railLine(...routes[0],e);railLine(...routes[1],e);
+    ctx.fillStyle=p.a?'#ef604d':'#2d82c5';ctx.beginPath();ctx.arc(e.mx,e.my,e.c*.095,0,Math.PI*2);ctx.fill();
+  }else{
+    const c=connections(p);railLine(c[0],c[1],e);
+  }
+  if(p.t==='station'){
+    ctx.fillStyle='#fffaf0';ctx.fillRect(e.l+e.c*.1,e.t+e.c*.08,e.c*.8,e.c*.19);
+    ctx.fillStyle='#ef604d';ctx.fillRect(e.l+e.c*.1,e.t+e.c*.08,e.c*.8,e.c*.045);
+  }
+  if(p.t==='crossing'){
+    const gate=crossingGates.get(`${x},${y}`)||{closed:0,alarm:false};
+    drawJapaneseCrossing(e,p,gate,performance.now());
+  }
+}
 function trainPos(t,p){const e=endpoints(t.x,t.y),a=e[t.entry]||e.M,b=e[t.exit]||e.M;if(p<.5){const u=p*2;return[a[0]+(e.mx-a[0])*u,a[1]+(e.my-a[1])*u]}const u=(p-.5)*2;return[e.mx+(b[0]-e.mx)*u,e.my+(b[1]-e.my)*u]}
 function drawTrain(t){const a=trainPos(t,t.p),b=trainPos(t,Math.min(1,t.p+.04)),ang=Math.atan2(b[1]-a[1],b[0]-a[0]),c=view.c;ctx.save();ctx.translate(...a);ctx.rotate(ang);ctx.fillStyle=t.color;ctx.strokeStyle='#fff';ctx.lineWidth=2;roundRect(-c*.29,-c*.145,c*.58,c*.29,c*.08);ctx.fill();ctx.stroke();ctx.fillStyle='#ddecf7';ctx.fillRect(-c*.13,-c*.1,c*.13,c*.2);ctx.fillStyle='#fff4ad';ctx.beginPath();ctx.arc(c*.22,-c*.06,c*.036,0,Math.PI*2);ctx.fill();ctx.restore()}
 function roundRect(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r)}
 function draw(){ctx.clearRect(0,0,view.w,view.h);ctx.fillStyle='#dceccb';ctx.fillRect(0,0,view.w,view.h);ctx.strokeStyle='#b8cfa5';ctx.lineWidth=1;for(let x=0;x<=COLS;x++){ctx.beginPath();ctx.moveTo(view.ox+x*view.c,view.oy);ctx.lineTo(view.ox+x*view.c,view.oy+ROWS*view.c);ctx.stroke()}for(let y=0;y<=ROWS;y++){ctx.beginPath();ctx.moveTo(view.ox,view.oy+y*view.c);ctx.lineTo(view.ox+COLS*view.c,view.oy+y*view.c);ctx.stroke()}for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)drawPiece(x,y,grid[y][x]);trains.forEach(drawTrain)}
 function updateTrain(t,dt){if(t.pause>0){t.pause-=dt;return}const p=at(t.x,t.y);if(!p)return;const key=`${t.x},${t.y}`;if(p.t==='station'&&t.p>.46&&t.p<.56&&t.lastStop!==key){t.pause=1.2;t.lastStop=key;tone(700,.08);return}t.p+=dt*.76*speed;if(t.p<1)return;const d=V[t.exit],nx=t.x+d[0],ny=t.y+d[1],np=at(nx,ny),entry=OPP[t.exit],nextExit=exitDir(np,entry);if(np&&nextExit){t.x=nx;t.y=ny;t.entry=entry;t.exit=nextExit;t.p=0;if(t.lastStop!==`${nx},${ny}`)t.lastStop=''}else{const tmp=t.entry;t.entry=t.exit;t.exit=tmp;t.p=0;t.pause=.25}}
-function frame(now){const dt=Math.min(.04,(now-lastTime)/1000);lastTime=now;if(running)trains.forEach(t=>updateTrain(t,dt));draw();requestAnimationFrame(frame)}
+function frame(now){const dt=Math.min(.04,(now-lastTime)/1000);lastTime=now;if(running)trains.forEach(t=>updateTrain(t,dt));updateCrossings(dt,now);draw();requestAnimationFrame(frame)}
 function placeOrRotate(c,drag=false){if(!c||mode!=='edit')return;const key=`${c.x},${c.y}`;if(drag&&pointer.lastCell===key)return;pointer.lastCell=key;const p=at(c.x,c.y);if(tool==='train'){if(!p){toast('線路の上に置いてね');return}if(drag)return;const i=trains.findIndex(t=>t.x===c.x&&t.y===c.y);remember();if(i>=0){trains.splice(i,1);tone(220,.05);toast('列車を消しました')}else addTrain(c.x,c.y,p);return}if(p){if(drag)return;remember();if(p.t===tool){p.r=(p.r+1)%4;tone(460,.04);toast('向きを変えました')}else{grid[c.y][c.x]={t:tool,r:0,a:false};tone(360,.035);toast('上書きしました')}return}remember();grid[c.y][c.x]={t:tool,r:0,a:false};tone(360,.035)}
 function removeAt(c){if(!c||mode!=='edit')return;const p=at(c.x,c.y),hasTrain=trains.some(t=>t.x===c.x&&t.y===c.y);if(!p&&!hasTrain)return;remember();grid[c.y][c.x]=null;trains=trains.filter(t=>!(t.x===c.x&&t.y===c.y));tone(220,.05);toast('消しました')}
 function addTrain(x,y,p){if(trains.length>=3){toast('列車は3本まで');return}const c=connections(p);if(c.length<2){toast('ここには置けません');return}trains.push({x,y,entry:c[0],exit:c[1],p:.5,pause:0,lastStop:'',color:['#e94f3d','#2e82c5','#f0a62a'][trains.length]});tone(620,.07);toast('列車を置きました')}
