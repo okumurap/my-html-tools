@@ -1,832 +1,753 @@
 (() => {
-  "use strict";
+  'use strict';
 
-  const canvas = document.querySelector("#game");
-  const context = canvas.getContext("2d");
-  const tapCard = document.querySelector("#tapCard");
-  const cardTitle = document.querySelector("#cardTitle");
-  const cardText = document.querySelector("#cardText");
-  const soundButton = document.querySelector("#soundButton");
-  const fullscreenButton = document.querySelector("#fullscreenButton");
-  const status = document.querySelector("#status");
-  const dots = [...document.querySelectorAll(".dot")];
+  const $ = selector => document.querySelector(selector);
+  const canvas = $('#game');
+  const ctx = canvas.getContext('2d');
+  const card = $('#tapCard');
+  const cardTitle = $('#cardTitle');
+  const cardText = $('#cardText');
+  const startButton = $('#startButton');
+  const driveControls = $('#driveControls');
+  const boostButton = $('#boostButton');
+  const brakeButton = $('#brakeButton');
+  const hornButton = $('#hornButton');
+  const soundButton = $('#soundButton');
+  const fullscreenButton = $('#fullscreenButton');
+  const toastNode = $('#toast');
+  const hint = $('#hint');
+  const status = $('#status');
+  const dots = [...document.querySelectorAll('.dot')];
+  const choices = [...document.querySelectorAll('.train-choice')];
 
-  if (!context) {
-    status.textContent = "このブラウザではゲーム画面を表示できません。";
-    tapCard.classList.remove("is-hidden");
-    cardTitle.textContent = "表示できません";
-    cardText.textContent = "別のブラウザでお試しください";
+  if (!ctx) {
+    cardTitle.textContent = 'このブラウザでは うごかせません';
+    cardText.textContent = 'ほかのブラウザで あそんでね';
+    startButton.disabled = true;
+    status.textContent = 'Canvasに対応していないためゲームを表示できません。';
     return;
   }
 
-  let width = window.innerWidth;
-  let height = window.innerHeight;
-  let pixelRatio = 1;
-  let state = "idle";
-  let trainX = 220;
+  const KEY = 'train-crossing:v2:';
+  const read = (key, fallback) => {
+    try { return localStorage.getItem(KEY + key) ?? fallback; } catch (_) { return fallback; }
+  };
+  const save = (key, value) => {
+    try { localStorage.setItem(KEY + key, String(value)); } catch (_) { /* プライベートモードでも遊べる */ }
+  };
+  const stations = ['パンダえき', 'おはなえき', 'うみえき', 'ほしぞらえき', 'りんごえき'];
+  const starsAt = [600, 1250, 1960];
+  const CROSSING = 910;
+  const TUNNEL_START = 1420;
+  const TUNNEL_END = 1830;
+  const DESTINATION = 2290;
+  const TAU = Math.PI * 2;
+  const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false;
+  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+  const storedTrips = Number(read('trips', '0'));
+  let trips = Number.isSafeInteger(storedTrips) ? clamp(storedTrips, 0, 999999) : 0;
+  let trainType = ['local', 'bullet', 'steam'].includes(read('train', 'local')) ? read('train', 'local') : 'local';
+  let soundOn = read('sound', 'true') !== 'false';
+  let state = 'idle';
+  let width = 375;
+  let height = 650;
+  let ratio = 1;
+  let trackHeight = 440;
+  let trainX = 160;
   let speed = 0;
+  let boost = 0;
+  let braking = false;
+  let gateDown = 0;
   let cameraX = 0;
-  let lastTime = performance.now();
-  let trip = 0;
-  let soundOn = true;
-  let audioContext = null;
+  let collected = new Set();
+  let progress = -1;
+  let confetti = [];
+  let particles = [];
+  let popupUntil = 0;
+  let lastTime = 0;
+  let audio = null;
   let nextClack = 0;
   let nextBell = 0;
-  let arrivalTime = 0;
-  let currentProgress = -1;
-  let confetti = [];
-  let puffs = [];
-  let stars = [];
-  let clouds = [];
-  let scenerySeed = 7;
+  let stageAnnounced = -1;
+  let lastHorn = 0;
+  let runSeed = 0;
 
-  const stationNames = ["パンダえき", "おはなえき", "うみえき", "ほしぞらえき", "りんごえき"];
-  const trainColors = ["#ff5f5f", "#42a5f5", "#ffb000", "#65c466", "#a76ee8"];
-  const confettiColors = ["#ff5f5f", "#ffd63d", "#49b9ff", "#61d477", "#aa6dec", "#ff8e3c"];
-
-  const announce = (message) => {
-    status.textContent = message;
+  const announce = text => { status.textContent = text; };
+  const showToast = (text, now = performance.now(), duration = 1550) => {
+    toastNode.textContent = text;
+    popupUntil = now + duration;
+    toastNode.classList.add('is-visible');
   };
-
-  const buildClouds = () => {
-    clouds = [];
-    const count = Math.max(5, Math.ceil(width / 260));
-
-    for (let index = 0; index < count; index += 1) {
-      clouds.push({
-        x: (index * 310 + 80) % (width + 300),
-        y: 70 + (index * 53) % Math.max(80, height * 0.25),
-        scale: 0.7 + (index % 3) * 0.18,
-      });
-    }
+  const updateRoute = () => {
+    const routeTrip = state === 'done' ? trips - 1 : trips;
+    $('#routeName').textContent = `${stations[routeTrip % stations.length]} → ${stations[(routeTrip + 1) % stations.length]}`;
+    $('#tripCount').textContent = `のった ${trips}かい`;
+    $('#starCount').textContent = `${collected.size} / ${starsAt.length}`;
+  };
+  const setPhase = text => { $('#routePhase').textContent = text; };
+  const setProgress = step => {
+    if (progress === step) return;
+    progress = step;
+    dots.forEach((dot, index) => {
+      dot.classList.toggle('is-current', index === step);
+      dot.classList.toggle('is-done', index < step);
+      if (index === step) dot.setAttribute('aria-current', 'step');
+      else dot.removeAttribute('aria-current');
+    });
+  };
+  const setTrain = type => {
+    if (!['local', 'bullet', 'steam'].includes(type)) return;
+    trainType = type;
+    save('train', type);
+    choices.forEach(button => {
+      const selected = button.dataset.train === type;
+      button.classList.toggle('is-selected', selected);
+      button.setAttribute('aria-pressed', String(selected));
+    });
+    const name = { local: 'ふつうでんしゃ', bullet: 'しんかんせん', steam: 'きかんしゃ' }[type];
+    announce(`${name}を選びました。出発ボタンを押してください。`);
   };
 
   const resize = () => {
-    width = window.innerWidth;
-    height = window.innerHeight;
-    pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.round(width * pixelRatio);
-    canvas.height = Math.round(height * pixelRatio);
+    width = Math.max(1, window.innerWidth);
+    height = Math.max(1, window.innerHeight);
+    trackHeight = Math.round(height * (height < 470 ? 0.73 : 0.69));
+    ratio = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(width * ratio);
+    canvas.height = Math.round(height * ratio);
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
-    context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-    buildClouds();
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   };
 
-  const pseudoRandom = (number) => {
-    const value = Math.sin(number * 12.9898 + scenerySeed * 78.233) * 43758.5453;
-    return value - Math.floor(value);
-  };
-
-  const initAudio = () => {
-    if (audioContext) return;
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (AudioContextClass) audioContext = new AudioContextClass();
-  };
-
-  const tone = (frequency, duration = 0.12, type = "sine", volume = 0.08, delay = 0) => {
+  const unlockSound = () => {
     if (!soundOn) return;
-    initAudio();
-    if (!audioContext) return;
+    try {
+      const Audio = window.AudioContext || window.webkitAudioContext;
+      if (!audio && Audio) audio = new Audio();
+      if (audio?.state === 'suspended') audio.resume().catch(() => {});
+    } catch (_) { audio = null; }
+  };
+  const tone = (freq, seconds = .12, type = 'sine', volume = .045, delay = 0) => {
+    if (!soundOn) return;
+    unlockSound();
+    if (!audio) return;
+    try {
+      const now = audio.currentTime + delay;
+      const oscillator = audio.createOscillator();
+      const gain = audio.createGain();
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(.0001, now);
+      gain.gain.exponentialRampToValueAtTime(volume, now + .012);
+      gain.gain.exponentialRampToValueAtTime(.0001, now + seconds);
+      oscillator.connect(gain).connect(audio.destination);
+      oscillator.start(now);
+      oscillator.stop(now + seconds + .04);
+    } catch (_) { /* 一部のブラウザでは音無しで続行 */ }
+  };
+  const horn = () => {
+    const now = performance.now();
+    if (now - lastHorn < 380) return;
+    lastHorn = now;
+    tone(392, .25, 'triangle', .085);
+    tone(523, .37, 'triangle', .055, .1);
+    showToast('プップー！');
+    announce('警笛を鳴らしました。プップー！');
+  };
+  const bell = () => { tone(920, .095, 'square', .025); tone(760, .1, 'square', .025, .115); };
+  const success = () => [523, 659, 784, 1047].forEach((pitch, i) => tone(pitch, .22, 'triangle', .062, i * .14));
+  const wheelSound = () => { tone(128, .04, 'square', .013); tone(102, .03, 'square', .011, .06); };
 
-    const startAt = audioContext.currentTime + delay;
-    const oscillator = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    oscillator.type = type;
-    oscillator.frequency.setValueAtTime(frequency, startAt);
-    gain.gain.setValueAtTime(0.0001, startAt);
-    gain.gain.exponentialRampToValueAtTime(volume, startAt + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
-    oscillator.connect(gain).connect(audioContext.destination);
-    oscillator.start(startAt);
-    oscillator.stop(startAt + duration + 0.03);
+  const spark = (x, y, count, colors = ['#ffd24a', '#fff', '#f86f83']) => {
+    if (reducedMotion) return;
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * TAU + Math.random() * .28;
+      const force = 75 + Math.random() * 185;
+      particles.push({ x, y, vx: Math.cos(angle) * force, vy: Math.sin(angle) * force - 25,
+        life: .8 + Math.random() * .6, maxLife: 1.4, size: 3 + Math.random() * 5, color: colors[i % colors.length] });
+    }
+    if (particles.length > 100) particles = particles.slice(-100);
+  };
+  const celebrate = () => {
+    if (reducedMotion) return;
+    confetti = Array.from({ length: 70 }, (_, i) => ({
+      x: width * .5 + (Math.random() - .5) * 220, y: height * .25 - Math.random() * 85,
+      vx: (Math.random() - .5) * 300, vy: -70 - Math.random() * 190,
+      spin: (Math.random() - .5) * 12, angle: Math.random() * TAU,
+      size: 4 + Math.random() * 6, life: 2.3 + Math.random() * 1.5,
+      color: ['#ff5e64', '#f9d83c', '#48b7fa', '#6acb83', '#a079ef'][i % 5]
+    }));
   };
 
-  const whistle = () => {
-    tone(740, 0.18, "triangle", 0.08);
-    tone(920, 0.28, "triangle", 0.075, 0.16);
-  };
-
-  const bell = () => {
-    tone(980, 0.08, "square", 0.035);
-    tone(760, 0.1, "square", 0.03, 0.1);
-  };
-
-  const clack = () => {
-    tone(125, 0.035, "square", 0.018);
-    tone(105, 0.035, "square", 0.014, 0.065);
-  };
-
-  const successSound = () => {
-    [523, 659, 784, 1047].forEach((frequency, index) => {
-      tone(frequency, 0.18, "triangle", 0.07, index * 0.12);
-    });
-  };
-
-  const setProgress = (step) => {
-    if (step === currentProgress) return;
-    currentProgress = step;
-    dots.forEach((dot, index) => {
-      const isCurrent = index === step;
-      dot.classList.toggle("is-current", isCurrent);
-      if (isCurrent) dot.setAttribute("aria-current", "step");
-      else dot.removeAttribute("aria-current");
-    });
-  };
-
-  const showCard = (title, text) => {
-    cardTitle.textContent = title;
-    cardText.textContent = text;
-    tapCard.classList.remove("is-hidden");
-  };
-
-  const hideCard = () => {
-    tapCard.classList.add("is-hidden");
-  };
-
-  const startTrip = () => {
-    if (state === "running" || state === "arriving") return;
-    initAudio();
-    if (audioContext?.state === "suspended") audioContext.resume();
-    state = "running";
-    speed = 40;
-    arrivalTime = 0;
-    confetti = [];
-    stars = [];
-    nextClack = 0;
-    nextBell = 0;
-    hideCard();
-    whistle();
-    setProgress(0);
-    announce("電車が出発しました。画面をタップするとスピードアップします。");
-  };
-
-  const resetTrip = () => {
-    trip += 1;
-    scenerySeed += 11;
-    trainX = 220;
-    speed = 0;
+  const start = () => {
+    if (state !== 'idle' && state !== 'done') return;
+    unlockSound();
+    state = 'running';
+    speed = 34;
+    boost = .4;
+    braking = false;
+    trainX = 160;
     cameraX = 0;
-    state = "idle";
+    gateDown = 0;
+    collected.clear();
+    particles = [];
     confetti = [];
-    stars = [];
-    puffs = [];
+    nextBell = 0;
+    nextClack = 0;
+    stageAnnounced = -1;
+    runSeed += 7;
+    card.classList.add('is-hidden');
+    driveControls.hidden = false;
+    hint.textContent = 'がめんタップでも はやくなるよ';
+    setPhase('はしっているよ！');
     setProgress(0);
-    const nextStation = stationNames[(trip + 1) % stationNames.length];
-    showCard("タップで しゅっぱつ！", `${nextStation}へ いこう`);
-    announce(`タップすると${nextStation}へ向けて出発します。`);
+    updateRoute();
+    tone(659, .19, 'triangle', .055);
+    tone(880, .28, 'triangle', .052, .15);
+    showToast('しゅっぱつ しんこう！');
+    announce('電車が出発しました。スピードアップ、ブレーキ、警笛が使えます。');
+  };
+  const reset = () => {
+    state = 'idle';
+    speed = 0;
+    boost = 0;
+    braking = false;
+    trainX = 160;
+    cameraX = 0;
+    gateDown = 0;
+    collected.clear();
+    confetti = [];
+    particles = [];
+    setProgress(0);
+    setPhase('しゅっぱつ じゅんび');
+    cardTitle.textContent = 'どのでんしゃに する？';
+    cardText.textContent = `${stations[(trips + 1) % stations.length]}へ いこう！`;
+    startButton.textContent = '▶ しゅっぱつ！';
+    card.classList.remove('is-hidden');
+    driveControls.hidden = true;
+    brakeButton.classList.remove('is-held');
+    hint.textContent = 'でんしゃを えらんでね';
+    updateRoute();
+  };
+  const arrive = () => {
+    if (state === 'done') return;
+    state = 'done';
+    speed = 0;
+    braking = false;
+    trainX = DESTINATION;
+    driveControls.hidden = true;
+    const perfect = collected.size === starsAt.length;
+    trips += 1;
+    save('trips', trips);
+    setProgress(3);
+    setPhase('とうちゃく！');
+    updateRoute();
+    celebrate();
+    success();
+    cardTitle.textContent = perfect ? '⭐ ぜんぶ あつめた！' : '🎉 とうちゃく！';
+    cardText.textContent = `${stations[trips % stations.length]}に ついたよ！　のった ${trips}かい`;
+    startButton.textContent = '▶ つぎの えきへ！';
+    card.classList.remove('is-hidden');
+    hint.textContent = 'つぎは どのでんしゃ？';
+    showToast('やったね！ とうちゃく！', performance.now(), 1800);
+    announce(`${stations[trips % stations.length]}に到着しました。これまでに${trips}回乗りました。`);
+  };
+  const accelerate = () => {
+    if (state === 'idle' || state === 'done') { start(); return; }
+    if (state !== 'running' || braking) return;
+    boost = 1.6;
+    speed = Math.min(390, speed + 55);
+    if (!reducedMotion) spark(clamp(trainX - cameraX, 40, width - 30), trackHeight - 100, 5);
+    tone(610, .06, 'sine', .018);
+    setPhase('スピード アップ！');
+  };
+  const brakeOn = event => {
+    if (state !== 'running' || event.button > 0) return;
+    braking = true;
+    boost = 0;
+    brakeButton.classList.add('is-held');
+    setPhase('ブレーキ！');
+    try { brakeButton.setPointerCapture(event.pointerId); } catch (_) { /* 非対応でも操作可能 */ }
+    event.preventDefault();
+  };
+  const brakeOff = () => {
+    braking = false;
+    brakeButton.classList.remove('is-held');
+    if (state === 'running') setPhase('はしっているよ！');
   };
 
-  const addStar = (x, y) => {
-    stars.push({
-      x: x + (Math.random() - 0.5) * 100,
-      y: y + (Math.random() - 0.5) * 60,
-      velocityX: (Math.random() - 0.5) * 80,
-      velocityY: -60 - Math.random() * 90,
-      life: 1,
-      radius: 5 + Math.random() * 8,
+  const rand = n => {
+    const v = Math.sin(n * 12.9898 + runSeed * 2.331) * 43758.5453;
+    return v - Math.floor(v);
+  };
+  const update = (dt, now) => {
+    if (popupUntil && now > popupUntil) {
+      popupUntil = 0;
+      toastNode.classList.remove('is-visible');
+    }
+    if (state === 'running') {
+      const remain = DESTINATION - trainX;
+      const stoppingDistance = speed * speed / (2 * 205);
+      const approaching = remain <= stoppingDistance + 4;
+      if (approaching) {
+        state = 'arriving';
+        braking = false;
+        brakeButton.classList.remove('is-held');
+        setPhase('えきに とまるよ');
+        announce('もうすぐ駅に到着します。ゆっくり停車します。');
+      } else {
+        boost = Math.max(0, boost - dt);
+        const target = braking ? 0 : boost > 0 ? 335 : 230;
+        const change = braking ? 330 : target > speed ? 165 : 115;
+        speed += clamp(target - speed, -change * dt, change * dt);
+        speed = Math.max(0, speed);
+      }
+    }
+    if (state === 'arriving') {
+      speed = Math.max(0, speed - 205 * dt);
+      if (DESTINATION - trainX < 15) speed = Math.min(speed, Math.max(0, (DESTINATION - trainX) * 3.4));
+    }
+    if (state === 'running' || state === 'arriving') {
+      trainX = Math.min(DESTINATION, trainX + speed * dt);
+      const desiredCamera = Math.max(0, trainX - width * .37);
+      cameraX += (desiredCamera - cameraX) * Math.min(1, dt * 5);
+      if (speed > 45 && now >= nextClack) {
+        wheelSound();
+        nextClack = now + clamp(390 - speed * .57, 150, 370);
+      }
+      if (Math.abs(trainX - CROSSING) < 380 && now >= nextBell) {
+        bell();
+        nextBell = now + 590;
+      }
+      const stage = trainX < 525 ? 0 : trainX < 1390 ? 1 : trainX < 1840 ? 2 : 3;
+      if (stage !== progress) setProgress(stage);
+      if (stage !== stageAnnounced) {
+        stageAnnounced = stage;
+        if (stage === 1) { showToast('カン カン カン！', now); announce('踏切を通過しています。カンカンカン！'); }
+        if (stage === 2) { showToast('トンネルに はいるよ！', now); announce('トンネルに入りました。'); }
+        if (stage === 3) { showToast('つぎは えきだよ！', now); announce('トンネルを抜け、次の駅が見えてきました。'); }
+      }
+      starsAt.forEach((x, i) => {
+        if (!collected.has(i) && trainX >= x) {
+          collected.add(i);
+          updateRoute();
+          const starX = clamp(x - cameraX, 35, width - 35);
+          spark(starX, trackHeight - 165, 14);
+          tone(680 + collected.size * 120, .13, 'sine', .05);
+          showToast(`おほしさま ${collected.size}こ！`, now);
+          announce(`お星さまを${collected.size}個集めました。`);
+        }
+      });
+      if (trainType === 'steam' && !reducedMotion && Math.random() < dt * 8 && particles.length < 90) {
+        particles.push({ x: trainX - cameraX - 66, y: trackHeight - 126,
+          vx: -22, vy: -41, life: 1, maxLife: 1, size: 10, color: '#e6f2f4', smoke: true });
+      }
+      if (state === 'arriving' && (trainX >= DESTINATION - .75 || speed <= 1.8)) arrive();
+    }
+    const shouldClose = trainX > 450 && trainX < 1250 && state !== 'idle' && state !== 'done';
+    gateDown += ((shouldClose ? 1 : 0) - gateDown) * Math.min(1, dt * 3.4);
+    particles.forEach(p => {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      if (p.smoke) p.size += dt * 12;
+      else p.vy += 130 * dt;
+      p.life -= dt * (p.smoke ? .95 : .9);
     });
+    particles = particles.filter(p => p.life > 0);
+    confetti.forEach(p => {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vy += 240 * dt;
+      p.angle += p.spin * dt;
+      p.life -= dt;
+    });
+    confetti = confetti.filter(p => p.life > 0 && p.y < height + 30);
   };
 
-  const handleTap = () => {
-    if (state === "idle") {
-      startTrip();
-    } else if (state === "done" && performance.now() - arrivalTime > 700) {
-      resetTrip();
-      startTrip();
-    } else if (state === "done") {
-      for (let index = 0; index < 8; index += 1) addStar(width * 0.5, height * 0.35);
-    } else if (state === "running") {
-      speed = Math.min(speed + 45, 330);
-      tone(520, 0.06, "sine", 0.025);
+  const path = (fill, stroke, lineWidth = 2) => {
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lineWidth; ctx.stroke(); }
+  };
+  const rectangle = (x, y, w, h, color) => { ctx.fillStyle = color; ctx.fillRect(x, y, w, h); };
+  const circle = (x, y, r, color, stroke, lineWidth = 2) => {
+    ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); path(color, stroke, lineWidth);
+  };
+  const round = (x, y, w, h, r, fill, stroke = null, sw = 2) => {
+    const rad = Math.max(0, Math.min(r, Math.abs(w) / 2, Math.abs(h) / 2));
+    ctx.beginPath(); ctx.moveTo(x + rad, y); ctx.lineTo(x + w - rad, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + rad);
+    ctx.lineTo(x + w, y + h - rad); ctx.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
+    ctx.lineTo(x + rad, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - rad);
+    ctx.lineTo(x, y + rad); ctx.quadraticCurveTo(x, y, x + rad, y); ctx.closePath();
+    path(fill, stroke, sw);
+  };
+  const label = (text, x, y, size = 19, color = '#21435b') => {
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `900 ${size}px "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif`;
+    ctx.fillStyle = color; ctx.fillText(text, x, y);
+  };
+  const cloud = (x, y, s) => {
+    ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+    ctx.globalAlpha = .93;
+    circle(0, 10, 19, '#fff'); circle(20, 0, 27, '#fff');
+    circle(47, 9, 22, '#fff'); round(-16, 8, 80, 20, 10, '#fff');
+    ctx.restore();
+  };
+  const tree = (x, y, s = 1) => {
+    ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+    rectangle(-6, -43, 12, 47, '#835530');
+    circle(-14, -47, 21, '#50a955'); circle(13, -48, 22, '#64bc62');
+    circle(0, -68, 23, '#77ce73'); circle(8, -77, 4, '#c9efa9');
+    ctx.restore();
+  };
+  const house = (x, y, variety) => {
+    rectangle(x - 31, y - 49, 62, 49, variety > .5 ? '#ffbb75' : '#eaa4bb');
+    ctx.beginPath(); ctx.moveTo(x - 40, y - 48); ctx.lineTo(x, y - 80); ctx.lineTo(x + 40, y - 48); ctx.closePath(); path('#9a6571');
+    rectangle(x - 21, y - 34, 16, 19, '#bcf1ff'); rectangle(x + 9, y - 34, 16, 19, '#bcf1ff');
+    rectangle(x - 2, y - 28, 13, 28, '#785344');
+  };
+  const background = now => {
+    const sky = ctx.createLinearGradient(0, 0, 0, trackHeight);
+    sky.addColorStop(0, '#76cefa'); sky.addColorStop(.76, '#d5f4ff'); sky.addColorStop(1, '#f5f9db');
+    rectangle(0, 0, width, height, sky);
+    const sunX = width - 55 - cameraX * .015;
+    circle(sunX, height < 460 ? 115 : 151, 36, '#fff8b4');
+    for (let i = -2; i < Math.ceil(width / 200) + 2; i++) {
+      const cloudX = i * 215 + 105 - (cameraX * .07 + now * .0014) % 215;
+      cloud(cloudX, 92 + (i % 3) * 35, .75 + (Math.abs(i) % 3) * .16);
+    }
+    const hillsY = trackHeight - 88;
+    ctx.beginPath(); ctx.moveTo(0, trackHeight);
+    for (let x = -80; x < width + 100; x += 50) {
+      const y = hillsY - 25 + 32 * Math.sin((x + cameraX * .15) / 165);
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(width, trackHeight); ctx.closePath(); path('#a2d98b');
+    ctx.beginPath(); ctx.moveTo(0, trackHeight);
+    for (let x = -30; x < width + 60; x += 32) {
+      ctx.lineTo(x, hillsY + 38 + 15 * Math.cos((x + cameraX * .35) / 82));
+    }
+    ctx.lineTo(width, trackHeight); ctx.closePath(); path('#70c770');
+    rectangle(0, trackHeight - 45, width, height - trackHeight + 45, '#6dbb61');
+    // 遠景・近景はカメラの移動速度を変えて奥行きを出す。
+    const cityOffset = cameraX * .32;
+    for (let i = Math.floor(cityOffset / 130) - 1; i < Math.ceil((cityOffset + width) / 130) + 1; i++) {
+      const x = i * 130 - cityOffset + 50;
+      const top = trackHeight - 95 - rand(i + 30) * 65;
+      rectangle(x, top, 47 + rand(i + 40) * 35, trackHeight - 48 - top, i % 2 ? '#c0dfd0' : '#d5e8d1');
+      for (let w = 0; w < 3; w++) for (let h = 0; h < 3; h++) {
+        rectangle(x + 9 + w * 18, top + 12 + h * 25, 8, 13, '#e9faff');
+      }
+    }
+    const start = Math.floor(cameraX / 175) - 2;
+    for (let i = start; i < start + Math.ceil(width / 175) + 5; i++) {
+      const world = i * 175 + 80;
+      if ((world > 5 && world < 370) || (world > 750 && world < 1090)
+        || (world > 1310 && world < 1880) || (world > 2120 && world < 2500)) continue;
+      const x = world - cameraX;
+      const r = rand(i);
+      if (r < .5) tree(x, trackHeight - 50, .72 + rand(i + 4) * .48);
+      else if (r < .86) house(x, trackHeight - 50, r);
+      else for (let f = 0; f < 5; f++) circle(x - 25 + f * 12, trackHeight - 58 - (f % 2) * 6, 5, f % 2 ? '#ef6fba' : '#fff0a1');
     }
   };
-
-  const celebrate = () => {
-    for (let index = 0; index < 70; index += 1) {
-      confetti.push({
-        x: width * 0.5 + (Math.random() - 0.5) * 180,
-        y: height * 0.24 + (Math.random() - 0.5) * 40,
-        velocityX: (Math.random() - 0.5) * 260,
-        velocityY: -70 - Math.random() * 190,
-        gravity: 190 + Math.random() * 160,
-        angle: Math.random() * Math.PI,
-        spin: (Math.random() - 0.5) * 10,
-        life: 1.8 + Math.random() * 1.2,
-        shape: Math.random() > 0.35 ? "rect" : "circle",
-        color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+  const tracks = () => {
+    const y = trackHeight;
+    rectangle(0, y - 5, width, height - y + 5, '#ac8457');
+    rectangle(0, y + 3, width, 50, '#d6bea1');
+    for (let x = -(cameraX % 51) - 51; x < width + 55; x += 51) {
+      round(x, y + 7, 17, 43, 3, '#76513a');
+    }
+    for (const railY of [y + 13, y + 40]) {
+      rectangle(0, railY - 4, width, 9, '#65717a');
+      rectangle(0, railY - 4, width, 3, '#e9f5fa');
+    }
+    rectangle(0, y + 58, width, height - y - 58, '#6ebc61');
+    for (let x = -(cameraX % 72) - 72; x < width + 72; x += 72) {
+      circle(x, y + 77, 3, '#c0e678');
+    }
+  };
+  const station = (worldX, name, destination = false) => {
+    const x = worldX - cameraX;
+    const y = trackHeight;
+    if (x < -240 || x > width + 240) return;
+    rectangle(x - 143, y - 111, 286, 104, '#fff2d7');
+    rectangle(x - 151, y - 124, 302, 16, destination ? '#fb8860' : '#5d9dc7');
+    for (let post = -117; post <= 118; post += 79) rectangle(x + post, y - 108, 9, 98, '#8e745e');
+    rectangle(x - 112, y - 102, 224, 44, '#e6f4f6');
+    round(x - 102, y - 98, 204, 32, 8, '#fff', '#4b7289', 3);
+    label(name, x, y - 81, 21);
+    rectangle(x - 155, y - 14, 310, 14, '#897159');
+    rectangle(x - 155, y - 13, 310, 4, '#ffec76');
+    for (let i = -130; i <= 130; i += 33) rectangle(x + i, y - 21, 20, 5, '#c7b09a');
+    if (destination) {
+      circle(x + 115, y - 146, 25, '#fff');
+      label('🐼', x + 115, y - 146, 23);
+    }
+  };
+  const crossing = (now, foreground = false) => {
+    const x = CROSSING - cameraX;
+    const y = trackHeight;
+    if (x < -240 || x > width + 240) return;
+    const active = gateDown > .05;
+    const blink = active && Math.floor(now / 280) % 2 === 0;
+    const posts = [-125, 125];
+    if (!foreground) {
+      rectangle(x - 157, y - 15, 314, 15, '#a3aaa8');
+      for (const p of posts) {
+        rectangle(x + p - 5, y - 154, 10, 154, '#3b454c');
+        rectangle(x + p - 27, y - 152, 54, 8, '#ffd63f');
+        // 日本風の黄黒のクロスバック標識。
+        ctx.save(); ctx.translate(x + p, y - 173);
+        for (const angle of [-Math.PI / 4, Math.PI / 4]) {
+          ctx.save(); ctx.rotate(angle);
+          round(-33, -6, 66, 12, 1, '#ffdb36', '#263640', 2);
+          rectangle(-17, -5, 10, 10, '#263640'); rectangle(7, -5, 10, 10, '#263640');
+          ctx.restore();
+        }
+        ctx.restore();
+        round(x + p - 28, y - 137, 56, 26, 8, '#343d43', '#f6d02b', 2);
+        circle(x + p - 14, y - 124, 9, active && blink ? '#ff4545' : '#61292c');
+        circle(x + p + 14, y - 124, 9, active && !blink ? '#ff4545' : '#61292c');
+        if (active) {
+          circle(x + p + (blink ? -14 : 14), y - 127, 3, '#ffe9d1');
+        }
+      }
+      round(x - 61, y - 218, 122, 30, 7, '#fff', '#405267', 3);
+      label('ふみきり', x, y - 202, 17);
+    } else {
+      posts.forEach((p, index) => {
+        const left = index === 0;
+        ctx.save();
+        ctx.translate(x + p, y - 100);
+        if (!left) ctx.scale(-1, 1);
+        ctx.rotate(-Math.PI * .43 * (1 - gateDown));
+        round(0, -7, 125, 14, 3, '#fff', '#3c4d56', 2);
+        for (let part = 8; part < 120; part += 26) rectangle(part, -6, 13, 12, '#fb5755');
+        ctx.restore();
+        circle(x + p, y - 100, 9, '#3a464d', '#f8db3e', 3);
       });
     }
-
-    for (let index = 0; index < 18; index += 1) addStar(width * 0.5, height * 0.32);
   };
-
-  const trackY = () => height * (height < 520 ? 0.72 : 0.69);
-
-  const update = (deltaTime, now) => {
-    clouds.forEach((cloud) => {
-      cloud.x -= deltaTime * 7 * cloud.scale;
-      if (cloud.x < -130) cloud.x = width + 150;
-    });
-
-    if (state === "running") {
-      const crossingDistance = Math.abs(trainX - 910);
-      const tunnelStart = 1420;
-      const destination = 2250;
-
-      if (trainX < destination - 260) {
-        speed += (280 - speed) * Math.min(1, deltaTime * 1.8);
-      } else {
-        state = "arriving";
-        announce("もうすぐ次の駅に到着します。");
+  const tunnel = (front = false) => {
+    const start = TUNNEL_START - cameraX;
+    const end = TUNNEL_END - cameraX;
+    const y = trackHeight;
+    if (end < -145 || start > width + 145) return;
+    if (!front) {
+      ctx.beginPath(); ctx.moveTo(start - 94, y);
+      ctx.quadraticCurveTo(start - 20, y - 258, start + 145, y - 275);
+      ctx.lineTo(end - 125, y - 274);
+      ctx.quadraticCurveTo(end + 30, y - 250, end + 110, y);
+      ctx.closePath(); path('#7b8b78');
+      ctx.beginPath(); ctx.moveTo(start - 33, y); ctx.lineTo(start - 33, y - 108);
+      ctx.quadraticCurveTo(start + 17, y - 236, start + 115, y - 237);
+      ctx.lineTo(end - 96, y - 237); ctx.quadraticCurveTo(end + 12, y - 222, end + 15, y - 100);
+      ctx.lineTo(end + 15, y); ctx.closePath(); path('#253438', '#52615c', 8);
+      for (let i = 0; i < 16; i++) {
+        const world = start + i * 32 - 30;
+        rectangle(world, y - 32, 10, 2, '#51605d');
       }
-
-      trainX += speed * deltaTime;
-      cameraX += (Math.max(0, trainX - width * 0.28) - cameraX) * Math.min(1, deltaTime * 4);
-
-      if (now > nextClack) {
-        clack();
-        nextClack = now + Math.max(130, 390 - speed);
+    } else {
+      for (const portal of [start - 12, end - 19]) {
+        ctx.beginPath(); ctx.moveTo(portal - 22, y); ctx.lineTo(portal - 22, y - 109);
+        ctx.quadraticCurveTo(portal + 29, y - 258, portal + 128, y - 256);
+        ctx.lineTo(portal + 128, y - 235);
+        ctx.quadraticCurveTo(portal + 42, y - 235, portal + 2, y - 110);
+        ctx.lineTo(portal + 2, y); ctx.closePath(); path('#98a59a', '#5a6b63', 4);
       }
-
-      if (crossingDistance < 420 && now > nextBell) {
-        bell();
-        nextBell = now + 520;
-      }
-
-      if (trainX > 520 && trainX < 1250) {
-        if (currentProgress !== 1) announce("踏切を通過しています。カンカンカン！");
-        setProgress(1);
-      } else if (trainX >= tunnelStart && trainX < 1850) {
-        if (currentProgress !== 2) announce("トンネルを通過しています。");
-        setProgress(2);
-      } else if (trainX >= 1850) {
-        setProgress(3);
-      }
-
-      if (Math.random() < deltaTime * 3.5) {
-        puffs.push({ x: trainX - 70, y: trackY() - 92, radius: 5, life: 1 });
-      }
-    }
-
-    if (state === "arriving") {
-      speed = Math.max(0, speed - 155 * deltaTime);
-      trainX += speed * deltaTime;
-      cameraX += (Math.max(0, trainX - width * 0.28) - cameraX) * Math.min(1, deltaTime * 4);
-
-      if (speed <= 1) {
-        state = "done";
-        arrivalTime = now;
-        setProgress(3);
-        successSound();
-        celebrate();
-        showCard("とうちゃく！ 🎉", "タップで つぎの えきへ");
-        announce("次の駅に到着しました。タップすると次の旅が始まります。");
-      }
-    }
-
-    puffs.forEach((puff) => {
-      puff.y -= 18 * deltaTime;
-      puff.radius += 12 * deltaTime;
-      puff.life -= 0.7 * deltaTime;
-    });
-    puffs = puffs.filter((puff) => puff.life > 0);
-
-    stars.forEach((star) => {
-      star.x += star.velocityX * deltaTime;
-      star.y += star.velocityY * deltaTime;
-      star.velocityY += 120 * deltaTime;
-      star.life -= 0.65 * deltaTime;
-    });
-    stars = stars.filter((star) => star.life > 0);
-
-    confetti.forEach((piece) => {
-      piece.x += piece.velocityX * deltaTime;
-      piece.y += piece.velocityY * deltaTime;
-      piece.velocityY += piece.gravity * deltaTime;
-      piece.angle += piece.spin * deltaTime;
-      piece.life -= deltaTime;
-    });
-    confetti = confetti.filter((piece) => piece.life > 0 && piece.y < height + 30);
-  };
-
-  const roundRect = (x, y, rectWidth, rectHeight, radius, fill, stroke, lineWidth = 2) => {
-    const safeRadius = Math.min(radius, rectWidth / 2, rectHeight / 2);
-    context.beginPath();
-    context.moveTo(x + safeRadius, y);
-    context.lineTo(x + rectWidth - safeRadius, y);
-    context.quadraticCurveTo(x + rectWidth, y, x + rectWidth, y + safeRadius);
-    context.lineTo(x + rectWidth, y + rectHeight - safeRadius);
-    context.quadraticCurveTo(x + rectWidth, y + rectHeight, x + rectWidth - safeRadius, y + rectHeight);
-    context.lineTo(x + safeRadius, y + rectHeight);
-    context.quadraticCurveTo(x, y + rectHeight, x, y + rectHeight - safeRadius);
-    context.lineTo(x, y + safeRadius);
-    context.quadraticCurveTo(x, y, x + safeRadius, y);
-    context.closePath();
-
-    if (fill) {
-      context.fillStyle = fill;
-      context.fill();
-    }
-    if (stroke) {
-      context.strokeStyle = stroke;
-      context.lineWidth = lineWidth;
-      context.stroke();
+      round((start + end) / 2 - 70, y - 276, 140, 30, 7, '#fff', '#55695d', 3);
+      label('トンネル', (start + end) / 2, y - 260, 18);
     }
   };
-
-  const drawCloud = (x, y, scale) => {
-    context.save();
-    context.translate(x, y);
-    context.scale(scale, scale);
-    context.fillStyle = "rgba(255, 255, 255, 0.9)";
-    context.beginPath();
-    context.arc(0, 12, 24, 0, Math.PI * 2);
-    context.arc(26, 0, 31, 0, Math.PI * 2);
-    context.arc(58, 13, 24, 0, Math.PI * 2);
-    context.arc(31, 22, 39, 0, Math.PI * 2);
-    context.fill();
-    context.restore();
+  const star = (x, y, radius, fill = '#ffdc4e') => {
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const angle = -Math.PI / 2 + i * Math.PI / 5;
+      const r = i % 2 ? radius * .43 : radius;
+      ctx.lineTo(x + Math.cos(angle) * r, y + Math.sin(angle) * r);
+    }
+    ctx.closePath(); path(fill, '#f5a22b', 2);
   };
-
-  const drawTree = (x, y, scale) => {
-    context.save();
-    context.translate(x, y);
-    context.scale(scale, scale);
-    context.fillStyle = "#87552e";
-    context.fillRect(-7, -45, 14, 45);
-    context.fillStyle = "#46a94e";
-    [[0, -62, 28], [-18, -48, 22], [18, -48, 22]].forEach(([circleX, circleY, radius]) => {
-      context.beginPath();
-      context.arc(circleX, circleY, radius, 0, Math.PI * 2);
-      context.fill();
+  const drawStars = now => {
+    starsAt.forEach((world, i) => {
+      if (collected.has(i)) return;
+      const x = world - cameraX;
+      if (x < -50 || x > width + 50) return;
+      const y = trackHeight - 168 + Math.sin(now * .003 + i) * (reducedMotion ? 0 : 7);
+      circle(x, y, 29, 'rgba(255,255,255,.35)');
+      star(x, y, 20);
     });
-    context.restore();
   };
-
-  const drawHouse = (x, y, randomValue) => {
-    context.fillStyle = randomValue > 0.5 ? "#ffac67" : "#f48f9a";
-    context.fillRect(x - 34, y - 50, 68, 50);
-    context.fillStyle = "#8d5b43";
-    context.beginPath();
-    context.moveTo(x - 44, y - 50);
-    context.lineTo(x, y - 86);
-    context.lineTo(x + 44, y - 50);
-    context.closePath();
-    context.fill();
-    context.fillStyle = "#fff4c8";
-    context.fillRect(x - 22, y - 35, 18, 18);
-    context.fillRect(x + 7, y - 35, 18, 18);
-    context.fillStyle = "#76513a";
-    context.fillRect(x - 6, y - 29, 16, 29);
+  const wheels = xs => xs.forEach(wx => {
+    circle(wx, -11, 15, '#263945'); circle(wx, -11, 8, '#b9d8e5');
+    const angle = trainX * .08;
+    ctx.strokeStyle = '#f4ffff'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(wx - Math.cos(angle) * 7, -11 - Math.sin(angle) * 7);
+    ctx.lineTo(wx + Math.cos(angle) * 7, -11 + Math.sin(angle) * 7); ctx.stroke();
+  });
+  const commuter = () => {
+    round(-125, -96, 243, 72, 15, '#f3f7ef', '#314e60', 4);
+    rectangle(-119, -51, 231, 23, '#ef695f');
+    round(-124, -96, 35, 72, 14, '#ef695f', '#314e60', 3);
+    for (const wx of [-81, -42, 15, 58]) round(wx, -86, 31, 30, 5, '#9bdcf5', '#42637b', 3);
+    round(-25, -91, 43, 65, 5, null, '#4a6876', 3);
+    rectangle(-120, -25, 235, 9, '#476376');
+    round(-119, -104, 68, 17, 5, '#204761');
+    label('ふつう', -85, -95, 11, '#fff');
+    circle(109, -54, 6, '#fff8bb');
+    wheels([-84, -43, 51, 92]);
   };
-
-  const drawFlowers = (x, y) => {
-    for (let index = -2; index <= 2; index += 1) {
-      const flowerX = x + index * 15;
-      const flowerY = y - Math.abs(index % 2) * 8;
-      context.strokeStyle = "#338a39";
-      context.lineWidth = 3;
-      context.beginPath();
-      context.moveTo(flowerX, flowerY + 20);
-      context.lineTo(flowerX, flowerY);
-      context.stroke();
-      context.fillStyle = index % 2 ? "#ff6c91" : "#ffd23f";
-      context.beginPath();
-      context.arc(flowerX, flowerY, 7, 0, Math.PI * 2);
-      context.fill();
-      context.fillStyle = "#fff";
-      context.beginPath();
-      context.arc(flowerX, flowerY, 2.5, 0, Math.PI * 2);
-      context.fill();
+  const bullet = () => {
+    ctx.beginPath(); ctx.moveTo(-135, -29); ctx.lineTo(-118, -91);
+    ctx.quadraticCurveTo(-110, -105, -88, -105); ctx.lineTo(53, -105);
+    ctx.quadraticCurveTo(104, -104, 131, -71);
+    ctx.quadraticCurveTo(141, -52, 146, -36); ctx.lineTo(126, -24);
+    ctx.closePath(); path('#f4fbfc', '#3b5d7b', 4);
+    ctx.beginPath(); ctx.moveTo(-126, -45); ctx.lineTo(139, -45); ctx.lineTo(123, -33);
+    ctx.lineTo(-129, -33); ctx.closePath(); path('#3f8bd8');
+    for (const wx of [-87, -52, -17, 18, 53]) round(wx, -91, 25, 19, 5, '#6dbfdd', '#3b5d7b', 2);
+    round(80, -89, 34, 23, 9, '#6dbfdd', '#3b5d7b', 2);
+    round(-113, -106, 45, 14, 5, '#2f6bb7');
+    label('はやい', -91, -99, 10, '#fff');
+    circle(133, -51, 5, '#fff8bf');
+    wheels([-91, -58, 80, 110]);
+  };
+  const steam = () => {
+    rectangle(-107, -118, 22, 51, '#3f444e');
+    rectangle(-115, -121, 38, 11, '#303b45');
+    round(-125, -86, 169, 62, 13, '#424a56', '#202d39', 4);
+    round(-68, -73, 96, 50, 15, '#333e4a', '#101f2b', 3);
+    round(22, -91, 105, 67, 8, '#e9b755', '#343d47', 4);
+    round(52, -105, 60, 23, 5, '#304550', '#253340', 3);
+    round(44, -81, 31, 27, 5, '#b8ecfa', '#293f55', 3);
+    round(86, -81, 30, 27, 5, '#b8ecfa', '#293f55', 3);
+    rectangle(-119, -37, 246, 14, '#d44c4b');
+    circle(-114, -59, 9, '#fff1af', '#273c4c', 2);
+    circle(-31, -51, 18, '#eac960', '#35404a', 3);
+    label('🐼', -31, -52, 21);
+    wheels([-85, -43, 58, 101]);
+  };
+  const train = (now) => {
+    const x = trainX - cameraX;
+    const scale = height < 415 ? .79 : height < 520 ? .88 : 1;
+    const bob = (state === 'running' || state === 'arriving') && !reducedMotion ? Math.sin(now * .027) * Math.min(1.5, speed / 160) : 0;
+    ctx.save(); ctx.translate(x, trackHeight + 10 + bob); ctx.scale(scale, scale);
+    circle(0, -15, 104, 'rgba(0,0,0,0)');
+    if (trainType === 'bullet') bullet();
+    else if (trainType === 'steam') steam();
+    else commuter();
+    ctx.restore();
+  };
+  const effects = () => {
+    for (const p of particles) {
+      ctx.save(); ctx.globalAlpha = clamp(p.life / p.maxLife, 0, 1);
+      if (p.smoke) circle(p.x, p.y, p.size, p.color);
+      else circle(p.x, p.y, p.size, p.color);
+      ctx.restore();
+    }
+    for (const p of confetti) {
+      ctx.save(); ctx.globalAlpha = clamp(p.life / 2, 0, 1);
+      ctx.translate(p.x, p.y); ctx.rotate(p.angle);
+      rectangle(-p.size / 2, -p.size / 3, p.size, p.size * .65, p.color);
+      ctx.restore();
     }
   };
-
-  const drawScenery = () => {
-    const start = Math.floor(cameraX / 180) - 2;
-    const end = start + Math.ceil(width / 180) + 5;
-
-    for (let index = start; index < end; index += 1) {
-      const worldX = index * 180 + 90;
-      const reservedArea = (worldX > 40 && worldX < 390)
-        || (worldX > 760 && worldX < 1050)
-        || (worldX > 1320 && worldX < 1880)
-        || (worldX > 2120 && worldX < 2520);
-      if (reservedArea) continue;
-
-      const x = worldX - cameraX;
-      const randomValue = pseudoRandom(index);
-      if (randomValue < 0.48) drawTree(x, trackY() - 62, 0.75 + pseudoRandom(index + 1) * 0.45);
-      else if (randomValue < 0.78) drawHouse(x, trackY() - 62, pseudoRandom(index + 2));
-      else drawFlowers(x, trackY() - 42);
-    }
-  };
-
-  const drawTrack = (now) => {
-    const y = trackY();
-    context.fillStyle = "#98714f";
-    context.fillRect(0, y - 3, width, height - y + 3);
-    context.fillStyle = "#d8c5a8";
-    context.fillRect(0, y + 8, width, 38);
-
-    const sleeperGap = 54;
-    const offset = -(cameraX % sleeperGap);
-    context.fillStyle = "#6d4d35";
-    for (let x = offset - 60; x < width + 60; x += sleeperGap) context.fillRect(x, y + 5, 14, 48);
-
-    context.fillStyle = "#dfe7eb";
-    context.fillRect(0, y + 7, width, 8);
-    context.fillRect(0, y + 35, width, 8);
-    context.fillStyle = "#68747a";
-    context.fillRect(0, y + 14, width, 3);
-    context.fillRect(0, y + 42, width, 3);
-    context.fillStyle = "rgba(255, 255, 255, 0.18)";
-    for (let x = (now * 0.09) % 120 - 120; x < width; x += 120) context.fillRect(x, y + 54, 60, 4);
-  };
-
-  const drawBackground = (now) => {
-    const sky = context.createLinearGradient(0, 0, 0, height);
-    sky.addColorStop(0, "#77d4ff");
-    sky.addColorStop(0.62, "#d7f4ff");
-    sky.addColorStop(0.63, "#94db69");
-    sky.addColorStop(1, "#54b852");
-    context.fillStyle = sky;
-    context.fillRect(0, 0, width, height);
-
-    context.fillStyle = "#ffe36a";
-    context.beginPath();
-    context.arc(width - 78, 92, 38, 0, Math.PI * 2);
-    context.fill();
-    clouds.forEach((cloud) => drawCloud(cloud.x, cloud.y, cloud.scale));
-
-    const horizon = trackY() - 55;
-    context.fillStyle = "#7ec65e";
-    context.beginPath();
-    context.moveTo(0, horizon);
-    for (let x = 0; x <= width + 80; x += 80) {
-      const y = horizon - 25 - Math.sin((x + cameraX * 0.12) / 150) * 22;
-      context.quadraticCurveTo(x + 40, y - 32, x + 80, horizon);
-    }
-    context.lineTo(width, height);
-    context.lineTo(0, height);
-    context.closePath();
-    context.fill();
-
-    drawScenery();
-    drawTrack(now);
-  };
-
-  const drawStation = (worldX, name, destination = false) => {
-    const x = worldX - cameraX;
-    const y = trackY();
-    if (x < -260 || x > width + 260) return;
-
-    context.fillStyle = "#eee6d5";
-    context.fillRect(x - 135, y - 105, 270, 105);
-    context.fillStyle = destination ? "#ff885e" : "#5c9fe8";
-    context.fillRect(x - 148, y - 116, 296, 18);
-    context.fillStyle = "#704b36";
-    for (let offset = -110; offset <= 110; offset += 55) context.fillRect(x + offset, y - 96, 10, 96);
-    context.fillStyle = "#fff9df";
-    context.fillRect(x - 112, y - 90, 224, 46);
-    roundRect(x - 92, y - 82, 184, 30, 8, "#fff", "#36526a", 3);
-    context.fillStyle = "#27465f";
-    context.font = `900 ${Math.min(24, Math.max(17, width * 0.028))}px "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif`;
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText(name, x, y - 66);
-
-    context.fillStyle = "#8d6c4d";
-    context.fillRect(x - 150, y - 12, 300, 12);
-    context.fillStyle = "#f7d658";
-    for (let offset = -140; offset < 140; offset += 24) context.fillRect(x + offset, y - 10, 14, 5);
-
-    if (destination) {
-      context.fillStyle = "#fff";
-      context.beginPath();
-      context.arc(x + 96, y - 137, 32, 0, Math.PI * 2);
-      context.fill();
-      context.font = "26px sans-serif";
-      context.fillText("🐼", x + 96, y - 136);
-    }
-  };
-
-  const drawCrossing = (now) => {
-    const x = 910 - cameraX;
-    const y = trackY();
-    if (x < -220 || x > width + 220) return;
-
-    const isNear = Math.abs(trainX - 910) < 430;
-    const gateAngle = isNear ? 0 : -Math.PI * 0.34;
-    const blink = isNear && Math.floor(now / 280) % 2 === 0;
-    context.fillStyle = "#3c444b";
-    context.fillRect(x - 145, y - 138, 12, 138);
-    context.fillRect(x + 130, y - 138, 12, 138);
-
-    context.save();
-    context.translate(x - 139, y - 112);
-    context.rotate(gateAngle);
-    context.fillStyle = "#fff";
-    context.fillRect(0, -8, 126, 16);
-    context.fillStyle = "#ff4c4c";
-    for (let offset = 8; offset < 120; offset += 28) context.fillRect(offset, -8, 14, 16);
-    context.restore();
-
-    context.save();
-    context.translate(x + 136, y - 112);
-    context.scale(-1, 1);
-    context.rotate(gateAngle);
-    context.fillStyle = "#fff";
-    context.fillRect(0, -8, 126, 16);
-    context.fillStyle = "#ff4c4c";
-    for (let offset = 8; offset < 120; offset += 28) context.fillRect(offset, -8, 14, 16);
-    context.restore();
-
-    const drawSignal = (signalX) => {
-      context.fillStyle = "#f7c93d";
-      context.beginPath();
-      context.moveTo(signalX - 28, y - 150);
-      context.lineTo(signalX, y - 122);
-      context.lineTo(signalX + 28, y - 150);
-      context.lineTo(signalX, y - 178);
-      context.closePath();
-      context.fill();
-      context.strokeStyle = "#343b40";
-      context.lineWidth = 5;
-      context.stroke();
-      context.fillStyle = "#343b40";
-      context.fillRect(signalX - 35, y - 126, 70, 18);
-      context.fillStyle = blink ? "#ff3939" : "#601f1f";
-      context.beginPath();
-      context.arc(signalX - 17, y - 117, 8, 0, Math.PI * 2);
-      context.fill();
-      context.fillStyle = !blink && isNear ? "#ff3939" : "#601f1f";
-      context.beginPath();
-      context.arc(signalX + 17, y - 117, 8, 0, Math.PI * 2);
-      context.fill();
-    };
-
-    drawSignal(x - 139);
-    drawSignal(x + 136);
-    roundRect(x - 72, y - 202, 144, 34, 8, "#fff", "#3f4a52", 3);
-    context.fillStyle = "#263f51";
-    context.font = "900 18px sans-serif";
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText("ふみきり", x, y - 185);
-  };
-
-  const drawTunnel = () => {
-    const start = 1420 - cameraX;
-    const end = 1830 - cameraX;
-    const y = trackY();
-    if (end < -100 || start > width + 100) return;
-
-    context.fillStyle = "#6a7772";
-    context.beginPath();
-    context.moveTo(start - 100, y);
-    context.quadraticCurveTo(start + 30, y - 265, start + 150, y - 270);
-    context.lineTo(end - 120, y - 270);
-    context.quadraticCurveTo(end + 30, y - 260, end + 100, y);
-    context.closePath();
-    context.fill();
-
-    context.fillStyle = "#4e5d58";
-    for (let blockX = start - 70; blockX < end + 70; blockX += 55) {
-      for (let blockY = y - 235; blockY < y; blockY += 32) {
-        context.fillRect(blockX + ((Math.floor((blockY - y) / 32) & 1) * 18), blockY, 48, 26);
+  const draw = now => {
+    ctx.clearRect(0, 0, width, height);
+    background(now);
+    const displayTrip = state === 'done' ? trips - 1 : trips;
+    station(160, stations[displayTrip % stations.length]);
+    crossing(now);
+    tunnel();
+    station(DESTINATION, stations[(displayTrip + 1) % stations.length], true);
+    tracks();
+    // 線路は前景なので、駅のホームや踏切の奥行きを描き足す。
+    for (const wx of [160, DESTINATION]) {
+      const x = wx - cameraX;
+      if (x > -180 && x < width + 180) {
+        rectangle(x - 155, trackHeight - 15, 310, 13, '#9c8569');
+        rectangle(x - 155, trackHeight - 15, 310, 3, '#ffee7d');
       }
     }
-
-    context.fillStyle = "#202b2c";
-    context.beginPath();
-    context.moveTo(start - 15, y);
-    context.lineTo(start - 15, y - 120);
-    context.quadraticCurveTo(start + 40, y - 230, start + 115, y - 230);
-    context.lineTo(end - 95, y - 230);
-    context.quadraticCurveTo(end - 15, y - 210, end - 15, y - 120);
-    context.lineTo(end - 15, y);
-    context.closePath();
-    context.fill();
-
-    roundRect((start + end) / 2 - 75, y - 263, 150, 38, 8, "#fff", "#354441", 3);
-    context.fillStyle = "#263f51";
-    context.font = "900 19px sans-serif";
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText("トンネル", (start + end) / 2, y - 244);
+    drawStars(now);
+    train(now);
+    crossing(now, true);
+    tunnel(true);
+    if (trainX > TUNNEL_START && trainX < TUNNEL_END && state !== 'idle') {
+      const fade = clamp(Math.min(trainX - TUNNEL_START, TUNNEL_END - trainX) / 85, 0, 1);
+      rectangle(0, 0, width, height, `rgba(11,26,35,${fade * .34})`);
+      const x = trainX - cameraX + (trainType === 'steam' ? -112 : 126);
+      const g = ctx.createRadialGradient(x, trackHeight - 64, 2, x, trackHeight - 64, 105);
+      g.addColorStop(0, `rgba(255,245,179,${fade * .55})`);
+      g.addColorStop(1, 'rgba(255,245,179,0)');
+      rectangle(x - 110, trackHeight - 174, 220, 220, g);
+    }
+    effects();
   };
-
-  const drawTrain = (now) => {
-    const screenX = trainX - cameraX;
-    const y = trackY() - 4;
-    const color = trainColors[trip % trainColors.length];
-    const bounce = state === "running" || state === "arriving" ? Math.sin(now * 0.025) * 1.8 : 0;
-    context.save();
-    context.translate(screenX, y + bounce);
-
-    puffs.forEach((puff) => {
-      const puffX = puff.x - cameraX - screenX;
-      const puffY = puff.y - y;
-      context.globalAlpha = Math.max(0, puff.life) * 0.55;
-      context.fillStyle = "#fff";
-      context.beginPath();
-      context.arc(puffX, puffY, puff.radius, 0, Math.PI * 2);
-      context.fill();
-    });
-    context.globalAlpha = 1;
-
-    context.fillStyle = "#263947";
-    context.fillRect(-82, -107, 20, 36);
-    context.fillRect(-88, -111, 32, 8);
-    roundRect(-98, -88, 150, 64, 15, color, "#283946", 4);
-    roundRect(39, -70, 92, 46, 12, color, "#283946", 4);
-    context.fillStyle = "#ffe8a6";
-    context.beginPath();
-    context.moveTo(52, -70);
-    context.lineTo(70, -96);
-    context.lineTo(112, -96);
-    context.lineTo(129, -70);
-    context.closePath();
-    context.fill();
-    context.strokeStyle = "#283946";
-    context.lineWidth = 4;
-    context.stroke();
-
-    roundRect(-66, -76, 35, 28, 7, "#bdeeff", "#283946", 3);
-    roundRect(-22, -76, 35, 28, 7, "#bdeeff", "#283946", 3);
-    roundRect(57, -61, 26, 23, 6, "#bdeeff", "#283946", 3);
-    roundRect(91, -61, 26, 23, 6, "#bdeeff", "#283946", 3);
-    context.fillStyle = "#fff7b2";
-    context.beginPath();
-    context.arc(-88, -56, 7, 0, Math.PI * 2);
-    context.fill();
-    context.fillStyle = "#263947";
-    context.beginPath();
-    context.arc(-88, -56, 3, 0, Math.PI * 2);
-    context.fill();
-
-    context.fillStyle = "#fff";
-    context.beginPath();
-    context.arc(-10, -112, 27, 0, Math.PI * 2);
-    context.fill();
-    context.font = "24px sans-serif";
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText("🐼", -10, -110);
-    context.fillStyle = "#f4ce45";
-    context.fillRect(-107, -32, 249, 10);
-    context.fillStyle = "#263947";
-    context.fillRect(-111, -25, 258, 10);
-
-    const wheelSpin = trainX * 0.09;
-    [-63, 9, 70, 113].forEach((wheelX) => {
-      context.save();
-      context.translate(wheelX, -14);
-      context.rotate(wheelSpin);
-      context.fillStyle = "#28343d";
-      context.beginPath();
-      context.arc(0, 0, 17, 0, Math.PI * 2);
-      context.fill();
-      context.fillStyle = "#aebbc3";
-      context.beginPath();
-      context.arc(0, 0, 8, 0, Math.PI * 2);
-      context.fill();
-      context.strokeStyle = "#fff";
-      context.lineWidth = 2;
-      context.beginPath();
-      context.moveTo(-7, 0);
-      context.lineTo(7, 0);
-      context.moveTo(0, -7);
-      context.lineTo(0, 7);
-      context.stroke();
-      context.restore();
-    });
-
-    context.restore();
-  };
-
-  const drawTunnelDarkness = () => {
-    if (trainX < 1440 || trainX > 1825) return;
-    const center = 1632;
-    const strength = Math.min(1, 1 - Math.abs(trainX - center) / 210);
-    context.fillStyle = `rgba(8, 17, 24, ${0.65 * strength})`;
-    context.fillRect(0, 0, width, height);
-    const lightX = trainX - cameraX - 86;
-    const lightY = trackY() - 55;
-    const gradient = context.createRadialGradient(lightX, lightY, 2, lightX, lightY, 150);
-    gradient.addColorStop(0, `rgba(255, 247, 176, ${0.52 * strength})`);
-    gradient.addColorStop(1, "rgba(255, 247, 176, 0)");
-    context.fillStyle = gradient;
-    context.fillRect(lightX - 170, lightY - 170, 340, 340);
-  };
-
-  const drawCelebration = () => {
-    stars.forEach((star) => {
-      context.save();
-      context.globalAlpha = Math.max(0, star.life);
-      context.translate(star.x, star.y);
-      context.fillStyle = "#ffd93f";
-      context.beginPath();
-      for (let index = 0; index < 10; index += 1) {
-        const angle = -Math.PI / 2 + index * Math.PI / 5;
-        const radius = index % 2 === 0 ? star.radius : star.radius * 0.45;
-        context.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
-      }
-      context.closePath();
-      context.fill();
-      context.restore();
-    });
-
-    confetti.forEach((piece) => {
-      context.save();
-      context.globalAlpha = Math.min(1, piece.life);
-      context.translate(piece.x, piece.y);
-      context.rotate(piece.angle);
-      context.fillStyle = piece.color;
-      if (piece.shape === "rect") {
-        context.fillRect(-6, -3, 12, 7);
-      } else {
-        context.beginPath();
-        context.arc(0, 0, 5, 0, Math.PI * 2);
-        context.fill();
-      }
-      context.restore();
-    });
-  };
-
-  const draw = (now) => {
-    context.clearRect(0, 0, width, height);
-    drawBackground(now);
-    drawStation(160, stationNames[trip % stationNames.length]);
-    drawCrossing(now);
-    drawTunnel();
-    drawStation(2290, stationNames[(trip + 1) % stationNames.length], true);
-    drawTrain(now);
-    drawTunnelDarkness();
-    drawCelebration();
-  };
-
-  const frame = (now) => {
-    const deltaTime = Math.min(0.033, (now - lastTime) / 1000);
+  const frame = now => {
+    const dt = lastTime ? Math.min(.034, Math.max(0, (now - lastTime) / 1000)) : 0;
     lastTime = now;
-    update(deltaTime, now);
-    draw(now);
+    if (!document.hidden) { update(dt, now); draw(now); }
     window.requestAnimationFrame(frame);
   };
 
-  soundButton.addEventListener("click", (event) => {
-    event.stopPropagation();
-    soundOn = !soundOn;
-    soundButton.textContent = soundOn ? "🔊" : "🔇";
-    soundButton.setAttribute("aria-label", soundOn ? "音を切る" : "音を出す");
-    soundButton.title = soundOn ? "音を切る" : "音を出す";
-    announce(soundOn ? "音をオンにしました。" : "音をオフにしました。");
-    if (soundOn) {
-      initAudio();
-      tone(660, 0.12, "sine", 0.05);
-    }
-  });
-
-  fullscreenButton.addEventListener("click", async (event) => {
-    event.stopPropagation();
-    try {
-      if (!document.fullscreenElement) {
-        if (!document.documentElement.requestFullscreen) throw new Error("unsupported");
-        await document.documentElement.requestFullscreen();
-      } else {
-        await document.exitFullscreen();
-      }
-    } catch (error) {
-      announce("このブラウザでは全画面表示に切り替えられませんでした。");
-    }
-  });
-
-  document.addEventListener("fullscreenchange", () => {
-    const isFullscreen = Boolean(document.fullscreenElement);
-    fullscreenButton.setAttribute("aria-label", isFullscreen ? "全画面表示を終了" : "全画面で表示");
-    fullscreenButton.title = isFullscreen ? "全画面表示を終了" : "全画面で表示";
-  });
-
-  window.addEventListener("pointerdown", (event) => {
-    if (event.target.closest("button, a")) return;
+  choices.forEach(button => button.addEventListener('click', () => setTrain(button.dataset.train)));
+  startButton.addEventListener('click', start);
+  boostButton.addEventListener('click', accelerate);
+  hornButton.addEventListener('click', horn);
+  brakeButton.addEventListener('pointerdown', brakeOn);
+  brakeButton.addEventListener('pointerup', brakeOff);
+  brakeButton.addEventListener('pointercancel', brakeOff);
+  brakeButton.addEventListener('lostpointercapture', brakeOff);
+  window.addEventListener('pointerup', brakeOff);
+  window.addEventListener('blur', brakeOff);
+  canvas.addEventListener('pointerdown', event => {
+    if (event.button > 0) return;
     event.preventDefault();
-    handleTap();
+    if (state === 'running') accelerate();
+    else if (state === 'idle' || state === 'done') start();
   }, { passive: false });
-
-  window.addEventListener("keydown", (event) => {
-    if (event.code === "Space" || event.code === "Enter") {
-      event.preventDefault();
-      handleTap();
+  window.addEventListener('keydown', event => {
+    if (event.repeat || /^(BUTTON|A)$/.test(document.activeElement?.tagName || '')) return;
+    if (event.code === 'Space' || event.code === 'ArrowUp') {
+      event.preventDefault(); accelerate();
+    } else if (event.code === 'KeyH') {
+      event.preventDefault(); horn();
+    } else if (event.code === 'ArrowDown') {
+      event.preventDefault(); braking = true; brakeButton.classList.add('is-held');
     }
   });
-
-  window.addEventListener("resize", resize);
-  document.addEventListener("visibilitychange", () => {
-    lastTime = performance.now();
+  window.addEventListener('keyup', event => { if (event.code === 'ArrowDown') brakeOff(); });
+  soundButton.addEventListener('click', () => {
+    soundOn = !soundOn;
+    save('sound', soundOn);
+    soundButton.textContent = soundOn ? '🔊' : '🔇';
+    soundButton.setAttribute('aria-label', soundOn ? '音を切る' : '音を出す');
+    soundButton.title = soundOn ? '音を切る' : '音を出す';
+    if (soundOn) tone(650, .11);
+    announce(soundOn ? '音をオンにしました。' : '音をオフにしました。');
   });
+  fullscreenButton.addEventListener('click', async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+      else showToast('このブラウザは ぜんがめんに できないよ');
+    } catch (_) { showToast('ぜんがめんに できなかったよ'); }
+  });
+  document.addEventListener('fullscreenchange', () => {
+    const full = Boolean(document.fullscreenElement);
+    fullscreenButton.setAttribute('aria-label', full ? '全画面表示を終了' : '全画面で表示');
+    fullscreenButton.title = full ? '全画面表示を終了' : '全画面で表示';
+  });
+  window.addEventListener('resize', resize);
+  document.addEventListener('visibilitychange', () => { lastTime = 0; brakeOff(); });
 
   resize();
-  setProgress(0);
+  soundButton.textContent = soundOn ? '🔊' : '🔇';
+  soundButton.setAttribute('aria-label', soundOn ? '音を切る' : '音を出す');
+  setTrain(trainType);
+  reset();
   window.requestAnimationFrame(frame);
 })();

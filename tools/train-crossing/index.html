@@ -3,38 +3,54 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="画面をタップして、駅から踏切とトンネルを越えて電車を走らせるミニゲームです。">
-  <meta name="theme-color" content="#8edcff">
+  <meta name="description" content="でんしゃをえらんで、踏切とトンネルを通って駅まで走ろう。小さな子でも遊べる電車ゲーム。">
+  <meta name="theme-color" content="#83d9f8">
   <title>でんしゃを走らせよう！ | My HTML Tools</title>
   <link rel="stylesheet" href="./style.css">
   <link rel="stylesheet" href="../../assets/css/mobile-touch.css">
 </head>
 <body class="mobile-touch-game">
-  <canvas id="game" aria-label="タップして電車を走らせるゲーム"></canvas>
+  <canvas id="game" aria-label="電車が踏切やトンネルを走るアニメーション。空いている場所をタップするとスピードアップ。"></canvas>
 
   <header class="topbar">
     <a class="back-link" href="../../index.html" aria-label="ツール一覧へ戻る">←</a>
-    <p class="title">🚆 でんしゃゲーム</p>
+    <p class="title">🚆 でんしゃを走らせよう！</p>
     <div class="buttons">
       <button type="button" id="soundButton" aria-label="音を切る" title="音を切る">🔊</button>
       <button type="button" id="fullscreenButton" aria-label="全画面で表示" title="全画面で表示">⛶</button>
     </div>
   </header>
 
-  <div class="progress" aria-label="えき、ふみきり、トンネル、とうちゃくの進行状況">
-    <span class="dot is-current" aria-label="えき"></span>
-    <span class="dot" aria-label="ふみきり"></span>
-    <span class="dot" aria-label="トンネル"></span>
-    <span class="dot" aria-label="とうちゃく"></span>
-  </div>
+  <section class="trip-hud" aria-label="旅のようす">
+    <div class="route"><span id="routeName">パンダえき → おはなえき</span><small id="routePhase">しゅっぱつ じゅんび</small></div>
+    <div class="collect"><span aria-hidden="true">⭐</span><span id="starCount">0 / 3</span><span class="trip-count" id="tripCount">のった 0かい</span></div>
+    <div class="progress" aria-label="駅、踏切、トンネル、到着の進行状況">
+      <span class="dot is-current" aria-label="駅" aria-current="step"></span>
+      <span class="dot" aria-label="踏切"></span>
+      <span class="dot" aria-label="トンネル"></span>
+      <span class="dot" aria-label="到着"></span>
+    </div>
+  </section>
 
-  <div id="tapCard" class="tap-card">
-    <span id="cardTitle" class="tap-card__title">タップで しゅっぱつ！</span>
-    <span id="cardText" class="tap-card__text">えき → ふみきり → トンネル</span>
-  </div>
+  <section id="tapCard" class="tap-card" aria-label="出発の操作">
+    <span id="cardTitle" class="tap-card__title">どのでんしゃに する？</span>
+    <span id="cardText" class="tap-card__text">えらんで しゅっぱつしよう！</span>
+    <div class="train-picker" role="group" aria-label="電車の種類">
+      <button type="button" class="train-choice is-selected" data-train="local" aria-pressed="true"><span aria-hidden="true">🚃</span>ふつう</button>
+      <button type="button" class="train-choice" data-train="bullet" aria-pressed="false"><span aria-hidden="true">🚅</span>しんかんせん</button>
+      <button type="button" class="train-choice" data-train="steam" aria-pressed="false"><span aria-hidden="true">🚂</span>きかんしゃ</button>
+    </div>
+    <button type="button" id="startButton" class="start-button">▶ しゅっぱつ！</button>
+  </section>
 
-  <p class="hint">どこをタップしてもOK</p>
-  <p id="status" class="visually-hidden" role="status" aria-live="polite">タップすると電車が出発します。</p>
+  <div class="drive-controls" id="driveControls" hidden>
+    <button type="button" class="drive-button horn" id="hornButton" aria-label="警笛を鳴らす"><span aria-hidden="true">📣</span><span>プップー！</span></button>
+    <button type="button" class="drive-button brake" id="brakeButton" aria-label="押している間ブレーキをかける"><span aria-hidden="true">✋</span><span>ブレーキ</span></button>
+    <button type="button" class="drive-button boost" id="boostButton" aria-label="電車をスピードアップ"><span aria-hidden="true">⚡</span><span>スピードアップ！</span></button>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <p class="hint" id="hint">でんしゃを えらんでね</p>
+  <p id="status" class="visually-hidden" role="status" aria-live="polite">電車を選んで出発してください。</p>
 
   <script src="./script.js"></script>
 </body>
