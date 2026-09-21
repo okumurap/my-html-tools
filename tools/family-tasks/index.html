@@ -20,6 +20,17 @@ body{padding-bottom:78px}
 /* 旧情報は既存データと互換性を保つが、カテゴリと担当の操作は廃止する。 */
 #reorderToggle{display:none!important}
 .task .drag-handle:not(.sort-handle),.task-meta .chip:nth-child(2),.task-meta .chip:nth-child(3),#quickMove{display:none!important}
+/* Keep original hidden selects for the existing filtering/rendering code. */
+.sort-toolbar,.task .sort-handle,.task .sort-arrows{display:none!important}
+.compact-filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.compact-filters .filter-cycle{flex:1 1 140px;min-width:0;min-height:46px;padding:9px 10px;white-space:normal;text-align:center}
+.filter-internals[hidden]{display:none!important}
+.task-list .task{cursor:grab;-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
+.task-list .task *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
+.task-list .task:active{cursor:grabbing}
+.task-list .task.drag-source{border-color:var(--accent);background:var(--accent-light)}
+.task-list .task:focus-visible{outline:3px solid #78b99a;outline-offset:2px}
+@media(max-width:380px){.compact-filters{gap:6px}.compact-filters .filter-cycle{flex-basis:130px;font-size:.76rem;padding:8px 5px}}
 #editScopeInfo.scope-warning{color:var(--danger)}#editError{margin:0 0 12px}
 @media(max-width:380px){.sort-arrows{gap:2px}.sort-arrow{min-width:30px;padding:2px 4px!important}.task:has(.sort-arrows){gap:4px}.task:has(.sort-arrows) .edit-button{font-size:.7rem;padding:4px!important}}
 @media(max-width:360px){.fab-add{width:56px;height:56px;right:max(12px,env(safe-area-inset-right));bottom:calc(12px + env(safe-area-inset-bottom))}.add-dialog{padding:16px}.add-dialog .form-footer{align-items:stretch}}
@@ -28,6 +39,7 @@ body{padding-bottom:78px}
 <script>try{localStorage.setItem('family-tasks:sort-mode:v1','manual')}catch(_){}</script>
 <script defer src="./script.js"></script>
 <script defer src="./enhancements.js"></script>
+<script defer src="./streamlined.js"></script>
 </head>
 <body>
 <div class="shell">
@@ -48,8 +60,8 @@ body{padding-bottom:78px}
 <dialog id="addDialog" class="add-dialog" aria-labelledby="addTitle"><section class="composer" aria-labelledby="addTitle"><div class="section-head"><h2 id="addTitle">タスクを追加</h2><button type="button" id="cancelAdd" class="ghost small">閉じる</button></div><p id="addError" class="message" role="alert" hidden></p><form id="addForm" novalidate><label for="taskTitle">やること <span class="required">必須</span></label><input id="taskTitle" type="text" maxlength="120" placeholder="例：牛乳を買う" autocomplete="off" required><input id="taskCategory" type="hidden" value="その他"><details id="taskAdvanced" class="add-advanced"><summary>詳細設定（公開範囲・期限・メモ）</summary><div class="form-grid"><div><label for="taskScope">公開範囲</label><select id="taskScope"><option value="shared">家族共有</option><option value="private">自分だけ</option></select></div><div hidden><label for="taskAssignee">旧担当情報</label><select id="taskAssignee"><option value="">共同</option><option value="self">自分</option><option value="partner">相手</option></select></div><div><label for="taskDate">期限</label><input id="taskDate" type="date"></div></div><label for="taskNotes">メモ（任意）</label><textarea id="taskNotes" rows="2" maxlength="1000" placeholder="必要な内容だけ記入"></textarea></details><div class="form-footer"><span id="formHint" class="hint">まずはデモで試せます</span><button type="submit" class="primary add-button" id="addBtn">＋ 追加する</button></div></form></section></dialog>
 <section class="task-section" aria-labelledby="listTitle"><div class="section-head list-title"><div><p class="eyebrow">YOUR TASKS</p><h2 id="listTitle">タスク一覧 <span id="visibleCount" class="count-pill">0</span></h2></div></div>
 <div class="sort-toolbar"><label for="sortSelect" hidden>並び順<select id="sortSelect"><option value="manual">手動順</option></select></label><button id="reorderToggle" type="button" class="ghost small" aria-pressed="false" hidden>並び替え</button></div><p id="sortHint" class="move-hint" role="status" hidden></p>
-<div class="filters"><label for="searchInput">検索<input id="searchInput" type="search" placeholder="タスク名・メモを検索"></label><label for="scopeFilter">公開範囲<select id="scopeFilter"><option value="all">すべて</option><option value="shared">家族共有</option><option value="private">自分だけ</option></select></label><label for="statusFilter">状態<select id="statusFilter"><option value="open">未完了</option><option value="all">すべて</option><option value="done">完了</option></select></label><label for="dateFilter">期限<select id="dateFilter"><option value="all">すべて</option><option value="today">今日まで</option><option value="week">7日以内</option><option value="none">期限なし</option></select></label></div>
-<p class="move-hint">↕を長押ししてドラッグ、または↑↓で順番を変更できます。</p><ul id="taskList" class="task-list" aria-live="polite"></ul><div id="emptyState" class="empty" hidden><span aria-hidden="true">✓</span><p id="emptyText">該当するタスクはありません。</p></div></section>
+<div class="filters compact-filters" role="group" aria-label="一覧の絞り込み"><button type="button" id="scopeCycle" class="ghost filter-cycle">公開範囲：すべて ↻</button><button type="button" id="statusCycle" class="ghost filter-cycle">状態：未完了 ↻</button><div class="filter-internals" hidden><input id="searchInput" type="search" value="" aria-hidden="true" tabindex="-1"><select id="scopeFilter" aria-hidden="true" tabindex="-1"><option value="all">すべて</option><option value="shared">家族共有</option><option value="private">自分だけ</option></select><select id="statusFilter" aria-hidden="true" tabindex="-1"><option value="open">未完了</option><option value="all">すべて</option><option value="done">完了</option></select><select id="dateFilter" aria-hidden="true" tabindex="-1"><option value="all">すべて</option><option value="today">今日まで</option><option value="week">7日以内</option><option value="none">期限なし</option></select></div></div>
+<p id="reorderInfo" class="move-hint" role="status">タスクを長押しして上下に移動できます。キーボードはタスクを選んでAlt＋↑↓。</p><ul id="taskList" class="task-list" aria-live="polite"></ul><div id="emptyState" class="empty" hidden><span aria-hidden="true">✓</span><p id="emptyText">該当するタスクはありません。</p></div></section>
 </main><footer>MY HTML TOOLS · 端末内デモ / Firebase共有</footer></div>
 <button type="button" id="fabAddTask" class="fab-add" aria-label="タスクを追加" aria-haspopup="dialog" aria-controls="addDialog" title="タスクを追加"><span aria-hidden="true">＋</span></button>
 <!-- 互換性のため旧イベントが参照する要素は保持。ただし画面上からは操作不可。 -->
