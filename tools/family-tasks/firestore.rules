@@ -14,17 +14,17 @@ service cloud.firestore {
           'done', 'scope', 'ownerUid', 'createdAt', 'updatedAt'
         ]) && data.keys().hasOnly([
           'title', 'notes', 'dueDate', 'category', 'assigneeUid',
-          'done', 'scope', 'ownerUid', 'createdAt', 'updatedAt'
+          'done', 'scope', 'ownerUid', 'createdAt', 'updatedAt', 'sortOrder'
         ]) &&
         data.title is string && data.title.size() > 0 && data.title.size() <= 120 &&
         data.notes is string && data.notes.size() <= 1000 &&
         data.dueDate is string && data.dueDate.size() <= 10 &&
-        // 旧カテゴリは既存ドキュメントの完了・日付変更を壊さないため更新時のみ許可。
         data.category in ['家', '買い物', '子ども', 'その他', '家事', '子育て', '住宅', '仕事'] &&
         data.assigneeUid is string && data.assigneeUid.size() <= 128 &&
         data.done is bool && data.ownerUid is string &&
         data.createdAt is int && data.createdAt >= 0 &&
-        data.updatedAt is int && data.updatedAt >= data.createdAt;
+        data.updatedAt is int && data.updatedAt >= data.createdAt &&
+        (!('sortOrder' in data) || (data.sortOrder is number && data.sortOrder >= -8000000000000000 && data.sortOrder <= 8000000000000000));
     }
     match /families/{familyId} {
       // 共有スペースの ID を知っているだけでは参加できない。
