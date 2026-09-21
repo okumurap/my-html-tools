@@ -5,7 +5,10 @@
   const STORE = 'family-tasks:demo:v1';
   const MODE_KEY = 'family-tasks:mode:v1';
   const CONFIG_KEY = 'my-html-tools:firebase-config:v1';
-  const CATEGORIES = ['家事', '買い物', '子育て', '住宅', '仕事', 'その他'];
+  const CATEGORIES = ['家', '買い物', '子ども', 'その他'];
+  // v1 の保存済みデータ・JSON・Firestoreドキュメントは削除せず新カテゴリへ読み替える。
+  const LEGACY_CATEGORIES = new Map([['家事', '家'], ['住宅', '家'], ['子育て', '子ども'], ['仕事', 'その他']]);
+  const normalizeCategory = value => LEGACY_CATEGORIES.get(value) ?? value;
   const $ = id => document.getElementById(id);
   const today = () => {
     const date = new Date();
@@ -45,18 +48,19 @@
     if (!VALID_SCOPE.has(raw.scope)) throw new Error('公開範囲が正しくありません。');
     if (typeof raw.assigneeUid !== 'string' || raw.assigneeUid.length > 128) throw new Error('担当者が正しくありません。');
     if (typeof raw.done !== 'boolean') throw new Error('完了状態が正しくありません。');
-    if (!CATEGORIES.includes(raw.category)) throw new Error('カテゴリが正しくありません。');
+    const category = normalizeCategory(raw.category);
+    if (!CATEGORIES.includes(category)) throw new Error('カテゴリが正しくありません。');
     if (!allowDemo && (!raw.ownerUid || typeof raw.ownerUid !== 'string')) throw new Error('所有者が正しくありません。');
     const createdAt = Number.isSafeInteger(raw.createdAt) && raw.createdAt >= 0 ? raw.createdAt : Date.now();
     const updatedAt = Number.isSafeInteger(raw.updatedAt) && raw.updatedAt >= 0 ? raw.updatedAt : Date.now();
     return { title, notes, dueDate, scope: raw.scope, assigneeUid: raw.assigneeUid,
-      category: raw.category, done: raw.done, ownerUid: String(raw.ownerUid || 'demo-me'), createdAt, updatedAt };
+      category, done: raw.done, ownerUid: String(raw.ownerUid || 'demo-me'), createdAt, updatedAt };
   }
 
   const exampleTasks = () => [
-    { title: 'ゴミ出しの準備', notes: 'これはサンプルです。自由に編集・削除できます。', dueDate: today(), category: '家事', scope: 'shared', assigneeUid: 'demo-me', done: false },
+    { title: 'ゴミ出しの準備', notes: 'これはサンプルです。自由に編集・削除できます。', dueDate: today(), category: '家', scope: 'shared', assigneeUid: 'demo-me', done: false },
     { title: '牛乳を買う', notes: '', dueDate: plusDays(1), category: '買い物', scope: 'shared', assigneeUid: '', done: false },
-    { title: '書類を確認する', notes: 'このタスクは自分だけに表示される想定です。', dueDate: '', category: '住宅', scope: 'private', assigneeUid: 'demo-me', done: false },
+    { title: '書類を確認する', notes: 'このタスクは自分だけに表示される想定です。', dueDate: '', category: '家', scope: 'private', assigneeUid: 'demo-me', done: false },
   ].map(task => ({ id: uuid(), ...normalizeTask({ ...task, ownerUid: 'demo-me', createdAt: Date.now(), updatedAt: Date.now() }, true) }));
 
   function loadDemo() {
@@ -74,7 +78,7 @@
       return parsed.tasks.map(item => ({ id: typeof item.id === 'string' && item.id.length <= 128 ? item.id : uuid(), ...normalizeTask(item, true) }));
     } catch (_) {
       demoCorrupted = true;
-      showMessage('保存済みデータを読み込めません。元データを保護するため、書き込みを停止しています。正しいJSONを読み込むか、ブラウザのデータを別途確認してください。');
+      showMessage('保存済みデータを読み込めません。元データを保護するため、書き込みを停止しています。正しいJSONを読み込んで復旧してください。');
       return [];
     }
   }
@@ -478,7 +482,7 @@
   function attachUser(uid) {
     const { sdk, connection } = state;
     state.privateUnsub = sdk.onSnapshot(sdk.collection(connection.db, 'users', uid, 'tasks'), { includeMetadataChanges: true }, snapshot => {
-      state.privateTasks = snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
+      state.privateTasks = snapshot.docs.map(item => ({ id: item.id, ...item.data(), category: normalizeCategory(item.data().category) }));
       state.metadata.private = snapshot.metadata; render();
     }, error => showMessage(`個人タスクの読込に失敗しました：${firebaseError(error)}`));
     const families = sdk.query(sdk.collection(connection.db, 'families'), sdk.where('memberUids', 'array-contains', uid));
@@ -498,7 +502,7 @@
   function attachShared(familyId) {
     const { sdk, connection } = state;
     state.sharedUnsub = sdk.onSnapshot(sdk.collection(connection.db, 'families', familyId, 'tasks'), { includeMetadataChanges: true }, snapshot => {
-      state.sharedTasks = snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
+      state.sharedTasks = snapshot.docs.map(item => ({ id: item.id, ...item.data(), category: normalizeCategory(item.data().category) }));
       state.metadata.shared = snapshot.metadata; render();
     }, error => showMessage(`共有タスクの読込に失敗しました：${firebaseError(error)}`));
   }
