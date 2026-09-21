@@ -83,12 +83,47 @@
           <label for="statusFilter">状態<select id="statusFilter"><option value="open">未完了</option><option value="all">すべて</option><option value="done">完了</option></select></label>
           <label for="dateFilter">期限<select id="dateFilter"><option value="all">すべて</option><option value="today">今日まで</option><option value="week">7日以内</option><option value="none">期限なし</option></select></label>
         </div>
+        <p class="move-hint">タスクの「≡」を長押し（PCではドラッグ）して、担当・カテゴリ・期限へ移動できます。「≡」をタップして項目を選ぶこともできます。</p>
         <ul id="taskList" class="task-list" aria-live="polite"></ul>
         <div id="emptyState" class="empty" hidden><span aria-hidden="true">✓</span><p id="emptyText">該当するタスクはありません。</p></div>
       </section>
     </main>
     <footer>MY HTML TOOLS · 端末内デモ / Firebase共有</footer>
   </div>
+  <section id="quickMove" class="quick-move" aria-labelledby="quickMoveTitle" hidden>
+    <div class="quick-move-header"><div><strong id="quickMoveTitle">ドラッグで変更</strong><p id="quickMoveTask" class="quick-move-task"></p></div><button type="button" id="cancelMove" class="ghost small">閉じる</button></div>
+    <div class="move-group" role="group" aria-label="担当を変更"><span class="move-group-title">担当</span><div class="move-options">
+      <button type="button" data-drop-kind="assignee" data-drop-value="self">自分</button>
+      <button type="button" data-drop-kind="assignee" data-drop-value="partner">相手</button>
+      <button type="button" data-drop-kind="assignee" data-drop-value="">共同</button>
+    </div></div>
+    <div class="move-group" role="group" aria-label="カテゴリを変更"><span class="move-group-title">カテゴリ</span><div class="move-options">
+      <button type="button" data-drop-kind="category" data-drop-value="家事">家事</button>
+      <button type="button" data-drop-kind="category" data-drop-value="買い物">買い物</button>
+      <button type="button" data-drop-kind="category" data-drop-value="子育て">子育て</button>
+      <button type="button" data-drop-kind="category" data-drop-value="住宅">住宅</button>
+      <button type="button" data-drop-kind="category" data-drop-value="仕事">仕事</button>
+      <button type="button" data-drop-kind="category" data-drop-value="その他">その他</button>
+    </div></div>
+    <div class="move-group" role="group" aria-label="期限を変更"><span class="move-group-title">期限</span><div class="move-options">
+      <button type="button" data-drop-kind="date" data-drop-value="today">今日</button>
+      <button type="button" data-drop-kind="date" data-drop-value="tomorrow">明日</button>
+      <button type="button" data-drop-kind="date" data-drop-value="week">7日後</button>
+      <button type="button" data-drop-kind="date" data-drop-value="custom">日付指定…</button>
+      <button type="button" data-drop-kind="date" data-drop-value="none">期限なし</button>
+    </div></div>
+    <p id="moveHelp" class="move-help" role="status">移動先へドロップ、または項目をタップしてください。</p>
+  </section>
+  <div id="dragGhost" class="drag-ghost" aria-hidden="true" hidden></div>
+  <dialog id="moveDateDialog" aria-labelledby="moveDateTitle">
+    <form id="moveDateForm">
+      <h2 id="moveDateTitle">期限を指定</h2>
+      <p id="moveDateTask" class="muted"></p>
+      <label for="moveDateInput">変更後の期限</label>
+      <input id="moveDateInput" type="date" required>
+      <div class="dialog-actions"><button type="button" id="cancelMoveDate" class="ghost">キャンセル</button><button type="submit" class="primary">期限を変更</button></div>
+    </form>
+  </dialog>
   <dialog id="editDialog" aria-labelledby="editTitle">
     <form id="editForm" class="edit-form" novalidate>
       <div class="section-head"><h2 id="editTitle">タスクを編集</h2><button type="button" id="cancelEdit" class="ghost small">閉じる</button></div>
