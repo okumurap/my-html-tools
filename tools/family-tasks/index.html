@@ -69,7 +69,7 @@
             <div><label for="taskScope">公開範囲</label><select id="taskScope"><option value="shared">家族共有</option><option value="private">自分だけ</option></select></div>
             <div><label for="taskAssignee">担当</label><select id="taskAssignee"><option value="">担当なし・共同</option><option value="self">自分</option><option value="partner">相手</option></select></div>
             <div><label for="taskDate">期限</label><input id="taskDate" type="date"></div>
-            <div><label for="taskCategory">カテゴリ</label><select id="taskCategory"><option>家事</option><option>買い物</option><option>子育て</option><option>住宅</option><option>仕事</option><option>その他</option></select></div>
+            <div><label for="taskCategory">カテゴリ</label><select id="taskCategory"><option>家</option><option>買い物</option><option>子ども</option><option>その他</option></select></div>
           </div>
           <label for="taskNotes">メモ（任意）</label><textarea id="taskNotes" rows="2" maxlength="1000" placeholder="必要な内容だけ記入"></textarea>
           <div class="form-footer"><span id="formHint" class="hint">まずはデモで試せます</span><button type="submit" class="primary add-button" id="addBtn">＋ 追加する</button></div>
@@ -98,11 +98,9 @@
       <button type="button" data-drop-kind="assignee" data-drop-value="">共同</button>
     </div></div>
     <div class="move-group" role="group" aria-label="カテゴリを変更"><span class="move-group-title">カテゴリ</span><div class="move-options">
-      <button type="button" data-drop-kind="category" data-drop-value="家事">家事</button>
+      <button type="button" data-drop-kind="category" data-drop-value="家">家</button>
       <button type="button" data-drop-kind="category" data-drop-value="買い物">買い物</button>
-      <button type="button" data-drop-kind="category" data-drop-value="子育て">子育て</button>
-      <button type="button" data-drop-kind="category" data-drop-value="住宅">住宅</button>
-      <button type="button" data-drop-kind="category" data-drop-value="仕事">仕事</button>
+      <button type="button" data-drop-kind="category" data-drop-value="子ども">子ども</button>
       <button type="button" data-drop-kind="category" data-drop-value="その他">その他</button>
     </div></div>
     <div class="move-group" role="group" aria-label="期限を変更"><span class="move-group-title">期限</span><div class="move-options">
@@ -132,7 +130,7 @@
       <div class="form-grid">
         <div><label for="editTaskAssignee">担当</label><select id="editTaskAssignee"><option value="">担当なし・共同</option><option value="self">自分</option><option value="partner">相手</option></select></div>
         <div><label for="editTaskDate">期限</label><input id="editTaskDate" type="date"></div>
-        <div><label for="editTaskCategory">カテゴリ</label><select id="editTaskCategory"><option>家事</option><option>買い物</option><option>子育て</option><option>住宅</option><option>仕事</option><option>その他</option></select></div>
+        <div><label for="editTaskCategory">カテゴリ</label><select id="editTaskCategory"><option>家</option><option>買い物</option><option>子ども</option><option>その他</option></select></div>
       </div>
       <label for="editTaskNotes">メモ</label><textarea id="editTaskNotes" rows="4" maxlength="1000"></textarea>
       <div class="dialog-actions"><button type="button" class="danger ghost" id="deleteTask">削除</button><button type="submit" class="primary">変更を保存</button></div>
