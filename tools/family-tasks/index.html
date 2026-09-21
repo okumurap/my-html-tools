@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#233b32">
+  <meta name="description" content="家族で共有できるタスク管理。設定前は端末内で試せるプロトタイプ。">
+  <title>暮らしのタスク | My HTML Tools</title>
+  <link rel="stylesheet" href="./style.css">
+  <script defer src="./script.js"></script>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <a class="back" href="../../index.html" aria-label="ツール一覧に戻る">← ツール一覧</a>
+      <div class="top-actions"><span id="modeBadge" class="mode-badge">デモ</span><button type="button" class="ghost small" id="settingsToggle" aria-controls="settings" aria-expanded="false">設定</button></div>
+    </header>
+    <main>
+      <section class="hero" aria-labelledby="pageTitle">
+        <p class="eyebrow">FAMILY TASKS · PROTOTYPE</p>
+        <h1 id="pageTitle">暮らしのタスク<span class="hero-dot">.</span></h1>
+        <p class="intro">やることを整理して、必要なものだけ家族と共有。</p>
+        <p id="syncStatus" class="sync-status" role="status" aria-live="polite">この端末内で動作中 · 他の端末とは同期しません</p>
+      </section>
+      <p id="message" class="message" role="alert" hidden></p>
+      <section id="settings" class="panel settings" aria-labelledby="settingsTitle" hidden>
+        <div class="section-head"><h2 id="settingsTitle">接続と共有の設定</h2><button type="button" id="closeSettings" class="ghost small">閉じる</button></div>
+        <p class="muted">デモのデータはこのブラウザだけに保存されます。Firebaseへ自動転送されません。</p>
+        <div id="firebaseArea" class="settings-grid">
+          <div class="settings-cell">
+            <h3>1. 共通Firebase</h3>
+            <p class="muted">複数アプリで同じプロジェクトを使うための設定です。同一サイト内で共通保存します。</p>
+            <label for="configInput">FirebaseのWebアプリ設定（JSON）</label>
+            <textarea id="configInput" rows="5" spellcheck="false" placeholder='{"apiKey":"…","authDomain":"…firebaseapp.com","projectId":"…","appId":"…"}'></textarea>
+            <div class="button-row"><button type="button" class="primary" id="saveConfig">設定を保存して接続</button><button type="button" class="ghost" id="removeConfig">接続設定を削除</button></div>
+            <p class="hint">秘密鍵やサービスアカウントJSONは入力しないでください。Firebase Web SDKのfirebaseConfigのみ使用します。</p>
+          </div>
+          <div class="settings-cell">
+            <h3>2. ログイン</h3>
+            <p id="accountText" class="muted">Firebase未接続</p>
+            <div class="button-row"><button type="button" class="primary" id="loginBtn" hidden>Googleでログイン</button><button type="button" class="ghost" id="logoutBtn" hidden>ログアウト</button><button type="button" class="ghost" id="demoBtn" hidden>デモに戻る</button></div>
+            <label for="myUid">自分のユーザーID（相手に伝える用）</label>
+            <div class="copy-row"><input id="myUid" type="text" readonly placeholder="ログイン後に表示"><button type="button" id="copyUid" class="ghost">コピー</button></div>
+          </div>
+          <div class="settings-cell" id="familySection" hidden>
+            <h3>3. 家族共有</h3>
+            <p id="familyDescription" class="muted">家族を作成すると、共有タスクを使えます。</p>
+            <button type="button" id="createFamily" class="primary">家族スペースを作成</button>
+            <div id="inviteArea" hidden>
+              <label for="partnerUid">共有する相手のユーザーID</label>
+              <div class="copy-row"><input type="text" id="partnerUid" maxlength="128" placeholder="相手がログインして表示されたID"><button type="button" id="addPartner" class="primary">招待を許可</button></div>
+              <p class="hint">相手もこのFirebaseへログインし、表示されたIDを伝えます。所有者が登録した相手だけが共有データへアクセスできます。</p>
+            </div>
+          </div>
+        </div>
+        <div class="settings-footer"><button type="button" id="exportBtn" class="ghost">表示中データをJSON保存</button><label class="import-label" for="importInput">デモのJSON読込</label><input id="importInput" type="file" accept="application/json,.json" hidden><span class="hint">Firebaseのデータはインポートできません。</span></div>
+      </section>
+      <section class="stats" aria-label="タスクの件数">
+        <div class="stat"><span class="stat-label">今日まで</span><strong id="todayCount">0</strong><span class="stat-note">未完了</span></div>
+        <div class="stat"><span class="stat-label">これから</span><strong id="upcomingCount">0</strong><span class="stat-note">未完了</span></div>
+        <div class="stat"><span class="stat-label">完了</span><strong id="doneCount">0</strong><span class="stat-note">全期間</span></div>
+      </section>
+      <section class="panel composer" aria-labelledby="addTitle">
+        <div class="section-head"><h2 id="addTitle">タスクを追加</h2><span class="subtle">Enterで追加</span></div>
+        <form id="addForm" novalidate>
+          <label for="taskTitle">やること <span class="required">必須</span></label>
+          <input id="taskTitle" type="text" maxlength="120" placeholder="例：牛乳を買う" autocomplete="off" required>
+          <div class="form-grid">
+            <div><label for="taskScope">公開範囲</label><select id="taskScope"><option value="shared">家族共有</option><option value="private">自分だけ</option></select></div>
+            <div><label for="taskAssignee">担当</label><select id="taskAssignee"><option value="">担当なし・共同</option><option value="self">自分</option><option value="partner">相手</option></select></div>
+            <div><label for="taskDate">期限</label><input id="taskDate" type="date"></div>
+            <div><label for="taskCategory">カテゴリ</label><select id="taskCategory"><option>家事</option><option>買い物</option><option>子育て</option><option>住宅</option><option>仕事</option><option>その他</option></select></div>
+          </div>
+          <label for="taskNotes">メモ（任意）</label><textarea id="taskNotes" rows="2" maxlength="1000" placeholder="必要な内容だけ記入"></textarea>
+          <div class="form-footer"><span id="formHint" class="hint">まずはデモで試せます</span><button type="submit" class="primary add-button" id="addBtn">＋ 追加する</button></div>
+        </form>
+      </section>
+      <section class="task-section" aria-labelledby="listTitle">
+        <div class="section-head list-title"><div><p class="eyebrow">YOUR TASKS</p><h2 id="listTitle">タスク一覧 <span id="visibleCount" class="count-pill">0</span></h2></div></div>
+        <div class="filters">
+          <label for="searchInput">検索<input id="searchInput" type="search" placeholder="タスク名・メモを検索"></label>
+          <label for="scopeFilter">公開範囲<select id="scopeFilter"><option value="all">すべて</option><option value="shared">家族共有</option><option value="private">自分だけ</option></select></label>
+          <label for="statusFilter">状態<select id="statusFilter"><option value="open">未完了</option><option value="all">すべて</option><option value="done">完了</option></select></label>
+          <label for="dateFilter">期限<select id="dateFilter"><option value="all">すべて</option><option value="today">今日まで</option><option value="week">7日以内</option><option value="none">期限なし</option></select></label>
+        </div>
+        <ul id="taskList" class="task-list" aria-live="polite"></ul>
+        <div id="emptyState" class="empty" hidden><span aria-hidden="true">✓</span><p id="emptyText">該当するタスクはありません。</p></div>
+      </section>
+    </main>
+    <footer>MY HTML TOOLS · 端末内デモ / Firebase共有</footer>
+  </div>
+  <dialog id="editDialog" aria-labelledby="editTitle">
+    <form id="editForm" class="edit-form" novalidate>
+      <div class="section-head"><h2 id="editTitle">タスクを編集</h2><button type="button" id="cancelEdit" class="ghost small">閉じる</button></div>
+      <p id="editScopeInfo" class="muted"></p>
+      <label for="editTaskTitle">やること</label><input id="editTaskTitle" type="text" maxlength="120" required>
+      <div class="form-grid">
+        <div><label for="editTaskAssignee">担当</label><select id="editTaskAssignee"><option value="">担当なし・共同</option><option value="self">自分</option><option value="partner">相手</option></select></div>
+        <div><label for="editTaskDate">期限</label><input id="editTaskDate" type="date"></div>
+        <div><label for="editTaskCategory">カテゴリ</label><select id="editTaskCategory"><option>家事</option><option>買い物</option><option>子育て</option><option>住宅</option><option>仕事</option><option>その他</option></select></div>
+      </div>
+      <label for="editTaskNotes">メモ</label><textarea id="editTaskNotes" rows="4" maxlength="1000"></textarea>
+      <div class="dialog-actions"><button type="button" class="danger ghost" id="deleteTask">削除</button><button type="submit" class="primary">変更を保存</button></div>
+    </form>
+  </dialog>
+</body>
+</html>
