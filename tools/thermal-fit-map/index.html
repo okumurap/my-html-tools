@@ -46,10 +46,10 @@
   <div class="stack">
    <section class="panel" aria-labelledby="summary-title"><div class="panelhead"><h2 id="summary-title">判定サマリー</h2><span class="tag">最悪公差で評価</span></div><div id="summary" class="summary" aria-live="polite"></div><p class="hint">最小すきま＝穴の下限－軸の上限。最大すきま＝穴の上限－軸の下限。</p></section>
    <section class="panel" aria-labelledby="states-title"><h2 id="states-title">温度条件ごとの計算結果</h2><div id="conditionResults" class="condition-list"></div></section>
-   <section class="panel" aria-labelledby="map-title"><div class="panelhead"><h2 id="map-title">温度 × 公差マップ</h2><span class="tag">帯をタップ</span></div><p class="hint">金型温度を固定し、インサートの温度変化に伴う直径すきまの公差範囲を表示します。</p><div class="maptools"><div class="field"><label for="mapShaft">金型温度（固定）℃</label><input id="mapShaft" type="number" step="any" min="-50" max="300" value="20"></div><div class="field"><label for="mapMin">インサート下限 ℃</label><input id="mapMin" type="number" step="any" min="-50" max="300" value="20"></div><div class="field"><label for="mapMax">インサート上限 ℃</label><input id="mapMax" type="number" step="any" min="-50" max="300" value="70"></div></div>
+   <section class="panel" aria-labelledby="map-title"><div class="panelhead"><h2 id="map-title">温度 × 公差マップ</h2><span class="tag">帯をタップ</span></div><p class="hint">金型温度を固定し、インサートの温度変化に伴う直径すきまの公差範囲を表示します。</p><div class="maptools"><div class="field"><label for="mapShaft">金型温度（固定）℃</label><input id="mapShaft" type="number" step="any" min="-50" max="300" value="120"></div><div class="field"><label for="mapMin">インサート下限 ℃</label><input id="mapMin" type="number" step="any" min="-50" max="300" value="20"></div><div class="field"><label for="mapMax">インサート上限 ℃</label><input id="mapMax" type="number" step="any" min="-50" max="300" value="70"></div></div>
     <div class="legend"><span><i class="swatch interference"></i>干渉確定</span><span><i class="swatch mixed"></i>公差次第</span><span><i class="swatch small"></i>目標未満</span><span><i class="swatch pass"></i>目標達成</span></div>
     <div class="mapframe"><div class="ylabel">インサート温度（℃） ↑ 上ほど高温</div><div id="heatmap" class="heatmap" role="group" aria-label="金型温度固定・インサート温度別の直径すきまマップ"></div></div><div class="xaxis"><span aria-hidden="true"></span><div class="xticks"><span id="xMin">—</span><span id="xMax">—</span></div></div><div class="axis-caption">直径すきま（mm） →</div><p class="mapnote">色付きの帯＝<strong>最小～最大すきま</strong>。破線＝0 mm（干渉境界）、点線＝設定した目標すきま。</p>
-    <div id="mapDetail" class="mapdetail" role="status">帯をタップすると温度と最小・最大すきまを表示します。</div><p class="hint">インサート温度を16点に分割します。金型は固定温度。帯の色は公差の最悪組み合わせと目標すきまで判定します。</p>
+    <div id="mapDetail" class="mapdetail" role="status">帯をタップすると温度と最小・最大すきまを表示します。</div><p class="hint">インサート温度を10点に分割します。金型は固定温度。帯の色は公差の最悪組み合わせと目標すきまで判定します。</p>
    </section>
    <section class="panel" aria-labelledby="inverse-title"><h2 id="inverse-title">寸法・必要加熱温度を逆算</h2><div class="field"><label for="inverseCondition">評価する条件</label><select id="inverseCondition"><option value="all">全4条件で目標すきまを保証</option></select></div><div id="inverseResult" class="inverse-box" aria-live="polite"></div><p class="hint">凸径の上限を20℃基準で逆算します。公差幅を維持する場合は基準寸法を同じ量だけ変更してください。</p><div class="split"></div><div class="field"><label for="heatCondition">インサート必要温度を求める条件</label><select id="heatCondition"></select></div><div id="heatResult" class="inverse-box" aria-live="polite"></div></section>
    <section class="panel" aria-labelledby="table-title"><h2 id="table-title">詳細数値</h2><div class="tablewrap"><table class="results-table"><thead><tr><th>条件</th><th>穴 下限</th><th>穴 上限</th><th>軸 下限</th><th>軸 上限</th><th>最小すきま</th><th>最大すきま</th></tr></thead><tbody id="detailRows"></tbody></table></div><p class="hint">単位：すべて mm。各温度の自由膨張寸法を表示。</p></section>
@@ -62,7 +62,7 @@
  'use strict';
  const KEY='thermal-fit-map:cases:v1';
  const PRESETS={scm:12,nak:12.5};
- const DEFAULT={holeMaterial:'scm',holeNom:32,holeAlpha:12,holeLower:-0.030,holeUpper:-0.008,shaftMaterial:'nak',shaftNom:32,shaftAlpha:12.5,shaftLower:0,shaftUpper:0,target:0.010,mapShaft:20,mapMin:20,mapMax:70,conditions:[{name:'常温',hole:20,shaft:20},{name:'組付け',hole:70,shaft:20},{name:'温度差あり',hole:70,shaft:120},{name:'成形・均熱',hole:120,shaft:120}]};
+ const DEFAULT={holeMaterial:'scm',holeNom:32,holeAlpha:12,holeLower:-0.030,holeUpper:-0.008,shaftMaterial:'nak',shaftNom:32,shaftAlpha:12.5,shaftLower:0,shaftUpper:0,target:0.010,mapShaft:120,mapMin:20,mapMax:70,conditions:[{name:'常温',hole:20,shaft:20},{name:'組付け',hole:70,shaft:20},{name:'温度差あり',hole:70,shaft:120},{name:'成形・均熱',hole:120,shaft:120}]};
  const $=id=>document.getElementById(id);
  const inputs=['holeMaterial','holeNom','holeAlpha','holeLower','holeUpper','shaftMaterial','shaftNom','shaftAlpha','shaftLower','shaftUpper','target','mapShaft','mapMin','mapMax'];
  const numeric=inputs.filter(id=>!id.endsWith('Material'));
@@ -146,7 +146,7 @@
   });
  }
  // 固定した金型温度で、インサートの温度ごとの公差帯を横軸のすきま量に描く。
- function mapRows(v){return Array.from({length:16},(_,i)=>{const hole=v.mapMax-(v.mapMax-v.mapMin)*i/15;return{hole,shaft:v.mapShaft,...calculate(v,hole,v.mapShaft)}})}
+ function mapRows(v){return Array.from({length:10},(_,i)=>{const hole=v.mapMax-(v.mapMax-v.mapMin)*i/9;return{hole,shaft:v.mapShaft,...calculate(v,hole,v.mapShaft)}})}
  function mapBounds(rows,v){
   let low=Math.min(0,v.target,...rows.map(r=>r.min));let high=Math.max(0,v.target,...rows.map(r=>r.max));
   const pad=Math.max((high-low)*.06,.001);low-=pad;high+=pad;
@@ -206,7 +206,7 @@
  for(const id of inputs){$(id).addEventListener('input',render)}
  for(const side of ['hole','shaft']){$(`${side}Material`).addEventListener('change',()=>{const key=$(`${side}Material`).value;if(key!=='custom')$(`${side}Alpha`).value=PRESETS[key];render()});$(`${side}Alpha`).addEventListener('input',()=>{$(`${side}Material`).value='custom';render()});}
  ['inverseCondition','heatCondition'].forEach(id=>$(id).addEventListener('change',render));
- $('save').addEventListener('click',doSave);$('load').addEventListener('click',doLoad);$('remove').addEventListener('click',doRemove);$('csv').addEventListener('click',downloadCSV);
+ $('save').addEventListener('click',doSave);$('load').addEventListener('click',doLoad);$('remove').addEventListener('click',downloadCSV);
  $('reset').addEventListener('click',()=>{restore(DEFAULT);$('saveStatus').textContent='例の条件に戻しました。保存データは削除していません。'});
 })();
 </script>
