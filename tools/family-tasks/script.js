@@ -84,6 +84,7 @@
     demo: [], privateTasks: [], sharedTasks: [], user: null, family: null,
     sdk: null, connection: null, unsubscribers: [], familyUnsub: null, sharedUnsub: null,
     metadata: { private: null, shared: null }, editing: null, creatingFamily: false,
+    movingId: null, dateTargetId: null, drag: null,
   };
   state.demo = loadDemo();
   if (state.mode === 'firebase' && !getSaved(CONFIG_KEY)) state.mode = 'demo';
@@ -203,6 +204,7 @@
   }
   function assigneeName(uid) { return uid === '' ? '担当なし・共同' : uid === userId() ? '担当：自分' : '担当：相手'; }
   function render() {
+    if (state.movingId && !allTasks().some(task => task.id === state.movingId)) hideMove();
     const tasks = allTasks();
     const currentDate = today();
     $('todayCount').textContent = tasks.filter(task => !task.done && task.dueDate && task.dueDate <= currentDate).length;
@@ -247,7 +249,12 @@
       const edit = document.createElement('button'); edit.type = 'button'; edit.className = 'ghost edit-button'; edit.textContent = '編集';
       edit.disabled = !modeIsReady();
       edit.setAttribute('aria-label', `${task.title}を編集`); edit.addEventListener('click', () => openEdit(task));
-      item.append(checkWrap, main, edit); fragment.append(item);
+      const grip = document.createElement('button'); grip.type = 'button'; grip.className = 'drag-handle';
+      grip.textContent = '≡'; grip.disabled = !modeIsReady();
+      grip.setAttribute('aria-label', `${task.title}の担当・カテゴリ・期限を変更`);
+      grip.setAttribute('aria-haspopup', 'true'); grip.dataset.taskId = task.id;
+      setupDragHandle(grip, task.id);
+      item.append(grip, checkWrap, main, edit); fragment.append(item);
     });
     list.replaceChildren(fragment);
     $('emptyState').hidden = visible.length > 0;
@@ -255,6 +262,162 @@
     updateSettings();
     setSyncStatus();
   }
+  // タスク本体はドラッグ不可とし、専用ハンドルだけを起点にする。
+  // Pointer Events でPCとタッチ端末を同じ処理にし、スマホは長押しで誤操作を防ぐ。
+  function selectedTask() { return allTasks().find(task => task.id === state.movingId) || null; }
+  function hideMove() {
+    $('quickMove').hidden = true;
+    $('dragGhost').hidden = true;
+    document.body.classList.remove('moving-task');
+    document.querySelectorAll('.move-target-hover').forEach(node => node.classList.remove('move-target-hover'));
+    state.movingId = null;
+  }
+  function showMove(id) {
+    const task = allTasks().find(item => item.id === id);
+    if (!task || !modeIsReady()) return false;
+    state.movingId = id;
+    $('quickMoveTask').textContent = task.title;
+    $('quickMove').hidden = false;
+    const partner = $('quickMove').querySelector('[data-drop-kind="assignee"][data-drop-value="partner"]');
+    const joint = $('quickMove').querySelector('[data-drop-kind="assignee"][data-drop-value=""]');
+    partner.disabled = task.scope === 'private' || !partnerId();
+    joint.disabled = task.scope === 'private';
+    $('moveHelp').textContent = task.scope === 'private'
+      ? '自分専用タスクは担当を他の人へ変更できません。カテゴリ・期限は変更できます。'
+      : !partnerId() ? '相手を担当にするには家族の登録が必要です。' : '移動先へドロップ、または項目をタップしてください。';
+    return true;
+  }
+  function applyMove(id, kind, value) {
+    const task = allTasks().find(item => item.id === id);
+    if (!task || !modeIsReady()) { showMessage('タスクが見つからないか、ログインが必要です。'); return false; }
+    let patch;
+    let description;
+    if (kind === 'assignee') {
+      if (!['self', 'partner', ''].includes(value)) return false;
+      if (task.scope === 'private' && value !== 'self') { showMessage('自分専用タスクは相手や共同の担当に変更できません。'); return false; }
+      if (value === 'partner' && !partnerId()) { showMessage('先に家族の相手を登録してください。'); return false; }
+      const uid = value === 'self' ? userId() : value === 'partner' ? partnerId() : '';
+      patch = { assigneeUid: uid }; description = value === 'self' ? '自分' : value === 'partner' ? '相手' : '共同';
+    } else if (kind === 'category') {
+      if (!CATEGORIES.includes(value)) return false;
+      patch = { category: value }; description = value;
+    } else if (kind === 'date') {
+      if (!validDate(value)) { showMessage('期限の日付が正しくありません。'); return false; }
+      patch = { dueDate: value }; description = value || '期限なし';
+    } else return false;
+    try {
+      const next = normalizeTask({ ...task, ...patch, updatedAt: Date.now() }, state.mode === 'demo');
+      const field = Object.keys(patch)[0];
+      if (next[field] === task[field]) { notify('変更はありません。'); return true; }
+      const succeeded = updateTask(task, { [field]: next[field], updatedAt: next.updatedAt });
+      if (!succeeded) return false;
+      notify(`${task.title} → ${description}（${state.mode === 'demo' ? '端末内に保存' : '同期処理中'}）`);
+      return true;
+    } catch (error) { showMessage(error.message); return false; }
+  }
+  function activateMove(kind, value) {
+    const id = state.movingId;
+    if (!id) return;
+    if (kind === 'date') {
+      if (value === 'custom') {
+        const task = selectedTask();
+        if (!task) return;
+        state.dateTargetId = id;
+        $('moveDateInput').value = task.dueDate || today();
+        $('moveDateTask').textContent = task.title;
+        hideMove();
+        $('moveDateDialog').showModal();
+        $('moveDateInput').focus();
+        return;
+      }
+      value = value === 'today' ? today() : value === 'tomorrow' ? plusDays(1) : value === 'week' ? plusDays(7) : value === 'none' ? '' : '__invalid__';
+    }
+    if (applyMove(id, kind, value)) hideMove();
+  }
+  function dragTargetAt(x, y) {
+    const element = document.elementFromPoint(x, y);
+    const target = element?.closest('[data-drop-kind]');
+    return target && $('quickMove').contains(target) && !target.disabled ? target : null;
+  }
+  function updateDragPosition(x, y) {
+    const ghost = $('dragGhost');
+    ghost.style.transform = `translate(${Math.min(x + 14, innerWidth - 170)}px, ${Math.max(8, y - 40)}px)`;
+    document.querySelectorAll('.move-target-hover').forEach(node => node.classList.remove('move-target-hover'));
+    const target = dragTargetAt(x, y);
+    if (target) target.classList.add('move-target-hover');
+    return target;
+  }
+  function setupDragHandle(handle, id) {
+    let ignoreClick = false;
+    const begin = (x, y) => {
+      const drag = state.drag;
+      if (!drag || drag.id !== id || drag.active || !showMove(id)) return;
+      drag.active = true;
+      document.body.classList.add('moving-task');
+      const task = selectedTask();
+      $('dragGhost').textContent = task?.title || '';
+      $('dragGhost').hidden = false;
+      updateDragPosition(x, y);
+    };
+    handle.addEventListener('pointerdown', event => {
+      if (!modeIsReady() || event.button !== 0 || state.drag) return;
+      const drag = { id, pointerId: event.pointerId, active: false, timer: null, x: event.clientX, y: event.clientY };
+      state.drag = drag;
+      handle.setPointerCapture(event.pointerId);
+      if (event.pointerType === 'mouse') { begin(event.clientX, event.clientY); event.preventDefault(); }
+      else drag.timer = setTimeout(() => begin(drag.x, drag.y), 340);
+    });
+    handle.addEventListener('pointermove', event => {
+      const drag = state.drag;
+      if (!drag || drag.id !== id || drag.pointerId !== event.pointerId) return;
+      if (!drag.active && Math.hypot(event.clientX - drag.x, event.clientY - drag.y) > 12) {
+        clearTimeout(drag.timer);
+        state.drag = null;
+        if (handle.hasPointerCapture(event.pointerId)) handle.releasePointerCapture(event.pointerId);
+        return;
+      }
+      if (drag.active) { updateDragPosition(event.clientX, event.clientY); event.preventDefault(); }
+    });
+    const end = (event, cancelled) => {
+      const drag = state.drag;
+      if (!drag || drag.id !== id || drag.pointerId !== event.pointerId) return;
+      clearTimeout(drag.timer);
+      state.drag = null;
+      if (handle.hasPointerCapture(event.pointerId)) handle.releasePointerCapture(event.pointerId);
+      if (!drag.active) return;
+      const target = !cancelled && dragTargetAt(event.clientX, event.clientY);
+      $('dragGhost').hidden = true;
+      document.body.classList.remove('moving-task');
+      document.querySelectorAll('.move-target-hover').forEach(node => node.classList.remove('move-target-hover'));
+      ignoreClick = true;
+      setTimeout(() => { ignoreClick = false; }, 0);
+      if (target) activateMove(target.dataset.dropKind, target.dataset.dropValue);
+      else $('moveHelp').textContent = '移動先をタップして変更するか、「閉じる」で中止できます。';
+    };
+    handle.addEventListener('pointerup', event => end(event, false));
+    handle.addEventListener('pointercancel', event => end(event, true));
+    handle.addEventListener('click', () => {
+      if (ignoreClick) { ignoreClick = false; return; }
+      if (state.movingId === id) hideMove();
+      else { showMove(id); $('quickMove').querySelector('button[data-drop-kind]:not(:disabled)')?.focus(); }
+    });
+  }
+  $('quickMove').addEventListener('click', event => {
+    const button = event.target.closest('button[data-drop-kind]');
+    if (button && !button.disabled && !state.drag?.active) activateMove(button.dataset.dropKind, button.dataset.dropValue);
+  });
+  $('cancelMove').addEventListener('click', hideMove);
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !$('quickMove').hidden && !$('moveDateDialog').open) hideMove();
+  });
+  $('cancelMoveDate').addEventListener('click', () => $('moveDateDialog').close());
+  $('moveDateDialog').addEventListener('close', () => { state.dateTargetId = null; });
+  $('moveDateForm').addEventListener('submit', event => {
+    event.preventDefault();
+    if (!state.dateTargetId) return;
+    if (applyMove(state.dateTargetId, 'date', $('moveDateInput').value)) $('moveDateDialog').close();
+  });
+
   function submitTask(values) {
     const scope = values.scope;
     if (state.mode !== 'demo' && !state.user) throw new Error('ログインしてください。');
@@ -269,9 +432,12 @@
     if (state.mode === 'demo') {
       const index = state.demo.findIndex(item => item.id === task.id);
       if (index < 0) return;
-      state.demo[index] = { ...state.demo[index], ...patch };
-      saveDemo(); render();
-    } else if (state.user) writeDoc('update', task, patch);
+      const previous = state.demo[index];
+      state.demo[index] = { ...previous, ...patch };
+      if (!saveDemo()) { state.demo[index] = previous; render(); return false; }
+      render(); return true;
+    } else if (state.user) { writeDoc('update', task, patch); return true; }
+    return false;
   }
   function openEdit(task) {
     if (!modeIsReady()) return;
@@ -287,7 +453,6 @@
     $('editDialog').showModal();
   }
   function closeEdit() { $('editDialog').close(); state.editing = null; }
-
   async function startFirebase() {
     const configText = getSaved(CONFIG_KEY);
     if (!configText) throw new Error('Firebase設定がありません。');
