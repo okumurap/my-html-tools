@@ -2,87 +2,63 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#233b32">
-<meta name="description" content="タスクの追加・完了・手動並び替え・期限管理。Firebaseで家族共有にも対応。">
-<title>暮らしのタスク | My HTML Tools</title>
-<link rel="stylesheet" href="./style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f9f4e9">
+<meta name="description" content="家族共有だけの、ジェスチャーで使えるシンプルなタスク一覧。">
+<title>ふたりのタスク | My HTML Tools</title>
 <style>
-.fab-add{position:fixed;z-index:60;right:max(18px,env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));width:60px;height:60px;display:grid;place-items:center;border:0;border-radius:50%;background:#28634d;color:#fff;box-shadow:0 5px 20px #14241c55;font-size:2.15rem;line-height:1;touch-action:manipulation}
-.fab-add:focus-visible{outline:3px solid #78b99a;outline-offset:4px}
-.add-dialog{width:min(560px,calc(100% - 22px));max-height:calc(100dvh - 26px);overscroll-behavior:contain}
-.add-dialog .composer label{margin-top:13px}.add-dialog .composer label:first-child{margin-top:0}.add-dialog .form-grid{margin-top:10px;row-gap:8px}.add-dialog .form-grid label{margin:0 0 5px}.add-dialog .section-head{margin-bottom:14px}.add-dialog .form-footer{align-items:center}.add-dialog #addError{margin-bottom:10px}
-.add-advanced{border-top:1px solid var(--line);margin-top:16px}.add-advanced summary{cursor:pointer;min-height:44px;display:list-item;padding:10px 4px;font-weight:700;font-size:.83rem;color:var(--accent);touch-action:manipulation}.add-advanced summary:focus-visible{outline:3px solid #78b99a;outline-offset:2px;border-radius:6px}
-body{padding-bottom:78px}
-/* 長押しによる文字選択を防止。入力フォームには適用しない。 */
-.task-list,.task-list *,.drag-handle,.drag-ghost,.sorting-task *,.drag-arming *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
-.sort-toolbar{display:flex;justify-content:flex-end;gap:12px;margin-bottom:10px}.sort-toolbar button{min-height:44px}.sort-handle{cursor:grab;touch-action:none}.sort-arrows{display:flex;flex-direction:column;gap:4px}.sort-arrow{min-height:33px!important;min-width:36px;padding:3px 7px!important;font-size:1rem!important}.sort-drop-before{box-shadow:inset 0 4px 0 var(--accent)}.sort-drop-after{box-shadow:inset 0 -4px 0 var(--accent)}
-/* 旧情報は既存データと互換性を保つが、カテゴリと担当の操作は廃止する。 */
-#reorderToggle{display:none!important}
-.task .drag-handle:not(.sort-handle),.task-meta .chip:nth-child(2),.task-meta .chip:nth-child(3),#quickMove{display:none!important}
-/* Keep original hidden selects for the existing filtering/rendering code. */
-.sort-toolbar,.task .sort-handle,.task .sort-arrows{display:none!important}
-.compact-filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
-.compact-filters .filter-cycle{flex:1 1 140px;min-width:0;min-height:46px;padding:9px 10px;white-space:normal;text-align:center}
-.filter-internals[hidden]{display:none!important}
-.task-list .task{cursor:grab;-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
-.task-list .task *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
-.task-list .task:active{cursor:grabbing}
-.task-list .task.drag-source{border-color:var(--accent);background:var(--accent-light)}
-.task-list .task:focus-visible{outline:3px solid #78b99a;outline-offset:2px}
-@media(max-width:380px){.compact-filters{gap:6px}.compact-filters .filter-cycle{flex-basis:130px;font-size:.76rem;padding:8px 5px}}
-#editScopeInfo.scope-warning{color:var(--danger)}#editError{margin:0 0 12px}
-@media(max-width:380px){.sort-arrows{gap:2px}.sort-arrow{min-width:30px;padding:2px 4px!important}.task:has(.sort-arrows){gap:4px}.task:has(.sort-arrows) .edit-button{font-size:.7rem;padding:4px!important}}
-@media(max-width:360px){.fab-add{width:56px;height:56px;right:max(12px,env(safe-area-inset-right));bottom:calc(12px + env(safe-area-inset-bottom))}.add-dialog{padding:16px}.add-dialog .form-footer{align-items:stretch}}
+:root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;color:#252019;background:#f9f4e9;font-synthesis:none;-webkit-text-size-adjust:100%;--accent:#bd423b}
+*{box-sizing:border-box}body{margin:0;min-height:100dvh}button,input,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}[hidden]{display:none!important}
+button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible,li:focus-visible{outline:3px solid #172c49;outline-offset:3px}
+.app{width:min(100%,570px);margin:0 auto;padding:0 14px calc(95px + env(safe-area-inset-bottom))}
+.top{display:flex;justify-content:space-between;align-items:center;padding:22px 4px 8px;gap:8px}.top a{color:#806e62;text-decoration:none;font-size:.8rem}.top button{background:none;border:0;color:#806e62;font-size:.8rem;min-height:44px;padding:8px}
+h1{font-size:clamp(2rem,8vw,3.15rem);font-weight:800;letter-spacing:-.075em;margin:18px 3px 4px}.subtitle{color:#887366;font-size:.85rem;margin:0 3px 14px}.subrow{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:0 3px 13px}.count{font-size:.8rem;color:#736254}.badge{font-size:.73rem;color:#a84038;background:#f5e5d8;padding:6px 10px;border-radius:16px}
+.notice{margin:6px 0 12px;border-radius:8px;padding:10px 12px;background:#eee5d5;color:#533b31;font-size:.85rem;line-height:1.55}.notice.error{background:#fae1df;color:#862c27}
+.list-wrap{position:relative}.pull{display:block;text-align:center;overflow:hidden;height:0;line-height:48px;font-size:.85rem;color:#ab5943;transition:height .16s ease}.pull.ready{color:#a32b24;font-weight:700}
+.tasks{padding:0;margin:0;list-style:none;display:grid;gap:4px;touch-action:pan-y}.task{position:relative;min-height:64px;border-radius:5px;display:flex;align-items:stretch;overflow:hidden;touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:transform .15s ease,opacity .15s ease,box-shadow .15s ease}.task *{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}.task.dragging{opacity:.48;box-shadow:0 10px 24px #34201540}.task.drop-before{box-shadow:0 -5px 0 #543122}.task.drop-after{box-shadow:0 5px 0 #543122}.task.swiping{transition:none}.task .check{flex:0 0 51px;border:0;background:transparent;color:inherit;font-size:1.28rem;opacity:.8;min-height:64px}.task .body{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px;border:0;background:transparent;color:inherit;text-align:left;padding:13px 14px 13px 3px;min-height:64px;font-size:1.03rem;font-weight:690;letter-spacing:.005em;overflow-wrap:anywhere}.task .body small{font-size:.65rem;white-space:nowrap;opacity:.8;font-weight:600}.task.done .body span{text-decoration:line-through;opacity:.75}.task.done{background:#d3d2cc!important;color:#595a56!important}.task .action-reveal{position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-weight:800;font-size:.86rem;opacity:0}.task.swiping .action-reveal{opacity:1}.task.swiping{background:#f3dfd9!important;color:#7c2822!important}.task.swiping.right{background:#dbeedd!important;color:#245b35!important}.task .content{position:relative;z-index:1;display:flex;width:100%;background:inherit;color:inherit;border-radius:5px}
+.empty{text-align:center;color:#948273;padding:46px 10px;font-size:.92rem}.gesture-hint{text-align:center;color:#968678;font-size:.73rem;margin:12px 3px 0;line-height:1.6}.footer{text-align:center;color:#b7a99c;font-size:.68rem;margin-top:42px}.status-btn{min-height:40px;padding:7px 12px;border:1px solid #e5cdbd;border-radius:24px;background:#fff9f2;color:#7e5345;font-size:.76rem;font-weight:650}
+.fab{position:fixed;bottom:calc(19px + env(safe-area-inset-bottom));right:max(18px,calc((100vw - 570px)/2 + 20px));width:64px;height:64px;border-radius:50%;border:0;background:#b84037;color:white;font-size:2.3rem;line-height:1;box-shadow:0 6px 23px #55261e55;z-index:5;display:grid;place-items:center}.fab:active{transform:scale(.96)}
+.composer{background:#fffaf2;border:1px solid #ead7c5;border-radius:10px;padding:15px;margin:9px 0 11px;box-shadow:0 5px 17px #6b3b2510}.composer label,.editor label,.settings label{display:block;font-size:.8rem;font-weight:700;color:#5e4c41;margin:13px 0 5px}.composer input,.composer textarea,.editor input,.editor textarea,.settings input,.settings textarea{display:block;width:100%;min-width:0;padding:12px;border:1px solid #d9c7b7;border-radius:6px;background:white;color:#302720;font-size:16px}.composer input:first-of-type{margin-bottom:8px}.composer details summary{min-height:44px;display:list-item;padding:12px 4px;color:#93554b;font-size:.79rem}.actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:14px}.primary{background:#b84037;color:#fff;border:0;border-radius:7px;padding:12px 18px;min-height:44px;font-weight:700}.secondary{background:#f6eee4;color:#695549;border:1px solid #ded1c3;border-radius:7px;padding:10px 14px;min-height:44px}.danger{background:#9a3732;color:white}.muted{color:#887669;font-size:.78rem;line-height:1.65}.fill{flex:1}
+dialog{width:min(510px,calc(100% - 22px));max-height:calc(100dvh - 24px);border:0;border-radius:14px;box-shadow:0 12px 60px #26151355;padding:20px;background:#fffaf3;color:#34261c;overflow:auto}dialog::backdrop{background:#1e1610a8}dialog h2{font-size:1.25rem;margin:0 0 15px}.dialog-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.dialog-top button{border:0;background:transparent;color:#6b5b51;min-height:44px}dialog .message{color:#9e2b25;font-size:.8rem;min-height:1.4em}
+.settings{width:min(560px,calc(100% - 20px))}.settings section{border-top:1px solid #e4d5c4;padding:10px 0}.settings h3{font-size:.93rem;margin:5px 0 7px}.settings textarea{min-height:96px}.settings .muted{margin:6px 0}
+@media(max-width:360px){.app{padding-left:8px;padding-right:8px}.task .check{flex-basis:44px}.task .body{font-size:.98rem;padding-right:9px}dialog{padding:15px}.fab{width:58px;height:58px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom))}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
 </style>
-<!-- 旧設定が期限順・新しい順でも、タスク本体を変更せず手動順に戻す。 -->
-<script>try{localStorage.setItem('family-tasks:sort-mode:v1','manual')}catch(_){}</script>
-<script defer src="./script.js"></script>
-<script defer src="./enhancements.js"></script>
-<script defer src="./streamlined.js"></script>
+<script defer src="./clear-app.js"></script>
 </head>
 <body>
-<div class="shell">
-<header class="topbar"><a class="back" href="../../index.html">← ツール一覧</a><div class="top-actions"><span id="modeBadge" class="mode-badge">デモ</span><button type="button" class="ghost small" id="settingsToggle" aria-controls="settings" aria-expanded="false">設定</button></div></header>
-<main>
-<section class="hero" aria-labelledby="pageTitle"><p class="eyebrow">FAMILY TASKS</p><h1 id="pageTitle">暮らしのタスク<span class="hero-dot">.</span></h1><p class="intro">やることを書いて、終わったらチェック。</p><p id="syncStatus" class="sync-status" role="status" aria-live="polite">この端末内で動作中</p></section>
-<p id="message" class="message" role="alert" hidden></p>
-<section id="settings" class="panel settings" aria-labelledby="settingsTitle" hidden>
-<div class="section-head"><h2 id="settingsTitle">接続と共有の設定</h2><button type="button" id="closeSettings" class="ghost small">閉じる</button></div><p class="muted">デモのデータはこのブラウザだけに保存され、Firebaseへ自動転送されません。</p>
-<div id="firebaseArea" class="settings-grid">
-<div class="settings-cell"><h3>1. 共通Firebase</h3><p class="muted">複数アプリで同じFirebaseプロジェクトを使います。</p><label for="configInput">FirebaseのWebアプリ設定（JSON）</label><textarea id="configInput" rows="5" spellcheck="false" placeholder='{"apiKey":"…","authDomain":"…firebaseapp.com","projectId":"…","appId":"…"}'></textarea><div class="button-row"><button type="button" class="primary" id="saveConfig">設定を保存して接続</button><button type="button" class="ghost" id="removeConfig">接続設定を削除</button></div><p class="hint">秘密鍵やサービスアカウントJSONは入力しないでください。</p></div>
-<div class="settings-cell"><h3>2. ログイン</h3><p id="accountText" class="muted">Firebase未接続</p><div class="button-row"><button type="button" class="primary" id="loginBtn" hidden>Googleでログイン</button><button type="button" class="ghost" id="logoutBtn" hidden>ログアウト</button><button type="button" class="ghost" id="demoBtn" hidden>デモに戻る</button></div><label for="myUid">自分のユーザーID（共有用）</label><div class="copy-row"><input id="myUid" type="text" readonly placeholder="ログイン後に表示"><button type="button" id="copyUid" class="ghost">コピー</button></div></div>
-<div class="settings-cell" id="familySection" hidden><h3>3. 家族共有</h3><p id="familyDescription" class="muted">家族を作成すると共有タスクを使えます。</p><button type="button" id="createFamily" class="primary">家族スペースを作成</button><div id="inviteArea" hidden><label for="partnerUid">共有する相手のユーザーID</label><div class="copy-row"><input id="partnerUid" type="text" maxlength="128" placeholder="相手のログイン画面に表示されたID"><button type="button" id="addPartner" class="primary">招待を許可</button></div><p class="hint">登録した相手だけが家族共有タスクにアクセスできます。IDを確認してください。</p></div></div>
-</div>
-<div class="settings-footer"><button type="button" id="exportBtn" class="ghost">表示中データをJSON保存</button><label class="import-label" for="importInput">デモのJSON読込</label><input id="importInput" type="file" accept="application/json,.json" hidden><span class="hint">Firebaseのデータはインポートできません。</span></div>
+<main class="app">
+<header class="top"><a href="../../index.html">← ツール一覧</a><button type="button" id="settingsOpen">設定</button></header>
+<h1>ふたりのタスク<span style="color:#d65c42">.</span></h1>
+<p class="subtitle">やることを、ひとつずつ。</p>
+<div class="subrow"><span id="count" class="count" role="status">読み込み中</span><span id="modeBadge" class="badge">端末内デモ</span></div>
+<p id="message" class="notice" role="status" aria-live="polite" hidden></p>
+<div class="subrow"><span class="count">家族共有リスト</span><button type="button" class="status-btn" id="statusToggle" aria-label="完了状態を絞り込む">未完了 ↻</button></div>
+<section class="list-wrap" id="listWrap" aria-label="家族共有タスク">
+<div id="pull" class="pull" aria-hidden="true">↓ 引いて追加</div>
+<form id="addForm" class="composer" novalidate hidden>
+<label for="newTitle">新しいタスク</label><input id="newTitle" maxlength="120" autocomplete="off" placeholder="何をする？" required>
+<details id="newDetails"><summary>期限・メモ（必要なときだけ）</summary><label for="newDate">期限</label><input type="date" id="newDate"><label for="newNotes">メモ</label><textarea id="newNotes" maxlength="1000" rows="2"></textarea></details>
+<div class="actions"><button type="button" class="secondary" id="closeAdd">閉じる</button><span class="fill"></span><button type="submit" class="primary" id="addSubmit">追加 ↵</button></div><p id="addError" class="message" role="alert" hidden></p>
+</form>
+<ul id="taskList" class="tasks" aria-live="polite"></ul>
+<div id="empty" class="empty" hidden>タスクはありません。<br>下に引くか、＋で追加できます。</div>
 </section>
-<section class="stats" aria-label="タスクの件数"><div class="stat"><span class="stat-label">今日まで</span><strong id="todayCount">0</strong><span class="stat-note">未完了</span></div><div class="stat"><span class="stat-label">これから</span><strong id="upcomingCount">0</strong><span class="stat-note">未完了</span></div><div class="stat"><span class="stat-label">完了</span><strong id="doneCount">0</strong><span class="stat-note">全期間</span></div></section>
-<dialog id="addDialog" class="add-dialog" aria-labelledby="addTitle"><section class="composer" aria-labelledby="addTitle"><div class="section-head"><h2 id="addTitle">タスクを追加</h2><button type="button" id="cancelAdd" class="ghost small">閉じる</button></div><p id="addError" class="message" role="alert" hidden></p><form id="addForm" novalidate><label for="taskTitle">やること <span class="required">必須</span></label><input id="taskTitle" type="text" maxlength="120" placeholder="例：牛乳を買う" autocomplete="off" required><input id="taskCategory" type="hidden" value="その他"><details id="taskAdvanced" class="add-advanced"><summary>詳細設定（公開範囲・期限・メモ）</summary><div class="form-grid"><div><label for="taskScope">公開範囲</label><select id="taskScope"><option value="shared">家族共有</option><option value="private">自分だけ</option></select></div><div hidden><label for="taskAssignee">旧担当情報</label><select id="taskAssignee"><option value="">共同</option><option value="self">自分</option><option value="partner">相手</option></select></div><div><label for="taskDate">期限</label><input id="taskDate" type="date"></div></div><label for="taskNotes">メモ（任意）</label><textarea id="taskNotes" rows="2" maxlength="1000" placeholder="必要な内容だけ記入"></textarea></details><div class="form-footer"><span id="formHint" class="hint">まずはデモで試せます</span><button type="submit" class="primary add-button" id="addBtn">＋ 追加する</button></div></form></section></dialog>
-<section class="task-section" aria-labelledby="listTitle"><div class="section-head list-title"><div><p class="eyebrow">YOUR TASKS</p><h2 id="listTitle">タスク一覧 <span id="visibleCount" class="count-pill">0</span></h2></div></div>
-<div class="sort-toolbar"><label for="sortSelect" hidden>並び順<select id="sortSelect"><option value="manual">手動順</option></select></label><button id="reorderToggle" type="button" class="ghost small" aria-pressed="false" hidden>並び替え</button></div><p id="sortHint" class="move-hint" role="status" hidden></p>
-<div class="filters compact-filters" role="group" aria-label="一覧の絞り込み"><button type="button" id="scopeCycle" class="ghost filter-cycle">公開範囲：すべて ↻</button><button type="button" id="statusCycle" class="ghost filter-cycle">状態：未完了 ↻</button><div class="filter-internals" hidden><input id="searchInput" type="search" value="" aria-hidden="true" tabindex="-1"><select id="scopeFilter" aria-hidden="true" tabindex="-1"><option value="all">すべて</option><option value="shared">家族共有</option><option value="private">自分だけ</option></select><select id="statusFilter" aria-hidden="true" tabindex="-1"><option value="open">未完了</option><option value="all">すべて</option><option value="done">完了</option></select><select id="dateFilter" aria-hidden="true" tabindex="-1"><option value="all">すべて</option><option value="today">今日まで</option><option value="week">7日以内</option><option value="none">期限なし</option></select></div></div>
-<p id="reorderInfo" class="move-hint" role="status">タスクを長押しして上下に移動できます。キーボードはタスクを選んでAlt＋↑↓。</p><ul id="taskList" class="task-list" aria-live="polite"></ul><div id="emptyState" class="empty" hidden><span aria-hidden="true">✓</span><p id="emptyText">該当するタスクはありません。</p></div></section>
-</main><footer>MY HTML TOOLS · 端末内デモ / Firebase共有</footer></div>
-<button type="button" id="fabAddTask" class="fab-add" aria-label="タスクを追加" aria-haspopup="dialog" aria-controls="addDialog" title="タスクを追加"><span aria-hidden="true">＋</span></button>
-<!-- 互換性のため旧イベントが参照する要素は保持。ただし画面上からは操作不可。 -->
-<section id="quickMove" class="quick-move" hidden><p id="quickMoveTask"></p><button type="button" id="cancelMove">閉じる</button><button type="button" data-drop-kind="assignee" data-drop-value="partner">相手</button><button type="button" data-drop-kind="assignee" data-drop-value="">共同</button><p id="moveHelp"></p></section>
-<div id="dragGhost" class="drag-ghost" aria-hidden="true" hidden></div>
-<dialog id="moveDateDialog" aria-labelledby="moveDateTitle"><form id="moveDateForm"><h2 id="moveDateTitle">期限を指定</h2><p id="moveDateTask"></p><label for="moveDateInput">変更後の期限</label><input id="moveDateInput" type="date" required><div class="dialog-actions"><button type="button" id="cancelMoveDate" class="ghost">キャンセル</button><button type="submit" class="primary">期限を変更</button></div></form></dialog>
-<dialog id="editDialog" aria-labelledby="editTitle"><form id="editForm" class="edit-form" novalidate><div class="section-head"><h2 id="editTitle">タスクを編集</h2><button type="button" id="cancelEdit" class="ghost small">閉じる</button></div><p id="editError" class="message" role="alert" hidden></p><label for="editTaskScope">公開範囲</label><select id="editTaskScope"><option value="shared">家族共有</option><option value="private">自分だけ</option></select><p id="editScopeInfo" class="muted"></p><label for="editTaskTitle">やること</label><input id="editTaskTitle" type="text" maxlength="120" required><div class="form-grid"><div hidden><label for="editTaskAssignee">旧担当情報</label><select id="editTaskAssignee"><option value="">共同</option><option value="self">自分</option><option value="partner">相手</option></select></div><div><label for="editTaskDate">期限</label><input id="editTaskDate" type="date"></div><div hidden><label for="editTaskCategory">旧カテゴリ情報</label><select id="editTaskCategory"><option>家</option><option>買い物</option><option>子ども</option><option>その他</option></select></div></div><label for="editTaskNotes">メモ</label><textarea id="editTaskNotes" rows="4" maxlength="1000"></textarea><div class="dialog-actions"><button type="button" class="danger ghost" id="deleteTask">削除</button><button type="submit" id="saveEdit" class="primary">変更を保存</button></div></form></dialog>
-<script>
-document.addEventListener('DOMContentLoaded',()=>{
-  // JSが参照するselectは残しつつ、手動順しか選べないようにする。
-  const sorter=document.getElementById('sortSelect');sorter.value='manual';
-  const dialog=document.getElementById('addDialog'),button=document.getElementById('fabAddTask'),title=document.getElementById('taskTitle'),form=document.getElementById('addForm'),error=document.getElementById('addError'),details=document.getElementById('taskAdvanced');
-  const reset=()=>{form.reset();details.open=false;document.getElementById('taskScope').dispatchEvent(new Event('change',{bubbles:true}));};
-  let attemptedTitle='';
-  button.addEventListener('click',()=>{reset();error.hidden=true;error.textContent='';dialog.showModal();title.focus();});
-  document.getElementById('cancelAdd').addEventListener('click',()=>dialog.close());
-  dialog.addEventListener('close',()=>button.focus());
-  form.addEventListener('input',()=>{error.hidden=true;},true);
-  form.addEventListener('submit',()=>{attemptedTitle=title.value.trim();},true);
-  form.addEventListener('submit',()=>{if(attemptedTitle&&title.value===''){error.hidden=true;reset();dialog.close();return;}const message=document.getElementById('message');error.textContent=message.hidden?'入力内容と保存状態を確認してください。':message.textContent;error.hidden=false;});
-});
-</script>
+<p class="gesture-hint">右へスワイプ：完了　左へ：削除<br>長押し：順番を変更　下へ引く：追加</p>
+<p id="syncStatus" class="footer" aria-live="polite">端末内に保存 · ほかの端末とは同期しません</p>
+</main>
+<button type="button" class="fab" id="addFab" aria-label="タスクを追加" title="タスクを追加">＋</button>
+<dialog id="editDialog" class="editor" aria-labelledby="editHeading"><form id="editForm" novalidate><div class="dialog-top"><h2 id="editHeading">タスクを編集</h2><button type="button" id="editClose" aria-label="閉じる">閉じる ×</button></div>
+<label for="editTitle">やること</label><input id="editTitle" maxlength="120" required>
+<label for="editDate">期限</label><input id="editDate" type="date">
+<label for="editNotes">メモ</label><textarea id="editNotes" maxlength="1000" rows="3"></textarea>
+<p id="editError" class="message" role="alert" hidden></p><div class="actions"><button type="button" class="secondary danger" id="deleteEdit">削除</button><span class="fill"></span><button type="submit" class="primary" id="editSave">保存</button></div></form></dialog>
+<dialog id="settingsDialog" class="settings" aria-labelledby="settingsHeading"><div class="dialog-top"><h2 id="settingsHeading">設定・家族共有</h2><button type="button" id="settingsClose">閉じる ×</button></div>
+<p class="muted">デモの内容はこのブラウザ内だけに保存されます。Firebaseを設定すると家族で同じリストを使えます。デモのタスクは自動移行されません。</p>
+<section><h3>Firebase接続</h3><label for="configInput">Webアプリ設定（firebaseConfig JSON）</label><textarea id="configInput" spellcheck="false" placeholder='{"apiKey":"…","authDomain":"…","projectId":"…","appId":"…"}'></textarea><div class="actions"><button type="button" id="connect" class="primary">接続して再読み込み</button><button type="button" id="disconnect" class="secondary">デモに戻す</button></div><p class="muted">秘密鍵は入力しないでください。接続先設定は同じサイト内のほかのアプリと共有されます。</p></section>
+<section id="accountSection"><h3>ログイン・家族</h3><p id="accountInfo" class="muted">Firebase未接続</p><div class="actions"><button type="button" class="primary" id="login">Googleでログイン</button><button type="button" class="secondary" id="logout">ログアウト</button></div><label for="myUid">自分のユーザーID</label><input id="myUid" readonly><p id="familyInfo" class="muted"></p><button type="button" id="createFamily" class="secondary">家族スペースを作成</button><div id="inviteBox"><label for="partnerUid">相手のユーザーID</label><input id="partnerUid" maxlength="128" autocomplete="off"><button type="button" id="invite" class="secondary">相手を登録</button></div></section>
+<section><h3>バックアップ</h3><p class="muted">JSONには非表示にした旧「自分だけ」のタスクも含めて保存します。Firebaseでは取得済みの共有タスクのみ書き出します。</p><div class="actions"><button type="button" id="export" class="secondary">JSON保存</button><label for="importFile" class="secondary" style="margin:0;cursor:pointer">デモJSON読込</label><input type="file" id="importFile" accept=".json,application/json" hidden></div></section>
+<p id="settingsError" class="notice error" role="alert" hidden></p></dialog>
+<div id="dragGhost" class="task" aria-hidden="true" hidden style="position:fixed;z-index:8;left:0;top:0;width:220px;pointer-events:none;display:block;background:#f0b65c;color:#3f2c1b;padding:16px;box-shadow:0 12px 28px #35221955"></div>
 </body>
 </html>
