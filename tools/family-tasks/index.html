@@ -7,6 +7,22 @@
   <meta name="description" content="家族で共有できるタスク管理。設定前は端末内で試せるプロトタイプ。">
   <title>暮らしのタスク | My HTML Tools</title>
   <link rel="stylesheet" href="./style.css">
+  <style>
+    /* 既存の追加フォームを流用し、右下のボタンからダイアログで開く。 */
+    .fab-add{position:fixed;z-index:60;right:max(18px,env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));width:60px;height:60px;display:grid;place-items:center;border:0;border-radius:50%;background:#28634d;color:white;box-shadow:0 5px 20px #14241c55;font-size:2.15rem;font-weight:400;line-height:1;touch-action:manipulation}
+    .fab-add:active{transform:scale(.96)}
+    .fab-add:focus-visible{outline:3px solid #78b99a;outline-offset:4px}
+    .add-dialog{width:min(560px,calc(100% - 22px));max-height:calc(100dvh - 26px);overscroll-behavior:contain}
+    .add-dialog .composer label{margin-top:13px}
+    .add-dialog .composer label:first-child{margin-top:0}
+    .add-dialog .form-grid{margin-top:10px;row-gap:8px}
+    .add-dialog .form-grid label{margin:0 0 5px}
+    .add-dialog .section-head{margin-bottom:14px}
+    .add-dialog .form-footer{align-items:center}
+    .add-dialog #addError{margin-bottom:10px}
+    body{padding-bottom:78px}
+    @media(max-width:360px){.fab-add{width:56px;height:56px;right:max(12px,env(safe-area-inset-right));bottom:calc(12px + env(safe-area-inset-bottom))}.add-dialog{padding:16px}.add-dialog .form-footer{align-items:stretch}}
+  </style>
   <script defer src="./script.js"></script>
 </head>
 <body>
@@ -60,8 +76,10 @@
         <div class="stat"><span class="stat-label">これから</span><strong id="upcomingCount">0</strong><span class="stat-note">未完了</span></div>
         <div class="stat"><span class="stat-label">完了</span><strong id="doneCount">0</strong><span class="stat-note">全期間</span></div>
       </section>
-      <section class="panel composer" aria-labelledby="addTitle">
-        <div class="section-head"><h2 id="addTitle">タスクを追加</h2><span class="subtle">Enterで追加</span></div>
+      <dialog id="addDialog" class="add-dialog" aria-labelledby="addTitle">
+      <section class="composer" aria-labelledby="addTitle">
+        <div class="section-head"><h2 id="addTitle">タスクを追加</h2><button type="button" id="cancelAdd" class="ghost small">閉じる</button></div>
+        <p id="addError" class="message" role="alert" hidden></p>
         <form id="addForm" novalidate>
           <label for="taskTitle">やること <span class="required">必須</span></label>
           <input id="taskTitle" type="text" maxlength="120" placeholder="例：牛乳を買う" autocomplete="off" required>
@@ -75,6 +93,7 @@
           <div class="form-footer"><span id="formHint" class="hint">まずはデモで試せます</span><button type="submit" class="primary add-button" id="addBtn">＋ 追加する</button></div>
         </form>
       </section>
+      </dialog>
       <section class="task-section" aria-labelledby="listTitle">
         <div class="section-head list-title"><div><p class="eyebrow">YOUR TASKS</p><h2 id="listTitle">タスク一覧 <span id="visibleCount" class="count-pill">0</span></h2></div></div>
         <div class="filters">
@@ -90,6 +109,7 @@
     </main>
     <footer>MY HTML TOOLS · 端末内デモ / Firebase共有</footer>
   </div>
+  <button type="button" id="fabAddTask" class="fab-add" aria-label="タスクを追加" aria-haspopup="dialog" aria-controls="addDialog" title="タスクを追加"><span aria-hidden="true">＋</span></button>
   <section id="quickMove" class="quick-move" aria-labelledby="quickMoveTitle" hidden>
     <div class="quick-move-header"><div><strong id="quickMoveTitle">ドラッグで変更</strong><p id="quickMoveTask" class="quick-move-task"></p></div><button type="button" id="cancelMove" class="ghost small">閉じる</button></div>
     <div class="move-group" role="group" aria-label="担当を変更"><span class="move-group-title">担当</span><div class="move-options">
@@ -136,5 +156,36 @@
       <div class="dialog-actions"><button type="button" class="danger ghost" id="deleteTask">削除</button><button type="submit" class="primary">変更を保存</button></div>
     </form>
   </dialog>
+  <script>
+    // script.js の既存フォーム保存・入力検証を変更せず、成功時のみダイアログを閉じる。
+    document.addEventListener('DOMContentLoaded', () => {
+      const dialog = document.getElementById('addDialog');
+      const button = document.getElementById('fabAddTask');
+      const title = document.getElementById('taskTitle');
+      const form = document.getElementById('addForm');
+      const error = document.getElementById('addError');
+      let attemptedTitle = '';
+      button.addEventListener('click', () => {
+        error.hidden = true;
+        error.textContent = '';
+        dialog.showModal();
+        title.focus();
+      });
+      document.getElementById('cancelAdd').addEventListener('click', () => dialog.close());
+      dialog.addEventListener('close', () => button.focus());
+      form.addEventListener('input', () => { error.hidden = true; }, true);
+      form.addEventListener('submit', () => { attemptedTitle = title.value.trim(); }, true);
+      form.addEventListener('submit', () => {
+        if (attemptedTitle && title.value === '') {
+          error.hidden = true;
+          dialog.close();
+          return;
+        }
+        const message = document.getElementById('message');
+        error.textContent = message.hidden ? '入力内容と保存状態を確認してください。' : message.textContent;
+        error.hidden = false;
+      });
+    });
+  </script>
 </body>
 </html>
