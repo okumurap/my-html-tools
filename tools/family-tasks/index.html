@@ -26,6 +26,20 @@
     .add-advanced[open]{padding-bottom:4px}
     body{padding-bottom:78px}
     @media(max-width:360px){.fab-add{width:56px;height:56px;right:max(12px,env(safe-area-inset-right));bottom:calc(12px + env(safe-area-inset-bottom))}.add-dialog{padding:16px}.add-dialog .form-footer{align-items:stretch}}
+    /* タスクの長押しでは文字選択・iOSのコピー吹き出しを出さない。入力フォームは対象外。 */
+    .task-list,.task-list *,.drag-handle,.drag-ghost{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+    .moving-task,.sorting-task,.drag-arming{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+    .moving-task *,.sorting-task *,.drag-arming *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
+    .sort-toolbar{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:10px}
+    .sort-toolbar label{margin:0;flex:1;max-width:230px;color:var(--muted)}
+    .sort-toolbar select{margin-top:4px;min-height:44px}
+    .sort-toolbar button{min-height:44px;white-space:nowrap}
+    .sort-handle{cursor:grab;touch-action:none}
+    .sort-arrows{display:flex;flex-direction:column;gap:4px}
+    .sort-arrow{min-height:33px!important;min-width:36px;padding:3px 7px!important;font-size:1rem!important}
+    .sort-drop-before{box-shadow:inset 0 4px 0 var(--accent)}
+    .sort-drop-after{box-shadow:inset 0 -4px 0 var(--accent)}
+    @media(max-width:380px){.sort-toolbar{gap:6px}.sort-arrows{gap:2px}.sort-arrow{min-width:30px;padding:2px 4px!important}.task:has(.sort-arrows){gap:4px}.task:has(.sort-arrows) .edit-button{font-size:.7rem;padding:4px!important}}
   </style>
   <script defer src="./script.js"></script>
 </head>
@@ -103,13 +117,15 @@
       </dialog>
       <section class="task-section" aria-labelledby="listTitle">
         <div class="section-head list-title"><div><p class="eyebrow">YOUR TASKS</p><h2 id="listTitle">タスク一覧 <span id="visibleCount" class="count-pill">0</span></h2></div></div>
+        <div class="sort-toolbar"><label for="sortSelect">並び順 <select id="sortSelect"><option value="due">期限順</option><option value="new">新しい順</option><option value="manual">手動順</option></select></label><button id="reorderToggle" type="button" class="ghost small" aria-pressed="false">並び替え</button></div>
+        <p id="sortHint" class="move-hint" role="status">「≡」は担当・カテゴリ・期限の変更用です。</p>
         <div class="filters">
           <label for="searchInput">検索<input id="searchInput" type="search" placeholder="タスク名・メモを検索"></label>
           <label for="scopeFilter">公開範囲<select id="scopeFilter"><option value="all">すべて</option><option value="shared">家族共有</option><option value="private">自分だけ</option></select></label>
           <label for="statusFilter">状態<select id="statusFilter"><option value="open">未完了</option><option value="all">すべて</option><option value="done">完了</option></select></label>
           <label for="dateFilter">期限<select id="dateFilter"><option value="all">すべて</option><option value="today">今日まで</option><option value="week">7日以内</option><option value="none">期限なし</option></select></label>
         </div>
-        <p class="move-hint">タスクの「≡」を長押し（PCではドラッグ）して、担当・カテゴリ・期限へ移動できます。「≡」をタップして項目を選ぶこともできます。</p>
+        <p class="move-hint">通常時は「≡」で担当・カテゴリ・期限を変更できます。並び替え中は「↕」で上下に移動できます。</p>
         <ul id="taskList" class="task-list" aria-live="polite"></ul>
         <div id="emptyState" class="empty" hidden><span aria-hidden="true">✓</span><p id="emptyText">該当するタスクはありません。</p></div>
       </section>
