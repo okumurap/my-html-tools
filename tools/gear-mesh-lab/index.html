@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="平歯車のモジュール・転位係数・圧力角・かみ合いピッチ円を歯形とアニメーションで学べる無料ツール">
+<title>歯車かみ合いラボ | My HTML Tools</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<main class="wrap">
+<header class="top"><a href="../../index.html">← ツール一覧</a><span class="pill">GEAR MESH LAB / 平歯車</span></header>
+<div class="heading"><div><p class="eyebrow">歯車のしくみを、動かして理解する。</p><h1>歯車かみ合いラボ</h1><p class="subtitle">歯数・モジュール・圧力角・転位を変え、歯形と5つの円、作用線を同時に観察。</p></div></div>
+<div class="presets" role="group" aria-label="例題を選択"><button type="button" data-preset="standard">標準歯車</button><button type="button" data-preset="small">小歯数と転位</button><button type="button" data-preset="pair">転位の配分</button><button type="button" data-preset="pressure">圧力角25°</button></div>
+<div id="error" role="alert" class="error" hidden></div>
+<div class="layout">
+<section class="panel viewer" aria-labelledby="visual-title">
+<div class="panel-title"><div><p class="eyebrow">01 / VISUALIZER</p><h2 id="visual-title">噛み合いを観察</h2></div><span class="pill">外歯・平歯車</span></div>
+<div class="drawing"><svg id="gear-svg" viewBox="-44 -31 88 62" role="img" aria-label="2つの歯車の歯形・各円・作用線・接触点を描画"></svg></div>
+<p id="visual-caption" class="hint" aria-live="polite">青：歯車1 ／ オレンジ：歯車2。接触点は赤丸です。</p>
+<div class="playback"><button type="button" id="play" class="primary">▶ 回転する</button><button type="button" id="step">1コマ進む</button><button type="button" id="reset-rotation">回転を戻す</button><label for="speed">速度 <output id="speed-output">1.0×</output></label><input id="speed" type="range" min="0.1" max="2" step="0.1" value="1"></div>
+<fieldset class="toggles"><legend>補助線の表示</legend><label><input type="checkbox" data-circle="reference" checked><i class="key reference"></i>基準円</label><label><input type="checkbox" data-circle="base" checked><i class="key base"></i>基礎円</label><label><input type="checkbox" data-circle="working" checked><i class="key working"></i>かみ合いピッチ円</label><label><input type="checkbox" data-circle="tip">歯先円</label><label><input type="checkbox" data-circle="root">歯底円</label><label><input type="checkbox" id="action-line" checked><i class="key action"></i>作用線・接触点</label></fieldset>
+<div class="zoom"><button type="button" id="zoom-in" aria-label="拡大">＋ 拡大</button><button type="button" id="zoom-out" aria-label="縮小">－ 縮小</button><button type="button" id="zoom-reset">全体表示</button></div>
+<div class="insight" id="insight" aria-live="polite">基準円は歯数 × モジュールで決まり、転位係数を変えても直径は変わりません。</div>
+</section>
+<div class="side">
+<section class="panel" aria-labelledby="controls-title"><div class="panel-title"><div><p class="eyebrow">02 / PARAMETERS</p><h2 id="controls-title">設計条件</h2></div><button type="button" id="reset" class="subtle">初期値</button></div><p class="hint">数値欄も直接編集できます。計算は入力変更に追従します。</p>
+<div id="fields" class="fields">
+<div class="field"><div class="field-head"><label for="m">モジュール m</label><input type="number" id="m" min="0.5" max="10" step="0.1" value="2" inputmode="decimal"></div><input type="range" id="m-range" min="0.5" max="10" step="0.1" value="2"></div>
+<div class="field"><div class="field-head"><label for="z1">歯数 z₁</label><input type="number" id="z1" min="8" max="80" step="1" value="12" inputmode="numeric"></div><input type="range" id="z1-range" min="8" max="80" step="1" value="12"></div>
+<div class="field"><div class="field-head"><label for="z2">歯数 z₂</label><input type="number" id="z2" min="8" max="80" step="1" value="24" inputmode="numeric"></div><input type="range" id="z2-range" min="8" max="80" step="1" value="24"></div>
+<div class="field"><div class="field-head"><label for="alpha">基準圧力角 α（°）</label><input type="number" id="alpha" min="14.5" max="30" step="0.5" value="20" inputmode="decimal"></div><input type="range" id="alpha-range" min="14.5" max="30" step="0.5" value="20"></div>
+<div class="field"><div class="field-head"><label for="x1">転位係数 x₁</label><input type="number" id="x1" min="-0.8" max="1" step="0.05" value="0.4" inputmode="decimal"></div><input type="range" id="x1-range" min="-0.8" max="1" step="0.05" value="0.4"></div>
+<div class="field"><div class="field-head"><label for="x2">転位係数 x₂</label><input type="number" id="x2" min="-0.8" max="1" step="0.05" value="0" inputmode="decimal"></div><input type="range" id="x2-range" min="-0.8" max="1" step="0.05" value="0"></div>
+<div class="field"><div class="field-head"><label for="extra">中心距離の追加量 Δa（mm）</label><input type="number" id="extra" min="0" max="20" step="0.05" value="0" inputmode="decimal"></div><input type="range" id="extra-range" min="0" max="4" step="0.05" value="0"></div>
+</div><div class="actions"><button type="button" id="snapshot">現在の条件を比較用に固定</button><button type="button" id="clear-snapshot" class="subtle">比較解除</button></div><p id="save-status" class="hint" role="status">入力条件はこの端末内に自動保存します。</p>
+</section>
+<section class="panel results" aria-labelledby="results-title"><div class="panel-title"><div><p class="eyebrow">03 / MEASUREMENTS</p><h2 id="results-title">寸法と噛み合い</h2></div><span class="pill">単位：mm</span></div>
+<div class="metrics"><div><small>組立中心距離 a</small><strong id="result-center">—</strong></div><div><small>かみ合い圧力角 αw</small><strong id="result-pressure">—</strong></div><div><small>かみ合い率 εα</small><strong id="result-ratio">—</strong></div><div><small>バックラッシ概算</small><strong id="result-backlash">—</strong></div></div>
+<div class="contact"><div class="contact-header"><strong>接触する歯の組数</strong><span id="contact-count">—</span></div><div class="contact-track"><span id="contact-bar"></span></div><p id="contact-note" class="hint">作用線上の接触点をアニメーション表示します。</p></div>
+<div class="table-scroll"><table><thead><tr><th scope="col">直径 / 項目</th><th scope="col">歯車1</th><th scope="col">歯車2</th></tr></thead><tbody id="dimension-rows"></tbody></table></div>
+<div id="warnings" class="warnings" role="status" aria-live="polite" hidden></div>
+<div id="compare" class="comparison" hidden></div>
+</section>
+</div>
+</div>
+<section class="panel learning"><h2>どの寸法が変わる？</h2><div class="learning-grid"><div><strong>モジュール m</strong><p>歯の大きさの基準。歯数一定なら基準円直径 d=mz も比例します。</p></div><div><strong>転位係数 x</strong><p>歯形の基準円上の歯厚と歯先径が変化しますが、基準円直径 d は変わりません。</p></div><div><strong>圧力角 α</strong><p>基礎円 db=d cos α、歯形と作用線、かみ合い率に影響します。</p></div><div><strong>中心距離 a</strong><p>歯形を変えずに、かみ合いピッチ円・かみ合い圧力角・バックラッシを変化させます。</p></div></div></section>
+<footer class="footnote"><p>前提：20°等の基準圧力角を持つ標準並歯の外歯平歯車2個・同じモジュール・バックラッシゼロで設計した転位歯車対を基準に、中心距離を追加できます。歯先・歯底は KHK 技術資料 表4.3の歯先・歯底すきま0.25mモデル。歯元曲線は模式的な接続であり、工具刃先R、切下げ部分、強度・干渉の厳密な検証や製造用歯形を提供しません。追加中心距離のバックラッシは一次近似で、寸法は参考値です。</p><p>参考資料：<a href="https://khkgears.net/gear-knowledge/gear-technical-reference/calculation-gear-dimensions/" target="_blank" rel="noopener noreferrer">KHK 歯車の寸法計算</a>。外部API・ライブラリ・送信なし。</p></footer>
+</main>
+<script src="./gear-math.js"></script><script src="./script.js"></script>
+</body>
+</html>
