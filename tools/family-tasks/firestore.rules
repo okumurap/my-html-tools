@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isFamilyMember(familyId) {
+      return signedIn() &&
+        request.auth.uid in get(/databases/$(database)/documents/families/$(familyId)).data.memberUids;
+    }
+    function validTask(data) {
+      return data.keys().hasAll([
+          'title', 'notes', 'dueDate', 'category', 'assigneeUid',
+          'done', 'scope', 'ownerUid', 'createdAt', 'updatedAt'
+        ]) && data.keys().hasOnly([
+          'title', 'notes', 'dueDate', 'category', 'assigneeUid',
+          'done', 'scope', 'ownerUid', 'createdAt', 'updatedAt'
+        ]) &&
+        data.title is string && data.title.size() > 0 && data.title.size() <= 120 &&
+        data.notes is string && data.notes.size() <= 1000 &&
+        data.dueDate is string && data.dueDate.size() <= 10 &&
+        data.category in ['家事', '買い物', '子育て', '住宅', '仕事', 'その他'] &&
+        data.assigneeUid is string && data.assigneeUid.size() <= 128 &&
+        data.done is bool && data.ownerUid is string &&
+        data.createdAt is int && data.createdAt >= 0 &&
+        data.updatedAt is int && data.updatedAt >= data.createdAt;
+    }
+    match /families/{familyId} {
+      // 共有スペースの ID を知っているだけでは参加できない。
+      allow get, list: if signedIn() && request.auth.uid in resource.data.memberUids;
+      allow create: if signedIn() &&
+        request.resource.data.keys().hasAll(['ownerUid', 'memberUids', 'createdAt']) &&
+        request.resource.data.keys().hasOnly(['ownerUid', 'memberUids', 'createdAt']) &&
+        request.resource.data.ownerUid == request.auth.uid &&
+        familyId == request.auth.uid &&
+        request.resource.data.memberUids == [request.auth.uid] &&
+        request.resource.data.createdAt is int;
+      // 管理者のみ 2 人目の UID を登録可。作成者の変更・無制限招待は不可。
+      allow update: if signedIn() && request.auth.uid == resource.data.ownerUid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberUids']) &&
+        request.resource.data.memberUids is list &&
+        request.resource.data.memberUids.size() >= 1 &&
+        request.resource.data.memberUids.size() <= 2 &&
+        request.resource.data.memberUids[0] == resource.data.ownerUid &&
+        (request.resource.data.memberUids.size() == 1 ||
+          request.resource.data.memberUids[1] is string);
+      allow delete: if false;
+
+      match /tasks/{taskId} {
+        allow get, list: if isFamilyMember(familyId);
+        allow create: if isFamilyMember(familyId) && validTask(request.resource.data) &&
+          request.resource.data.scope == 'shared' &&
+          request.resource.data.ownerUid == request.auth.uid &&
+          (request.resource.data.assigneeUid == '' ||
+            request.resource.data.assigneeUid in get(/databases/$(database)/documents/families/$(familyId)).data.memberUids);
+        allow update: if isFamilyMember(familyId) && validTask(request.resource.data) &&
+          request.resource.data.scope == resource.data.scope &&
+          request.resource.data.ownerUid == resource.data.ownerUid &&
+          request.resource.data.createdAt == resource.data.createdAt &&
+          (request.resource.data.assigneeUid == '' ||
+            request.resource.data.assigneeUid in get(/databases/$(database)/documents/families/$(familyId)).data.memberUids);
+        allow delete: if isFamilyMember(familyId);
+      }
+    }
+    match /users/{userId}/tasks/{taskId} {
+      // 個人タスクは本人以外が一覧・取得・変更不可。
+      allow get, list: if signedIn() && request.auth.uid == userId;
+      allow create: if signedIn() && request.auth.uid == userId &&
+        validTask(request.resource.data) &&
+        request.resource.data.scope == 'private' &&
+        request.resource.data.ownerUid == userId &&
+        request.resource.data.assigneeUid == userId;
+      allow update: if signedIn() && request.auth.uid == userId &&
+        validTask(request.resource.data) &&
+        request.resource.data.scope == resource.data.scope &&
+        request.resource.data.ownerUid == resource.data.ownerUid &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        request.resource.data.assigneeUid == userId;
+      allow delete: if signedIn() && request.auth.uid == userId;
+    }
+    // ほかのコレクションはデフォルト拒否。他アプリ追加時に明示的に拡張。
+  }
+}
