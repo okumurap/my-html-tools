@@ -206,7 +206,7 @@
  for(const id of inputs){$(id).addEventListener('input',render)}
  for(const side of ['hole','shaft']){$(`${side}Material`).addEventListener('change',()=>{const key=$(`${side}Material`).value;if(key!=='custom')$(`${side}Alpha`).value=PRESETS[key];render()});$(`${side}Alpha`).addEventListener('input',()=>{$(`${side}Material`).value='custom';render()});}
  ['inverseCondition','heatCondition'].forEach(id=>$(id).addEventListener('change',render));
- $('save').addEventListener('click',doSave);$('load').addEventListener('click',doLoad);$('remove').addEventListener('click',downloadCSV);
+ $('save').addEventListener('click',doSave);$('load').addEventListener('click',doLoad);$('remove').addEventListener('click',doRemove);$('csv').addEventListener('click',downloadCSV);
  $('reset').addEventListener('click',()=>{restore(DEFAULT);$('saveStatus').textContent='例の条件に戻しました。保存データは削除していません。'});
 })();
 </script>
