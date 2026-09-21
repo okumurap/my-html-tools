@@ -19,7 +19,8 @@ service cloud.firestore {
         data.title is string && data.title.size() > 0 && data.title.size() <= 120 &&
         data.notes is string && data.notes.size() <= 1000 &&
         data.dueDate is string && data.dueDate.size() <= 10 &&
-        data.category in ['家事', '買い物', '子育て', '住宅', '仕事', 'その他'] &&
+        // 旧カテゴリは既存ドキュメントの完了・日付変更を壊さないため更新時のみ許可。
+        data.category in ['家', '買い物', '子ども', 'その他', '家事', '子育て', '住宅', '仕事'] &&
         data.assigneeUid is string && data.assigneeUid.size() <= 128 &&
         data.done is bool && data.ownerUid is string &&
         data.createdAt is int && data.createdAt >= 0 &&
@@ -49,6 +50,7 @@ service cloud.firestore {
       match /tasks/{taskId} {
         allow get, list: if isFamilyMember(familyId);
         allow create: if isFamilyMember(familyId) && validTask(request.resource.data) &&
+          request.resource.data.category in ['家', '買い物', '子ども', 'その他'] &&
           request.resource.data.scope == 'shared' &&
           request.resource.data.ownerUid == request.auth.uid &&
           (request.resource.data.assigneeUid == '' ||
@@ -67,6 +69,7 @@ service cloud.firestore {
       allow get, list: if signedIn() && request.auth.uid == userId;
       allow create: if signedIn() && request.auth.uid == userId &&
         validTask(request.resource.data) &&
+        request.resource.data.category in ['家', '買い物', '子ども', 'その他'] &&
         request.resource.data.scope == 'private' &&
         request.resource.data.ownerUid == userId &&
         request.resource.data.assigneeUid == userId;
