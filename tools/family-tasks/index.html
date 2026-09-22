@@ -10,7 +10,7 @@
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;color:#252019;background:#f9f4e9;font-synthesis:none;-webkit-text-size-adjust:100%;--accent:#bd423b}
 *{box-sizing:border-box}body{margin:0;min-height:100dvh}button,input,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}[hidden]{display:none!important}
 button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible,li:focus-visible{outline:3px solid #172c49;outline-offset:3px}
-.app{width:min(100%,570px);margin:0 auto;padding:0 14px calc(95px + env(safe-area-inset-bottom))}
+.app{width:min(100%,570px);margin:0 auto;padding:0 14px calc(48px + env(safe-area-inset-bottom))}
 .top{display:flex;justify-content:space-between;align-items:center;padding:22px 4px 8px;gap:8px}.top a{color:#806e62;text-decoration:none;font-size:.8rem}.top button{background:none;border:0;color:#806e62;font-size:.8rem;min-height:44px;padding:8px}
 h1{font-size:clamp(2rem,8vw,3.15rem);font-weight:800;letter-spacing:-.075em;margin:18px 3px 4px}.subtitle{color:#887366;font-size:.85rem;margin:0 3px 14px}.subrow{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:0 3px 13px}.count{font-size:.8rem;color:#736254}.badge{font-size:.73rem;color:#a84038;background:#f5e5d8;padding:6px 10px;border-radius:16px}
 .notice{margin:6px 0 12px;border-radius:8px;padding:10px 12px;background:#eee5d5;color:#533b31;font-size:.85rem;line-height:1.55}.notice.error{background:#fae1df;color:#862c27}
@@ -25,16 +25,24 @@ h1{font-size:clamp(2rem,8vw,3.15rem);font-weight:800;letter-spacing:-.075em;marg
 .category-dock button.over{background:#b84037;color:white;border-color:#fff0ce;transform:scale(1.04)}
 .category-dock button:focus-visible{outline:3px solid #fff;outline-offset:1px}
 .editor select{display:block;width:100%;min-width:0;padding:12px;border:1px solid #d9c7b7;border-radius:6px;background:white;color:#302720;font-size:16px}
+/* メモのあるタスクだけ、期限と干渉しない2行プレビューを表示する。 */
+.task .body:has(.note-preview){display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;align-content:center;align-items:center;column-gap:8px;row-gap:4px}
+.task .body:has(.note-preview)>span:first-child{grid-column:1;grid-row:1;min-width:0}
+.task .body:has(.note-preview)>small:not(.note-preview){grid-column:2;grid-row:1}
+.task .body .note-preview{grid-column:1/-1;grid-row:2;display:-webkit-box;min-width:0;max-width:100%;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal;overflow-wrap:anywhere;font-size:.76rem;font-weight:450;line-height:1.4;opacity:.82;text-overflow:ellipsis}
+.task.done .body .note-preview{opacity:.6}
+
 .empty{text-align:center;color:#948273;padding:46px 10px;font-size:.92rem}.gesture-hint{text-align:center;color:#968678;font-size:.73rem;margin:12px 3px 0;line-height:1.6}.footer{text-align:center;color:#b7a99c;font-size:.68rem;margin-top:42px}.status-btn{min-height:40px;padding:7px 12px;border:1px solid #e5cdbd;border-radius:24px;background:#fff9f2;color:#7e5345;font-size:.76rem;font-weight:650}
-.fab{position:fixed;bottom:calc(19px + env(safe-area-inset-bottom));right:max(18px,calc((100vw - 570px)/2 + 20px));width:64px;height:64px;border-radius:50%;border:0;background:#b84037;color:white;font-size:2.3rem;line-height:1;box-shadow:0 6px 23px #55261e55;z-index:5;display:grid;place-items:center}.fab:active{transform:scale(.96)}
+
 .composer{background:#fffaf2;border:1px solid #ead7c5;border-radius:10px;padding:15px;margin:9px 0 11px;box-shadow:0 5px 17px #6b3b2510}.composer label,.editor label,.settings label{display:block;font-size:.8rem;font-weight:700;color:#5e4c41;margin:13px 0 5px}.composer input,.composer textarea,.editor input,.editor textarea,.settings input,.settings textarea{display:block;width:100%;min-width:0;padding:12px;border:1px solid #d9c7b7;border-radius:6px;background:white;color:#302720;font-size:16px}.composer input:first-of-type{margin-bottom:8px}.composer details summary{min-height:44px;display:list-item;padding:12px 4px;color:#93554b;font-size:.79rem}.actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:14px}.primary{background:#b84037;color:#fff;border:0;border-radius:7px;padding:12px 18px;min-height:44px;font-weight:700}.secondary{background:#f6eee4;color:#695549;border:1px solid #ded1c3;border-radius:7px;padding:10px 14px;min-height:44px}.danger{background:#9a3732;color:white}.muted{color:#887669;font-size:.78rem;line-height:1.65}.fill{flex:1}
 dialog{width:min(510px,calc(100% - 22px));max-height:calc(100dvh - 24px);border:0;border-radius:14px;box-shadow:0 12px 60px #26151355;padding:20px;background:#fffaf3;color:#34261c;overflow:auto}dialog::backdrop{background:#1e1610a8}dialog h2{font-size:1.25rem;margin:0 0 15px}.dialog-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.dialog-top button{border:0;background:transparent;color:#6b5b51;min-height:44px}dialog .message{color:#9e2b25;font-size:.8rem;min-height:1.4em}
 .settings{width:min(560px,calc(100% - 20px))}.settings section{border-top:1px solid #e4d5c4;padding:10px 0}.settings h3{font-size:.93rem;margin:5px 0 7px}.settings textarea{min-height:96px}.settings .muted{margin:6px 0}
-@media(max-width:360px){.app{padding-left:8px;padding-right:8px}.task .check{flex-basis:44px}.task .body{font-size:.98rem;padding-right:9px}dialog{padding:15px}.fab{width:58px;height:58px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom))}}
+@media(max-width:360px){.app{padding-left:8px;padding-right:8px}.task .check{flex-basis:44px}.task .body{font-size:.98rem;padding-right:9px}dialog{padding:15px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
 </style>
 <script defer src="./clear-app.js"></script>
 <script defer src="./categories.js"></script>
+<script defer src="./notes-preview.js"></script>
 </head>
 <body>
 <main class="app">
@@ -45,19 +53,20 @@ dialog{width:min(510px,calc(100% - 22px));max-height:calc(100dvh - 24px);border:
 <p id="message" class="notice" role="status" aria-live="polite" hidden></p>
 <div class="subrow"><span class="count">家族共有リスト</span><button type="button" class="status-btn" id="statusToggle" aria-label="完了状態を絞り込む">未完了 ↻</button></div>
 <section class="list-wrap" id="listWrap" aria-label="家族共有タスク">
-<div id="pull" class="pull" aria-hidden="true">↓ 引いて追加</div>
-<form id="addForm" class="composer" novalidate hidden>
+<div id="pull" class="pull" aria-hidden="true" hidden>↓ 引いて追加</div>
+<form id="addForm" class="composer" novalidate>
 <label for="newTitle">新しいタスク</label><input id="newTitle" maxlength="120" autocomplete="off" placeholder="何をする？" required>
 <details id="newDetails"><summary>期限・メモ（必要なときだけ）</summary><label for="newDate">期限</label><input type="date" id="newDate"><label for="newNotes">メモ</label><textarea id="newNotes" maxlength="1000" rows="2"></textarea></details>
-<div class="actions"><button type="button" class="secondary" id="closeAdd">閉じる</button><span class="fill"></span><button type="submit" class="primary" id="addSubmit">追加 ↵</button></div><p id="addError" class="message" role="alert" hidden></p>
+<div class="actions"><button type="button" class="secondary" id="closeAdd" hidden>閉じる</button><span class="fill"></span><button type="submit" class="primary" id="addSubmit">追加 ↵</button></div><p id="addError" class="message" role="alert" hidden></p>
 </form>
 <ul id="taskList" class="tasks" aria-live="polite"></ul>
-<div id="empty" class="empty" hidden>タスクはありません。<br>下に引くか、＋で追加できます。</div>
+<div id="empty" class="empty" hidden>タスクはありません。<br>上の入力欄から追加できます。</div>
 </section>
-<p class="gesture-hint">右へスワイプ：完了　左へ：削除<br>長押し：順番変更・下の3つへ分類　下へ引く：追加</p>
+<p class="gesture-hint">右へスワイプ：完了　左へ：削除<br>長押し：順番変更・下の3つへ分類</p>
 <p id="syncStatus" class="footer" aria-live="polite">端末内に保存 · ほかの端末とは同期しません</p>
 </main>
-<button type="button" class="fab" id="addFab" aria-label="タスクを追加" title="タスクを追加">＋</button>
+<!-- 旧追加処理が参照する要素。アイコンは表示せず、フォームを常時表示する。 -->
+<button type="button" id="addFab" aria-label="タスクを追加" hidden>＋</button>
 <dialog id="editDialog" class="editor" aria-labelledby="editHeading"><form id="editForm" novalidate><div class="dialog-top"><h2 id="editHeading">タスクを編集</h2><button type="button" id="editClose" aria-label="閉じる">閉じる ×</button></div>
 <label for="editTitle">やること</label><input id="editTitle" maxlength="120" required>
 <label for="editCategory">分類</label><select id="editCategory" aria-describedby="editCategoryError"><option value="home">家・その他</option><option value="shopping">買い物</option><option value="kids">子ども</option></select><p id="editCategoryError" class="message" role="alert" hidden></p>
