@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="2条ウォームとウォームホイールの3D回転・寸法・リード角を学ぶ模式モデル">
+<title>ウォームギヤ 3Dラボ | 歯車かみ合いラボ</title>
+<style>
+:root{color-scheme:light;--bg:#eff4fa;--panel:#fff;--ink:#17283b;--muted:#53677b;--line:#d3dfeb;--accent:#146ca8;--pale:#e5f3ff;--error:#b12b43;--shadow:0 12px 34px #2039530e}
+@media(prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#101924;--panel:#192738;--ink:#eef4fc;--muted:#b9cadb;--line:#3e536b;--accent:#91ceff;--pale:#233e56;--error:#ff8999;--shadow:none}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;line-height:1.55}button,input,select{font:inherit}button{cursor:pointer}a{color:var(--accent)}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:3px}button{min-height:44px;border:1px solid var(--line);border-radius:10px;padding:9px 13px;background:var(--panel);color:var(--ink);font-weight:700}button.primary{background:#176fa8;border-color:#176fa8;color:white}button[aria-pressed=true]{background:var(--pale);border-color:var(--accent)}button:disabled{opacity:.55;cursor:not-allowed}input[type=number]{min-width:0;width:94px;min-height:43px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:6px 9px;font-variant-numeric:tabular-nums}input[type=range]{accent-color:var(--accent);width:100%;min-width:0;min-height:34px;cursor:pointer}input[type=checkbox]{accent-color:var(--accent);width:19px;height:19px}.wrap{max-width:1240px;margin:0 auto;padding:14px 12px 48px}.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:.85rem}.tag{padding:3px 9px;border:1px solid var(--line);border-radius:99px;color:var(--accent);font-weight:700;font-size:.76rem}.eyebrow{font-weight:800;letter-spacing:.1em;color:var(--accent);font-size:.73rem;margin:17px 0 2px}h1{font-size:clamp(1.55rem,4vw,2.45rem);line-height:1.24;margin:0 0 8px}h2{font-size:1.12rem;margin:0}h3{font-size:1rem;margin:0}.intro,.hint{color:var(--muted);font-size:.86rem;margin:5px 0 15px}.layout{display:grid;grid-template-columns:minmax(0,1.38fr) minmax(300px,.86fr);gap:15px;align-items:start}.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;min-width:0;box-shadow:var(--shadow)}.stack{display:grid;gap:15px}.panel-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}.viewer{position:sticky;top:10px}.canvas-frame{position:relative;min-width:0;overflow:hidden;border-radius:12px;background:linear-gradient(150deg,#0d1d2f,#1d3653);height:clamp(300px,49vw,550px)}#scene{width:100%;height:100%;display:block;touch-action:none;cursor:grab}#scene:active{cursor:grabbing}.viewer-message{position:absolute;left:10px;top:10px;background:#081628c9;border:1px solid #7b9cb86b;color:#e6f3ff;padding:6px 10px;border-radius:9px;font-size:.72rem;pointer-events:none}.visual-error{position:absolute;inset:0;display:grid;place-items:center;padding:20px;color:white;background:#142132e9;text-align:center}.visual-error[hidden],[hidden]{display:none!important}.fallback{display:block;width:100%;height:100%;padding:12px}.legend,.playback,.choices,.actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.legend{font-size:.79rem;color:var(--muted);margin:9px 0}.swatch{width:12px;height:12px;border-radius:3px;display:inline-block;margin-right:4px;background:#d69a4e}.swatch.blue{background:#67baf4}.swatch.red{background:#ff716b}.playback{margin:11px 0}.playback button{flex:1 1 auto}.speed-field{display:flex;align-items:center;gap:7px;font-size:.79rem;color:var(--muted);width:100%}.speed-field input{flex:1}.choices{margin-top:8px}.choices label{display:inline-flex;align-items:center;gap:5px;font-size:.81rem;min-height:35px}.status{min-height:1.4em;font-size:.8rem;color:var(--muted);margin:9px 0 0}.error{color:var(--error);border:1px solid var(--error);padding:10px;border-radius:9px;font-weight:700;margin:0 0 13px}.field{margin-top:11px;padding-bottom:10px;border-bottom:1px solid var(--line)}.field:last-child{border:0}.field-top{display:flex;align-items:center;justify-content:space-between;gap:10px}.field label{font-size:.83rem;font-weight:700;min-width:0}.field small{color:var(--muted);display:block;font-size:.74rem}.field input[type=range]{display:block;margin-top:5px}.starts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 4px}.starts button{width:100%}.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}.metric{border:1px solid var(--line);padding:11px;border-radius:11px;min-width:0}.metric small{display:block;color:var(--muted);font-size:.74rem}.metric strong{font-size:clamp(1.07rem,2.5vw,1.5rem);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.81rem}th,td{padding:8px 6px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}th:first-child,td:first-child{text-align:left}th{color:var(--muted)}.concept{border-left:4px solid var(--accent);padding:9px 11px;background:var(--pale);border-radius:0 8px 8px 0;font-size:.83rem;margin:13px 0}.note{font-size:.79rem;color:var(--muted)}.note p{margin:7px 0}.number{font-variant-numeric:tabular-nums}.ref{font-size:.75rem;overflow-wrap:anywhere}.readout{font-size:.82rem;font-variant-numeric:tabular-nums}.actions button{flex:1 1 120px}.aux{margin-top:13px}.subheading{font-size:.85rem;font-weight:700;margin-top:15px}.diagram-label{font-size:13px;fill:white}
+@media(max-width:850px){.layout{grid-template-columns:minmax(0,1fr)}.viewer{position:static}.canvas-frame{height:clamp(290px,90vw,490px)}}@media(max-width:365px){.wrap{padding:9px 9px 32px}.panel{padding:11px}.starts button{padding:8px 5px;font-size:.84rem}.metric{padding:8px}.viewer-message{font-size:.66rem}.canvas-frame{height:300px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body><main class="wrap">
+<header class="top"><a href="../index.html">← 歯車かみ合いラボ（平歯車）</a><span class="tag">WORM GEAR / 3D 学習モデル</span></header>
+<p class="eyebrow">GEAR MESH LAB / SPECIAL EDITION</p>
+<h1>ウォームギヤ 3Dラボ</h1><p class="intro">2条ウォームとホイールを立体表示。回して、透かして、回転比と寸法を理解する。精密な製造用歯形ではありません。</p>
+<div id="error" class="error" role="alert" hidden></div>
+<div class="layout">
+<section class="panel viewer" aria-labelledby="view-title"><div class="panel-heading"><h2 id="view-title">① 3Dでかみ合いを見る</h2><span class="tag" id="render-kind">WebGL 3D</span></div>
+<div class="canvas-frame"><canvas id="scene" aria-label="ウォームとホイールの立体モデル。ドラッグで視点回転、ピンチで拡大縮小。">3D表示に対応するブラウザが必要です。</canvas><div id="fallback" class="visual-error" hidden><svg viewBox="0 0 320 190" class="fallback" role="img" aria-label="ウォームの横にウォームホイールが直交配置された概念図"><circle cx="105" cy="91" r="65" fill="#d49a51" stroke="#ffd6a0" stroke-width="4"/><circle cx="105" cy="91" r="22" fill="#21344c" stroke="#ffd6a0" stroke-width="3"/><rect x="180" y="64" width="120" height="49" rx="15" fill="#2c689f" stroke="#a3d7ff" stroke-width="3"/><path d="M190 70l16 36 16-36 16 36 16-36 16 36 16-36" fill="none" stroke="#c1e7ff" stroke-width="6"/></svg><p>この環境ではWebGLを利用できません。下の寸法計算と条数比較は利用できます。</p></div><div class="viewer-message">指で回転 · ピンチで拡大<br>PC：ドラッグ · ホイール</div></div>
+<div class="legend"><span><i class="swatch blue"></i>ウォーム（青）</span><span><i class="swatch"></i>ホイール（銅）</span><span><i class="swatch red"></i>かみ合い位置の目安</span></div>
+<div class="playback"><button type="button" id="play" class="primary" aria-pressed="false">▶ 回転する</button><button type="button" id="step">15°進める</button><button type="button" id="zero">回転を戻す</button></div>
+<label for="speed" class="speed-field">速度 <input type="range" id="speed" min="0.2" max="2" step="0.1" value="0.7"><output for="speed" id="speed-out">0.7×</output></label>
+<div class="choices"><label><input type="checkbox" id="translucent">歯車を半透明にする</label><label><input type="checkbox" id="worm-only">ウォームだけ表示</label><label><input type="checkbox" id="wheel-only">ホイールだけ表示</label></div>
+<div class="actions aux"><button type="button" id="zoom-in">＋ 拡大</button><button type="button" id="zoom-out">－ 縮小</button><button type="button" id="view-reset">視点を戻す</button></div>
+<p id="phase" class="status readout" role="status">ウォーム 0.0° ／ ホイール 0.0°</p>
+<p class="note">青の螺旋は2条を独立した位相で表現。ホイール歯面は凹形状を模式化しています。赤い目印は接触点の計算結果ではありません。</p></section>
+<div class="stack"><section class="panel" aria-labelledby="inputs-title"><div class="panel-heading"><h2 id="inputs-title">② 条数・寸法を動かす</h2><button type="button" id="reset">初期値</button></div><div class="subheading">ウォーム条数</div><div class="starts" role="group" aria-label="ウォーム条数"><button type="button" id="one" data-start="1" aria-pressed="false">1条</button><button type="button" id="two" data-start="2" aria-pressed="true">2条</button></div>
+<div class="field"><div class="field-top"><label for="z2">ホイール歯数 z₂</label><input id="z2" type="number" min="16" max="60" step="1" value="30" inputmode="numeric"></div><input type="range" id="z2-range" min="16" max="60" step="1" value="30"></div>
+<div class="field"><div class="field-top"><label for="module">軸方向モジュール mₓ <small>mm</small></label><input id="module" type="number" min="1" max="5" step="0.1" value="3" inputmode="decimal"></div><input type="range" id="module-range" min="1" max="5" step="0.1" value="3"></div>
+<div class="field"><div class="field-top"><label for="d1">ウォーム基準円直径 d₁ <small>mm</small></label><input id="d1" type="number" min="20" max="70" step="0.5" value="44" inputmode="decimal"></div><input type="range" id="d1-range" min="20" max="70" step="0.5" value="44"></div>
+<div class="field"><div class="field-top"><label for="shift">ホイール転位係数 x₂</label><input id="shift" type="number" min="-0.3" max="0.5" step="0.05" value="0" inputmode="decimal"></div><input type="range" id="shift-range" min="-0.3" max="0.5" step="0.05" value="0"></div>
+<p class="hint" id="save">設定はこの端末に自動保存します。</p></section>
+<section class="panel" aria-labelledby="math-title"><div class="panel-heading"><h2 id="math-title">③ 計算結果</h2><span class="tag">軸角 90°</span></div><div class="metrics"><div class="metric"><small>減速比 i</small><strong id="ratio">—</strong></div><div class="metric"><small>中心距離 a</small><strong id="center">—</strong></div><div class="metric"><small>リード角 γ</small><strong id="lead-angle">—</strong></div><div class="metric"><small>ウォーム1回転で</small><strong id="wheel-step">—</strong></div></div>
+<div class="concept" id="insight" aria-live="polite">ウォーム1回転でホイールが2歯分進みます。</div>
+<div class="table-wrap"><table><thead><tr><th scope="col">寸法</th><th scope="col">ウォーム</th><th scope="col">ホイール</th></tr></thead><tbody id="dimensions"></tbody></table></div>
+<p class="note">寸法：KHK「Calculation of Gear Dimensions」表4.23（軸方向モジュール式）に準拠。計算値と3D模式形状は別物です。</p></section></div></div>
+<section class="panel aux" aria-labelledby="limits-title"><h2 id="limits-title">第一段階の表示範囲・制約</h2><p class="note">外歯の円筒ウォーム／ホイール、右ねじ相当・直交軸の模式モデルです。歯面は理解用の滑らかな螺旋・凹形状であり、実際のホブによる創成歯面、工具歯先R、バックラッシ、厳密な接触点、干渉、強度、潤滑、効率は計算しません。描画上の食い込みや空隙は設計判定に使えません。圧力角は寸法例に合わせ法線20°で固定。製作や金型設計に用いる前に、適用規格・工具・メーカーの図面で必ず検証してください。</p><p class="ref">参考：<a href="https://khkgears.net/gear-knowledge/gear-technical-reference/calculation-gear-dimensions/" target="_blank" rel="noopener noreferrer">KHK 歯車寸法計算・ウォームギヤ表4.23</a>。外部ライブラリ・通信・ビルド不要です。</p></section>
+</main>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const STORAGE = 'gear-mesh-lab:worm3d:v1';
+const DEFAULT = Object.freeze({ starts:2, z2:30, module:3, d1:44, shift:0 });
+const keys = ['z2','module','d1','shift'];
+const fmt = (n, digits=3) => Number.isFinite(n) ? n.toFixed(digits) : '—';
+// KHK gear technical reference, table 4.23, axial-module cylindrical worm pair.
+function calculate(input) {
+  const rules = {starts:[1,2,true],z2:[16,60,true],module:[1,5,false],d1:[20,70,false],shift:[-0.3,0.5,false]};
+  const p = {};
+  for (const [key,[min,max,integer]] of Object.entries(rules)) {
+    const raw = input[key];
+    if (raw === '' || raw === null || raw === undefined || !Number.isFinite(Number(raw))) throw Error(`${key}：数値を入力してください。`);
+    const n = Number(raw);
+    if (n < min || n > max || (integer && !Number.isInteger(n))) throw Error(`${key}：${min}～${max}${integer?'の整数':''}で入力してください。`);
+    p[key] = n;
+  }
+  const {starts,z2,module:m,d1,shift:x} = p;
+  const d2 = m*z2;
+  const gamma = Math.atan(m*starts/d1);
+  const lead = Math.PI*m*starts;
+  const axialPitch = Math.PI*m;
+  const center = (d1+d2)/2 + x*m;
+  const da1 = d1+2*m, df1 = d1-2.5*m;
+  const ha2 = (1+x)*m;
+  const dt2 = d2+2*ha2;
+  const da2 = dt2+m, df2 = dt2-4.5*m;
+  const ri = d1/2-m;
+  const q = d1/m;
+  const width1 = Math.PI*m*(4.5+0.02*z2);
+  const width2 = m*(2*Math.sqrt(q+1)+1.5);
+  if (df1<=0 || df2<=0 || center<=0 || da1<=df1 || da2<=df2 || width1<=0 || width2<=0) throw Error('指定の寸法では模式形状を生成できません。');
+  return { ...p, m,d2,gamma, lead,axialPitch,center,ratio:z2/starts,step:360*starts/z2,da1,df1,ha2,dt2,da2,df2,ri,q,width1,width2 };
+}
+window.WormGearMath = Object.freeze({ calculate });
+let params = {...DEFAULT}, model = null, view = null, playing=false, wormAngle=0, previous=null, speed=0.7;
+function load() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORAGE));
+    if (raw && typeof raw === 'object') { calculate(raw); return raw; }
+  } catch (_) { /* Missing, outdated or blocked storage: start with example. */ }
+  return {...DEFAULT};
+}
+function save() {
+  try { localStorage.setItem(STORAGE,JSON.stringify(params)); $('save').textContent='入力条件を端末に保存しました。'; }
+  catch (_) { $('save').textContent='端末へ保存できませんが、表示は利用できます。'; }
+}
+function setFields() {
+  keys.forEach(k => { $(k).value=params[k]; $(`${k}-range`).value=params[k]; });
+  document.querySelectorAll('[data-start]').forEach(b => b.setAttribute('aria-pressed',String(Number(b.dataset.start)===Number(params.starts))));
+}
+function tableRow(label,worm,wheel) {
+  const tr=document.createElement('tr');
+  for (const text of [label,worm,wheel]) { const td=document.createElement('td'); td.textContent=text; tr.append(td); }
+  return tr;
+}
+function showResults(g) {
+  $('ratio').textContent=`${fmt(g.ratio,2)} : 1`;
+  $('center').textContent=`${fmt(g.center)} mm`;
+  $('lead-angle').textContent=`${fmt(g.gamma*180/Math.PI,3)}°`;
+  $('wheel-step').textContent=`${fmt(g.step,2)}°`;
+  $('insight').textContent=`ウォームが1回転するとホイールは${g.starts}歯分（${fmt(g.step,2)}°）進みます。リード = 条数 × 軸方向ピッチ = ${fmt(g.lead)} mm。`;
+  $('dimensions').replaceChildren(
+    tableRow('条数 / 歯数',`${g.starts} 条`,`${g.z2} 歯`),
+    tableRow('基準円直径 d',`${fmt(g.d1)} mm`,`${fmt(g.d2)} mm`),
+    tableRow('歯先径 da',`${fmt(g.da1)} mm`,`${fmt(g.da2)} mm`),
+    tableRow('歯底径 df',`${fmt(g.df1)} mm`,`${fmt(g.df2)} mm`),
+    tableRow('喉径 dt','—',`${fmt(g.dt2)} mm`),
+    tableRow('参考歯幅',`${fmt(g.width1)} mm`,`${fmt(g.width2)} mm`),
+    tableRow('リード / 喉半径',`${fmt(g.lead)} mm`,`${fmt(g.ri)} mm`)
+  );
+}
+function updatePhase() {
+  if (!model) return;
+  const w=wormAngle*180/Math.PI;
+  const h=w*model.starts/model.z2;
+  $('phase').textContent=`ウォーム ${fmt(w,1)}° ／ ホイール ${fmt(h,1)}°（${fmt(model.ratio,2)} : 1）`;
+}
+function stop() { playing=false; previous=null; $('play').textContent='▶ 回転する'; $('play').setAttribute('aria-pressed','false'); }
+function apply() {
+  try {
+    const next=calculate(params);
+    model=next;
+    $('error').hidden=true;
+    showResults(next); save();
+    if(view) { view.rebuild(next); view.draw(wormAngle); }
+    updatePhase();
+  } catch(err) {
+    model=null; stop();
+    $('error').textContent=err.message; $('error').hidden=false;
+    ['ratio','center','lead-angle','wheel-step'].forEach(id => $(id).textContent='—');
+    $('dimensions').replaceChildren(); $('insight').textContent='正しい条件を入力すると寸法と3D表示が更新されます。';
+    if(view) view.clear(); $('phase').textContent='計算できません';
+  }
+}
+// Geometry is deliberately schematic, not a hob-generated mating tooth surface.
+function surface(nu,nv,point) {
+  const pos=[],indices=[];
+  for(let u=0;u<=nu;u++) for(let v=0;v<=nv;v++) pos.push(...point(u/nu,v/nv));
+  const stride=nv+1;
+  for(let u=0;u<nu;u++)for(let v=0;v<nv;v++) {
+    const a=u*stride+v,b=a+1,c=a+stride,d=c+1;
+    indices.push(a,b,c,b,d,c);
+  }
+  const normals=new Float32Array(pos.length);
+  for(let i=0;i<indices.length;i+=3) {
+    const ia=indices[i]*3,ib=indices[i+1]*3,ic=indices[i+2]*3;
+    const ax=pos[ib]-pos[ia],ay=pos[ib+1]-pos[ia+1],az=pos[ib+2]-pos[ia+2];
+    const bx=pos[ic]-pos[ia],by=pos[ic+1]-pos[ia+1],bz=pos[ic+2]-pos[ia+2];
+    const nx=ay*bz-az*by,ny=az*bx-ax*bz,nz=ax*by-ay*bx;
+    for (const j of [ia,ib,ic]) {normals[j]+=nx;normals[j+1]+=ny;normals[j+2]+=nz;}
+  }
+  for(let j=0;j<normals.length;j+=3) {
+    const len=Math.hypot(normals[j],normals[j+1],normals[j+2])||1;
+    normals[j]/=len;normals[j+1]/=len;normals[j+2]/=len;
+  }
+  return {positions:new Float32Array(pos),normals,indices:new Uint16Array(indices)};
+}
+function wormGeometry(g) {
+  const length=g.width1, root=g.df1/2, height=(g.da1-g.df1)/2;
+  return surface(135,84,(u,v)=>{
+    const x=(u-.5)*length, t=v*2*Math.PI;
+    const phase=g.starts*(t-2*Math.PI*x/g.lead);
+    const ridge=Math.pow((1+Math.cos(phase))/2,3.1);
+    const edge=Math.min(1, u*28, (1-u)*28);
+    const r=root+height*ridge*Math.max(0,edge);
+    return [x,r*Math.cos(t),r*Math.sin(t)];
+  });
+}
+function wheelGeometry(g) {
+  const root=g.df2/2, half=g.width2/2;
+  return surface(38,Math.max(320,g.z2*12),(u,v)=>{
+    const z=(u-.5)*g.width2, theta=v*2*Math.PI;
+    // A shallow concave throat at the centre; tooth phase bends across the face.
+    const throat=g.dt2/2+0.5*g.m*Math.pow(Math.abs(z)/half,2);
+    const curved=theta-0.12*(z/half)*2*Math.PI/g.z2;
+    const ridge=Math.pow((1+Math.cos(g.z2*curved))/2,4.5);
+    const r=root+(throat-root)*(.07+.93*ridge);
+    return [r*Math.cos(theta),r*Math.sin(theta),z];
+  });
+}
+function capGeometry(radius,half,axis,positive) {
+  const mesh=surface(1,72,(u,v)=>{
+    const t=2*Math.PI*v,r=radius*u;
+    return axis==='x'?[positive*half,r*Math.cos(t),r*Math.sin(t)]:[r*Math.cos(t),r*Math.sin(t),positive*half];
+  });
+  if(positive>0) for(let i=0;i<mesh.indices.length;i+=3){const q=mesh.indices[i];mesh.indices[i]=mesh.indices[i+1];mesh.indices[i+1]=q;}
+  return mesh;
+}
+function lookAt(eye,target) {
+  const norm=v=>{const n=Math.hypot(...v)||1;return v.map(x=>x/n);};
+  const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+  const dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0);
+  const f=norm(target.map((x,i)=>x-eye[i]));const s=norm(cross(f,[0,0,1]));const up=cross(s,f);
+  return new Float32Array([s[0],up[0],-f[0],0,s[1],up[1],-f[1],0,s[2],up[2],-f[2],0,-dot(s,eye),-dot(up,eye),dot(f,eye),1]);
+}
+function perspective(aspect) {
+  const f=1/Math.tan(48*Math.PI/360),n=.5,far=3000;
+  return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+n)/(n-far),-1,0,0,2*far*n/(n-far),0]);
+}
+function shader(gl,type,source) {
+  const obj=gl.createShader(type); gl.shaderSource(obj,source); gl.compileShader(obj);
+  if(!gl.getShaderParameter(obj,gl.COMPILE_STATUS)) {const msg=gl.getShaderInfoLog(obj);gl.deleteShader(obj);throw Error(msg||'シェーダーエラー');}
+  return obj;
+}
+function renderer(canvas) {
+  const gl=canvas.getContext('webgl',{alpha:false,antialias:true,depth:true}) || canvas.getContext('experimental-webgl');
+  if(!gl) throw Error('この端末ではWebGLを利用できません。');
+  const vs=shader(gl,gl.VERTEX_SHADER,`attribute vec3 a_position;attribute vec3 a_normal;uniform mat4 u_view;uniform mat4 u_projection;uniform vec3 u_translate;uniform float u_angle;uniform float u_kind;varying vec3 v_normal;varying vec3 v_world;void main(){float c=cos(u_angle),s=sin(u_angle);vec3 p=a_position,n=a_normal;if(u_kind<0.5){p=vec3(c*p.x-s*p.y,s*p.x+c*p.y,p.z);n=vec3(c*n.x-s*n.y,s*n.x+c*n.y,n.z);}else{p=vec3(p.x,c*p.y-s*p.z,s*p.y+c*p.z);n=vec3(n.x,c*n.y-s*n.z,s*n.y+c*n.z);}p+=u_translate;v_world=p;v_normal=n;gl_Position=u_projection*u_view*vec4(p,1.0);}`);
+  const fs=shader(gl,gl.FRAGMENT_SHADER,`precision mediump float;uniform vec4 u_color;varying vec3 v_normal;varying vec3 v_world;void main(){vec3 n=normalize(v_normal);vec3 light=normalize(vec3(-0.55,0.45,0.84));float d=max(dot(n,light),0.0)*0.61+max(dot(n,normalize(vec3(0.7,-0.4,-0.5))),0.0)*0.15;float ambient=0.39;float shiny=pow(max(dot(reflect(-light,n),normalize(vec3(0.3,0.4,0.85))),0.0),19.0)*0.17;gl_FragColor=vec4(u_color.rgb*(ambient+d)+vec3(shiny),u_color.a);}`);
+  const program=gl.createProgram();gl.attachShader(program,vs);gl.attachShader(program,fs);gl.linkProgram(program);
+  if(!gl.getProgramParameter(program,gl.LINK_STATUS)) throw Error(gl.getProgramInfoLog(program)||'WebGLの初期化に失敗しました。');
+  gl.useProgram(program);
+  const attrs={position:gl.getAttribLocation(program,'a_position'),normal:gl.getAttribLocation(program,'a_normal')};
+  const uni={view:gl.getUniformLocation(program,'u_view'),projection:gl.getUniformLocation(program,'u_projection'),translate:gl.getUniformLocation(program,'u_translate'),angle:gl.getUniformLocation(program,'u_angle'),kind:gl.getUniformLocation(program,'u_kind'),color:gl.getUniformLocation(program,'u_color')};
+  gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);
+  const upload=mesh=>{
+    const obj={count:mesh.indices.length};
+    obj.pos=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,obj.pos);gl.bufferData(gl.ARRAY_BUFFER,mesh.positions,gl.STATIC_DRAW);
+    obj.normal=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,obj.normal);gl.bufferData(gl.ARRAY_BUFFER,mesh.normals,gl.STATIC_DRAW);
+    obj.idx=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,obj.idx);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,mesh.indices,gl.STATIC_DRAW);
+    return obj;
+  };
+  const dispose=o=>{if(!o)return;gl.deleteBuffer(o.pos);gl.deleteBuffer(o.normal);gl.deleteBuffer(o.idx);};
+  let geometry=[], current=null, yaw=0.82,pitch=0.43,zoom=1.0;
+  function rebuild(g) {
+    geometry.forEach(o=>dispose(o.mesh));geometry=[];current=g;
+    for(const [kind,mesh,color] of [
+      [0,wheelGeometry(g),[.84,.52,.22]],
+      [0,capGeometry(g.df2/2,g.width2/2,'z',1),[.69,.40,.16]],
+      [0,capGeometry(g.df2/2,g.width2/2,'z',-1),[.69,.40,.16]],
+      [1,wormGeometry(g),[.27,.64,.94]],
+      [1,capGeometry(g.df1/2,g.width1/2,'x',1),[.16,.43,.69]],
+      [1,capGeometry(g.df1/2,g.width1/2,'x',-1),[.16,.43,.69]]
+    ]) geometry.push({kind,mesh:upload(mesh),color});
+    // The marker is an approximate meshing region, not a calculated contact point.
+    geometry.push({kind:2,mesh:upload(surface(12,22,(u,v)=>{const t=u*Math.PI,p=v*2*Math.PI,r=Math.max(0.9,g.m*.31);return [r*Math.sin(t)*Math.cos(p),g.d2/2+r*Math.sin(t)*Math.sin(p),r*Math.cos(t)];})),color:[1,.23,.2]});
+  }
+  function clear(){gl.clearColor(.065,.12,.19,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);}
+  function draw(angle) {
+    if(!current)return clear();
+    const bounds=Math.max(current.center+current.da1/2,current.da2/2,current.width1);
+    const distance=bounds*2.65/zoom;
+    const target=[0,current.center*.40,0];
+    const eye=[target[0]+distance*Math.cos(pitch)*Math.cos(yaw),target[1]+distance*Math.cos(pitch)*Math.sin(yaw),distance*Math.sin(pitch)];
+    const ratio=Math.min(2,window.devicePixelRatio||1);
+    const w=Math.max(1,Math.round(canvas.clientWidth*ratio)),h=Math.max(1,Math.round(canvas.clientHeight*ratio));
+    if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
+    gl.viewport(0,0,w,h);clear();gl.useProgram(program);
+    gl.uniformMatrix4fv(uni.view,false,lookAt(eye,target));gl.uniformMatrix4fv(uni.projection,false,perspective(w/h));
+    const transparent=$('translucent').checked, onlyWorm=$('worm-only').checked, onlyWheel=$('wheel-only').checked;
+    gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(!transparent);
+    for(const obj of geometry) {
+      if((onlyWorm&&obj.kind===0)||(onlyWheel&&obj.kind===1))continue;
+      if(obj.kind===2 && (onlyWorm||onlyWheel))continue;
+      if(obj.kind===2) gl.disable(gl.DEPTH_TEST); else gl.enable(gl.DEPTH_TEST);
+      gl.bindBuffer(gl.ARRAY_BUFFER,obj.mesh.pos);gl.enableVertexAttribArray(attrs.position);gl.vertexAttribPointer(attrs.position,3,gl.FLOAT,false,0,0);
+      gl.bindBuffer(gl.ARRAY_BUFFER,obj.mesh.normal);gl.enableVertexAttribArray(attrs.normal);gl.vertexAttribPointer(attrs.normal,3,gl.FLOAT,false,0,0);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,obj.mesh.idx);
+      gl.uniform1f(uni.kind,obj.kind===1?1:0);gl.uniform1f(uni.angle,obj.kind===1?angle:obj.kind===0?angle*current.starts/current.z2:0);
+      gl.uniform3f(uni.translate,0,obj.kind===1?current.center:0,0);
+      const alpha=transparent&&obj.kind!==2?.43:1;
+      gl.uniform4f(uni.color,...obj.color,alpha);
+      gl.drawElements(gl.TRIANGLES,obj.mesh.count,gl.UNSIGNED_SHORT,0);
+    }
+    gl.depthMask(true);gl.enable(gl.DEPTH_TEST);gl.disable(gl.BLEND);
+  }
+  const pointers=new Map();let last=null,pinch=null;
+  canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,[e.clientX,e.clientY]);last=[e.clientX,e.clientY];pinch=null;});
+  canvas.addEventListener('pointermove',e=>{
+    if(!pointers.has(e.pointerId))return;
+    const prev=pointers.get(e.pointerId);pointers.set(e.pointerId,[e.clientX,e.clientY]);
+    if(pointers.size>=2){const pts=[...pointers.values()];const d=Math.hypot(pts[0][0]-pts[1][0],pts[0][1]-pts[1][1]);if(pinch)zoom=Math.max(.55,Math.min(3.2,zoom*d/pinch));pinch=d;}
+    else{yaw+=(e.clientX-prev[0])*.008;pitch=Math.max(-1.30,Math.min(1.30,pitch+(e.clientY-prev[1])*.008));}
+    last=[e.clientX,e.clientY];draw(wormAngle);
+  });
+  const up=e=>{pointers.delete(e.pointerId);pinch=null;last=null;};
+  canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',up);canvas.addEventListener('lostpointercapture',up);
+  canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(.55,Math.min(3.2,zoom*Math.exp(-e.deltaY*.001)));draw(wormAngle);},{passive:false});
+  window.addEventListener('resize',()=>draw(wormAngle));
+  return {rebuild,draw,clear,zoomBy:factor=>{zoom=Math.max(.55,Math.min(3.2,zoom*factor));draw(wormAngle);},resetView:()=>{yaw=.82;pitch=.43;zoom=1;draw(wormAngle);}};
+}
+function animate(now) {
+  if(playing&&model&&view) {
+    if(previous!==null) wormAngle+=(Math.min(60,now-previous)/1000)*2*Math.PI*.28*speed;
+    previous=now;view.draw(wormAngle);updatePhase();
+  }
+  requestAnimationFrame(animate);
+}
+params=load();setFields();
+try { view=renderer($('scene')); $('fallback').hidden=true; }
+catch(_) { $('scene').hidden=true;$('fallback').hidden=false;$('render-kind').textContent='3D非対応 / 数値は利用可'; }
+apply();
+keys.forEach(key=>{
+  const n=$(key),range=$(`${key}-range`);
+  range.addEventListener('input',()=>{n.value=range.value;params[key]=n.value;apply();});
+  n.addEventListener('input',()=>{params[key]=n.value;if(n.value!==''&&Number.isFinite(Number(n.value)))range.value=n.value;apply();});
+});
+document.querySelectorAll('[data-start]').forEach(btn=>btn.addEventListener('click',()=>{params.starts=Number(btn.dataset.start);setFields();apply();}));
+$('reset').addEventListener('click',()=>{params={...DEFAULT};wormAngle=0;stop();setFields();apply();});
+$('play').addEventListener('click',()=>{if(!model)return;playing=!playing;previous=null;$('play').textContent=playing?'Ⅱ 一時停止':'▶ 回転する';$('play').setAttribute('aria-pressed',String(playing));});
+$('step').addEventListener('click',()=>{if(!model)return;stop();wormAngle+=15*Math.PI/180;if(view)view.draw(wormAngle);updatePhase();});
+$('zero').addEventListener('click',()=>{stop();wormAngle=0;if(view)view.draw(wormAngle);updatePhase();});
+$('speed').addEventListener('input',()=>{speed=Number($('speed').value);$('speed-out').value=`${fmt(speed,1)}×`;});
+['translucent','worm-only','wheel-only'].forEach(id=>$(id).addEventListener('change',()=>{
+  if(id==='worm-only'&&$('worm-only').checked)$('wheel-only').checked=false;
+  if(id==='wheel-only'&&$('wheel-only').checked)$('worm-only').checked=false;
+  if(view)view.draw(wormAngle);
+}));
+$('zoom-in').addEventListener('click',()=>view&&view.zoomBy(1.22));
+$('zoom-out').addEventListener('click',()=>view&&view.zoomBy(1/1.22));
+$('view-reset').addEventListener('click',()=>view&&view.resetView());
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});
+requestAnimationFrame(animate);
+})();
+</script>
+</body></html>
