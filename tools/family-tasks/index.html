@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f9f4e9">
-<meta name="description" content="家族共有だけの、ジェスチャーで使えるシンプルなタスク一覧。">
-<title>ふたりのタスク | My HTML Tools</title>
+<meta name="description" content="家族共有タスクを3つに分類。長押しで分類や順番を変更できます。">
+<title>タスク管理 | My HTML Tools</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;color:#252019;background:#f9f4e9;font-synthesis:none;-webkit-text-size-adjust:100%;--accent:#bd423b}
 *{box-sizing:border-box}body{margin:0;min-height:100dvh}button,input,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}[hidden]{display:none!important}
@@ -16,6 +16,15 @@ h1{font-size:clamp(2rem,8vw,3.15rem);font-weight:800;letter-spacing:-.075em;marg
 .notice{margin:6px 0 12px;border-radius:8px;padding:10px 12px;background:#eee5d5;color:#533b31;font-size:.85rem;line-height:1.55}.notice.error{background:#fae1df;color:#862c27}
 .list-wrap{position:relative}.pull{display:block;text-align:center;overflow:hidden;height:0;line-height:48px;font-size:.85rem;color:#ab5943;transition:height .16s ease}.pull.ready{color:#a32b24;font-weight:700}
 .tasks{padding:0;margin:0;list-style:none;display:grid;gap:4px;touch-action:pan-y}.task{position:relative;min-height:64px;border-radius:5px;display:flex;align-items:stretch;overflow:hidden;touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:transform .15s ease,opacity .15s ease,box-shadow .15s ease}.task *{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}.task.dragging{opacity:.48;box-shadow:0 10px 24px #34201540}.task.drop-before{box-shadow:0 -5px 0 #543122}.task.drop-after{box-shadow:0 5px 0 #543122}.task.swiping{transition:none}.task .check{flex:0 0 51px;border:0;background:transparent;color:inherit;font-size:1.28rem;opacity:.8;min-height:64px}.task .body{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px;border:0;background:transparent;color:inherit;text-align:left;padding:13px 14px 13px 3px;min-height:64px;font-size:1.03rem;font-weight:690;letter-spacing:.005em;overflow-wrap:anywhere}.task .body small{font-size:.65rem;white-space:nowrap;opacity:.8;font-weight:600}.task.done .body span{text-decoration:line-through;opacity:.75}.task.done{background:#d3d2cc!important;color:#595a56!important}.task .action-reveal{position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-weight:800;font-size:.86rem;opacity:0}.task.swiping .action-reveal{opacity:1}.task.swiping{background:#f3dfd9!important;color:#7c2822!important}.task.swiping.right{background:#dbeedd!important;color:#245b35!important}.task .content{position:relative;z-index:1;display:flex;width:100%;background:inherit;color:inherit;border-radius:5px}
+.category-heading{display:flex;align-items:center;justify-content:space-between;padding:20px 10px 7px;margin-top:4px;list-style:none;color:#795944;font-size:.85rem;font-weight:800;letter-spacing:.04em;min-height:45px}
+.category-heading:first-child{padding-top:8px;min-height:34px}
+.category-count{background:#eee4d5;border-radius:99px;padding:2px 8px;font-size:.7rem;color:#826c5a;font-weight:700}
+.category-dock{position:fixed;z-index:12;bottom:calc(12px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:min(570px,calc(100% - 16px));display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:8px;border-radius:15px;background:#302820ee;box-shadow:0 10px 38px #30282066}
+.category-dock button{border:2px solid transparent;border-radius:10px;background:#f6ede1;color:#503828;font-weight:800;min-height:66px;padding:6px 2px;font-size:clamp(.78rem,3.3vw,.93rem);touch-action:none}
+.category-dock button.current{border-color:#b59a71;background:#ece0c7}
+.category-dock button.over{background:#b84037;color:white;border-color:#fff0ce;transform:scale(1.04)}
+.category-dock button:focus-visible{outline:3px solid #fff;outline-offset:1px}
+.editor select{display:block;width:100%;min-width:0;padding:12px;border:1px solid #d9c7b7;border-radius:6px;background:white;color:#302720;font-size:16px}
 .empty{text-align:center;color:#948273;padding:46px 10px;font-size:.92rem}.gesture-hint{text-align:center;color:#968678;font-size:.73rem;margin:12px 3px 0;line-height:1.6}.footer{text-align:center;color:#b7a99c;font-size:.68rem;margin-top:42px}.status-btn{min-height:40px;padding:7px 12px;border:1px solid #e5cdbd;border-radius:24px;background:#fff9f2;color:#7e5345;font-size:.76rem;font-weight:650}
 .fab{position:fixed;bottom:calc(19px + env(safe-area-inset-bottom));right:max(18px,calc((100vw - 570px)/2 + 20px));width:64px;height:64px;border-radius:50%;border:0;background:#b84037;color:white;font-size:2.3rem;line-height:1;box-shadow:0 6px 23px #55261e55;z-index:5;display:grid;place-items:center}.fab:active{transform:scale(.96)}
 .composer{background:#fffaf2;border:1px solid #ead7c5;border-radius:10px;padding:15px;margin:9px 0 11px;box-shadow:0 5px 17px #6b3b2510}.composer label,.editor label,.settings label{display:block;font-size:.8rem;font-weight:700;color:#5e4c41;margin:13px 0 5px}.composer input,.composer textarea,.editor input,.editor textarea,.settings input,.settings textarea{display:block;width:100%;min-width:0;padding:12px;border:1px solid #d9c7b7;border-radius:6px;background:white;color:#302720;font-size:16px}.composer input:first-of-type{margin-bottom:8px}.composer details summary{min-height:44px;display:list-item;padding:12px 4px;color:#93554b;font-size:.79rem}.actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:14px}.primary{background:#b84037;color:#fff;border:0;border-radius:7px;padding:12px 18px;min-height:44px;font-weight:700}.secondary{background:#f6eee4;color:#695549;border:1px solid #ded1c3;border-radius:7px;padding:10px 14px;min-height:44px}.danger{background:#9a3732;color:white}.muted{color:#887669;font-size:.78rem;line-height:1.65}.fill{flex:1}
@@ -25,11 +34,12 @@ dialog{width:min(510px,calc(100% - 22px));max-height:calc(100dvh - 24px);border:
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
 </style>
 <script defer src="./clear-app.js"></script>
+<script defer src="./categories.js"></script>
 </head>
 <body>
 <main class="app">
 <header class="top"><a href="../../index.html">← ツール一覧</a><button type="button" id="settingsOpen">設定</button></header>
-<h1>ふたりのタスク<span style="color:#d65c42">.</span></h1>
+<h1>タスク管理<span style="color:#d65c42">.</span></h1>
 <p class="subtitle">やることを、ひとつずつ。</p>
 <div class="subrow"><span id="count" class="count" role="status">読み込み中</span><span id="modeBadge" class="badge">端末内デモ</span></div>
 <p id="message" class="notice" role="status" aria-live="polite" hidden></p>
@@ -44,12 +54,13 @@ dialog{width:min(510px,calc(100% - 22px));max-height:calc(100dvh - 24px);border:
 <ul id="taskList" class="tasks" aria-live="polite"></ul>
 <div id="empty" class="empty" hidden>タスクはありません。<br>下に引くか、＋で追加できます。</div>
 </section>
-<p class="gesture-hint">右へスワイプ：完了　左へ：削除<br>長押し：順番を変更　下へ引く：追加</p>
+<p class="gesture-hint">右へスワイプ：完了　左へ：削除<br>長押し：順番変更・下の3つへ分類　下へ引く：追加</p>
 <p id="syncStatus" class="footer" aria-live="polite">端末内に保存 · ほかの端末とは同期しません</p>
 </main>
 <button type="button" class="fab" id="addFab" aria-label="タスクを追加" title="タスクを追加">＋</button>
 <dialog id="editDialog" class="editor" aria-labelledby="editHeading"><form id="editForm" novalidate><div class="dialog-top"><h2 id="editHeading">タスクを編集</h2><button type="button" id="editClose" aria-label="閉じる">閉じる ×</button></div>
 <label for="editTitle">やること</label><input id="editTitle" maxlength="120" required>
+<label for="editCategory">分類</label><select id="editCategory" aria-describedby="editCategoryError"><option value="home">家・その他</option><option value="shopping">買い物</option><option value="kids">子ども</option></select><p id="editCategoryError" class="message" role="alert" hidden></p>
 <label for="editDate">期限</label><input id="editDate" type="date">
 <label for="editNotes">メモ</label><textarea id="editNotes" maxlength="1000" rows="3"></textarea>
 <p id="editError" class="message" role="alert" hidden></p><div class="actions"><button type="button" class="secondary danger" id="deleteEdit">削除</button><span class="fill"></span><button type="submit" class="primary" id="editSave">保存</button></div></form></dialog>
@@ -59,6 +70,7 @@ dialog{width:min(510px,calc(100% - 22px));max-height:calc(100dvh - 24px);border:
 <section id="accountSection"><h3>ログイン・家族</h3><p id="accountInfo" class="muted">Firebase未接続</p><div class="actions"><button type="button" class="primary" id="login">Googleでログイン</button><button type="button" class="secondary" id="logout">ログアウト</button></div><label for="myUid">自分のユーザーID</label><input id="myUid" readonly><p id="familyInfo" class="muted"></p><button type="button" id="createFamily" class="secondary">家族スペースを作成</button><div id="inviteBox"><label for="partnerUid">相手のユーザーID</label><input id="partnerUid" maxlength="128" autocomplete="off"><button type="button" id="invite" class="secondary">相手を登録</button></div></section>
 <section><h3>バックアップ</h3><p class="muted">JSONには非表示にした旧「自分だけ」のタスクも含めて保存します。Firebaseでは取得済みの共有タスクのみ書き出します。</p><div class="actions"><button type="button" id="export" class="secondary">JSON保存</button><label for="importFile" class="secondary" style="margin:0;cursor:pointer">デモJSON読込</label><input type="file" id="importFile" accept=".json,application/json" hidden></div></section>
 <p id="settingsError" class="notice error" role="alert" hidden></p></dialog>
+<div id="categoryDock" class="category-dock" role="group" aria-label="ドラッグして分類を変更" hidden><button type="button" data-group="home" data-category="家">家・その他</button><button type="button" data-group="shopping" data-category="買い物">買い物</button><button type="button" data-group="kids" data-category="子ども">子ども</button></div>
 <div id="dragGhost" class="task" aria-hidden="true" hidden style="position:fixed;z-index:8;left:0;top:0;width:220px;pointer-events:none;display:block;background:#f0b65c;color:#3f2c1b;padding:16px;box-shadow:0 12px 28px #35221955"></div>
 </body>
 </html>
