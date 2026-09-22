@@ -6,13 +6,13 @@
 <meta name="description" content="平歯車のモジュール・転位係数・圧力角・かみ合いピッチ円を歯形とアニメーションで学べる無料ツール">
 <title>歯車かみ合いラボ | My HTML Tools</title>
 <link rel="stylesheet" href="./style.css">
-<style>.worm-link{display:inline-flex;align-items:center;min-height:44px;padding:9px 13px;border:1px solid var(--accent);border-radius:10px;background:var(--wash);font-weight:800;text-decoration:none;margin:1px 0 8px}.worm-link:hover{text-decoration:underline}</style>
+<style>.worm-link{display:inline-flex;align-items:center;min-height:44px;padding:9px 13px;border:1px solid var(--accent);border-radius:10px;background:var(--wash);font-weight:800;text-decoration:none;margin:1px 0 8px}.worm-link:hover{text-decoration:underline}.gear-nav{display:flex;flex-wrap:wrap;gap:8px}</style>
 </head>
 <body>
 <main class="wrap">
 <header class="top"><a href="../../index.html">← ツール一覧</a><span class="pill">GEAR MESH LAB / 平歯車</span></header>
 <div class="heading"><div><p class="eyebrow">歯車のしくみを、動かして理解する。</p><h1>歯車かみ合いラボ</h1><p class="subtitle">歯数・モジュール・圧力角・転位を変え、歯形と5つの円、作用線を同時に観察。</p></div></div>
-<nav aria-label="歯車の種類"><a class="worm-link" href="./worm-3d/">ウォームギヤ 3Dラボ（1条・2条）を開く →</a></nav>
+<nav class="gear-nav" aria-label="歯車の種類"><a class="worm-link" href="./worm-3d/">ウォームギヤ 3Dラボ（1条・2条）を開く →</a><a class="worm-link" href="./worm-3d/axis-tilt.html">ウォーム軸の傾き 3D（17°など）を開く →</a></nav>
 <div class="presets" role="group" aria-label="例題を選択"><button type="button" data-preset="standard">標準歯車</button><button type="button" data-preset="small">小歯数と転位</button><button type="button" data-preset="pair">転位の配分</button><button type="button" data-preset="pressure">圧力角25°</button></div>
 <div id="error" role="alert" class="error" hidden></div>
 <div class="layout">
