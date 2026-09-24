@@ -2,9 +2,9 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#111827">
-  <meta name="description" content="スマートフォンのモーションセンサーで、物体に沿わせて移動した距離を概算する実験的な寸法測定ツールです。">
+  <meta name="description" content="スマートフォンを物に沿わせて一方向へ滑らせ、モーションセンサーから移動距離を概算する実験的な寸法測定ツールです。">
   <title>モーション寸法計 | My HTML Tools</title>
   <link rel="stylesheet" href="./style.css">
 </head>
@@ -13,22 +13,44 @@
     <header class="app-header">
       <a href="../../index.html">← ツール一覧</a>
       <div>
-        <p class="eyebrow">MOTION RULER / EXPERIMENTAL</p>
+        <p class="eyebrow">MOTION RULER / ONE DIRECTION</p>
         <h1>モーション寸法計</h1>
-        <p>スマホを物に当て、測りたい方向へそのまま滑らせて概算します。</p>
+        <p>始点から終点へ、1方向だけに滑らせて測ります。</p>
       </div>
     </header>
 
     <section class="notice-card" aria-label="重要な注意">
-      <strong>定規・ノギスの代わりにはなりません。</strong>
-      <span>加速度から距離を推定するため、短時間でも誤差が蓄積します。目安寸法の確認用です。</span>
+      <strong>定規・ノギスの代わりにはなりません</strong>
+      <span>加速度の二重積分による概算です。短時間・一方向・接触させたままの移動を前提にしています。</span>
+    </section>
+
+    <section class="ruler-card card" aria-labelledby="ruler-title">
+      <div class="card-head">
+        <div>
+          <p class="eyebrow">01 / RULER</p>
+          <h2 id="ruler-title">常時表示スケール</h2>
+        </div>
+        <span id="axisBadge" class="badge badge-wait">方向未設定</span>
+      </div>
+
+      <div class="reading" aria-live="polite">
+        <span id="phaseLabel" class="phase">センサー待ち</span>
+        <div class="big-value"><strong id="mainValue">0.0</strong><span>mm</span></div>
+        <p id="measureHint">モーションを有効化すると測定できます。</p>
+      </div>
+
+      <div class="ruler-shell">
+        <canvas id="rulerCanvas" width="760" height="190" role="img" aria-label="0ミリからの仮想定規。現在位置を固定指針で表示します。"></canvas>
+        <div class="ruler-pointer" aria-hidden="true"></div>
+      </div>
+      <p class="small muted">1 mm目盛り。指針の位置が現在の概算距離です。測定中は後戻り表示を抑えます。</p>
     </section>
 
     <section class="sensor-card card" aria-labelledby="sensor-title">
       <div class="card-head">
         <div>
-          <p class="eyebrow">01 / SENSOR</p>
-          <h2 id="sensor-title">センサー準備</h2>
+          <p class="eyebrow">02 / SENSOR</p>
+          <h2 id="sensor-title">センサー</h2>
         </div>
         <span id="sensorBadge" class="badge badge-wait">未接続</span>
       </div>
@@ -38,43 +60,30 @@
         <button id="retrySensor" class="secondary" type="button" hidden>再接続</button>
       </div>
       <details>
-        <summary>対応条件</summary>
-        <p class="muted small">iPhoneではHTTPS上で、ボタン操作からモーション権限を許可する必要があります。姿勢情報が取得できない端末では、測定中にスマホの向きを変えると誤差が増えます。</p>
+        <summary>使い方と対応条件</summary>
+        <p class="muted small">iPhoneではHTTPS上で、ボタン操作からモーション権限を許可する必要があります。スマホの向きは問いませんが、測定中に大きく回転させないでください。</p>
       </details>
     </section>
 
     <section class="measure-card card" aria-labelledby="measure-title">
       <div class="card-head">
         <div>
-          <p class="eyebrow">02 / MEASURE</p>
-          <h2 id="measure-title">測定</h2>
+          <p class="eyebrow">03 / MEASURE</p>
+          <h2 id="measure-title">1方向測定</h2>
         </div>
-        <label class="mode-field" for="modeSelect">モード
-          <select id="modeSelect">
-            <option value="straight">直線距離</option>
-            <option value="trace">なぞった距離</option>
-            <option value="xyz">XYZ成分</option>
-            <option value="box">3辺連続</option>
-          </select>
-        </label>
+        <span id="factorLabel" class="badge">補正 1.000×</span>
       </div>
 
-      <div class="measure-display" aria-live="polite">
-        <span id="phaseLabel" class="phase">センサー待ち</span>
-        <div class="big-value"><strong id="mainValue">—</strong><span id="mainUnit">mm</span></div>
-        <p id="measureHint">スマホの端を測定開始位置に当てます。</p>
-        <div id="calibrationProgress" class="progress" hidden><span></span></div>
-      </div>
-
+      <div id="calibrationProgress" class="progress" hidden><span></span></div>
       <div class="measure-actions">
         <button id="startMeasure" class="primary giant" type="button" disabled>測定開始</button>
-        <button id="stopMeasure" class="danger giant" type="button" hidden>測定終了</button>
+        <button id="stopMeasure" class="danger giant" type="button" hidden>終点で停止</button>
         <button id="measureAgain" class="secondary giant" type="button" hidden>もう一度測る</button>
       </div>
 
       <div id="liveMeta" class="live-meta" hidden>
         <div><span>経過</span><strong id="elapsedValue">0.00 s</strong></div>
-        <div><span>センサー</span><strong id="sourceValue">—</strong></div>
+        <div><span>測定軸</span><strong id="axisValue">—</strong></div>
         <div><span>姿勢補正</span><strong id="orientationValue">—</strong></div>
       </div>
     </section>
@@ -82,49 +91,25 @@
     <section id="resultCard" class="card" aria-labelledby="result-title" hidden>
       <div class="card-head">
         <div>
-          <p class="eyebrow">03 / RESULT</p>
+          <p class="eyebrow">04 / RESULT</p>
           <h2 id="result-title">測定結果</h2>
         </div>
         <span id="qualityBadge" class="badge">—</span>
       </div>
+      <div class="result-main"><strong id="resultValue">—</strong><span>mm</span></div>
       <p id="qualityText" class="muted"></p>
       <div class="metrics">
-        <div><span>直線距離</span><strong id="straightValue">—</strong><small>mm</small></div>
-        <div><span>なぞった距離</span><strong id="pathValue">—</strong><small>mm</small></div>
-        <div><span>横ぶれ RMS</span><strong id="sideValue">—</strong><small>mm</small></div>
         <div><span>測定時間</span><strong id="durationValue">—</strong><small>s</small></div>
+        <div><span>横方向ノイズ</span><strong id="sideValue">—</strong><small>m/s²</small></div>
+        <div><span>終端速度補正前</span><strong id="endVelocityValue">—</strong><small>m/s</small></div>
       </div>
-      <div class="xyz-grid" aria-label="XYZ移動量">
-        <div><span>X</span><strong id="xValue">—</strong><small>mm</small></div>
-        <div><span>Y</span><strong id="yValue">—</strong><small>mm</small></div>
-        <div><span>Z</span><strong id="zValue">—</strong><small>mm</small></div>
-      </div>
-      <div class="trace-wrap">
-        <canvas id="traceCanvas" width="720" height="300" role="img" aria-label="測定した移動軌跡の2次元投影"></canvas>
-        <p id="traceCaption" class="muted small">軌跡は移動量の大きい2軸へ投影して表示します。</p>
-      </div>
-    </section>
-
-    <section id="boxCard" class="card" aria-labelledby="box-title" hidden>
-      <div class="card-head">
-        <div><p class="eyebrow">BOX / 3 EDGES</p><h2 id="box-title">3辺連続測定</h2></div>
-        <button id="resetBox" class="text-button" type="button">リセット</button>
-      </div>
-      <div class="box-steps">
-        <div><span>A辺</span><strong id="edgeA">—</strong></div>
-        <div><span>B辺</span><strong id="edgeB">—</strong></div>
-        <div><span>C辺</span><strong id="edgeC">—</strong></div>
-      </div>
-      <p id="boxSummary" class="muted">A辺から順番に測定します。</p>
-      <button id="nextEdge" class="primary" type="button" hidden>次の辺を測る</button>
     </section>
 
     <section class="card" aria-labelledby="cal-title">
       <div class="card-head">
-        <div><p class="eyebrow">04 / CALIBRATION</p><h2 id="cal-title">長さ校正</h2></div>
-        <span id="factorLabel" class="badge">補正 1.000×</span>
+        <div><p class="eyebrow">05 / CALIBRATION</p><h2 id="cal-title">長さ校正</h2></div>
       </div>
-      <p class="muted">既知寸法を1回測り、直前の「直線距離」がその長さになるよう倍率補正します。倍率だけを補正するため、ドリフト自体は消えません。</p>
+      <p class="muted">既知寸法を測った直後に、実寸に合わせて倍率補正します。ドリフトそのものを消す機能ではありません。</p>
       <div class="cal-row">
         <label for="knownLength">既知寸法（mm）
           <input id="knownLength" type="number" min="10" max="2000" step="0.1" value="100" inputmode="decimal">
@@ -137,7 +122,7 @@
 
     <section class="card" aria-labelledby="history-title">
       <div class="card-head">
-        <div><p class="eyebrow">05 / HISTORY</p><h2 id="history-title">最近の測定</h2></div>
+        <div><p class="eyebrow">06 / HISTORY</p><h2 id="history-title">最近の測定</h2></div>
         <button id="clearHistory" class="text-button" type="button">履歴削除</button>
       </div>
       <ol id="historyList" class="history-list"></ol>
@@ -149,11 +134,11 @@
       <h2 id="howto-title">測り方</h2>
       <ol>
         <li>スマホの端を物体の始点に当てる。</li>
-        <li>「測定開始」を押したあと、約0.7秒そのまま静止する。</li>
-        <li>合図が出たら、測りたい方向へゆっくり1〜2秒で滑らせる。</li>
-        <li>終点でスマホを止め、0.2〜0.5秒待って「測定終了」を押す。</li>
+        <li>「測定開始」を押し、約0.6秒そのまま静止する。</li>
+        <li>始点から終点へ、向きを変えずに1秒前後で一方向に滑らせる。</li>
+        <li>終点でスマホを止め、「終点で停止」を押したら約0.4秒そのまま待つ。</li>
       </ol>
-      <p class="muted small">測定中にスマホを大きく回転させない方が安定します。机・壁・箱など、スマホを接触させたまま短距離を直線移動させる用途を想定しています。</p>
+      <p class="muted small">動き始めの方向を自動で測定軸として固定し、その後は軸以外の加速度を距離計算から除外します。</p>
     </section>
   </main>
 

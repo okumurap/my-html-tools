@@ -8,7 +8,6 @@
 
   const DEG = Math.PI / 180;
   const EPS = 1e-12;
-
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const add = (a, b) => ({ x: a.x + b.x, y: a.y + b.y, z: a.z + b.z });
   const sub = (a, b) => ({ x: a.x - b.x, y: a.y - b.y, z: a.z - b.z });
@@ -43,8 +42,7 @@
 
   function meanVector(vectors) {
     if (!vectors.length) return { x: 0, y: 0, z: 0 };
-    const sum = vectors.reduce((acc, v) => add(acc, v), { x: 0, y: 0, z: 0 });
-    return scale(sum, 1 / vectors.length);
+    return scale(vectors.reduce((sum, v) => add(sum, v), { x: 0, y: 0, z: 0 }), 1 / vectors.length);
   }
 
   function vectorStd(vectors, mean = meanVector(vectors)) {
@@ -56,139 +54,76 @@
     return Math.sqrt(variance);
   }
 
-  function dominantAxis(points) {
-    if (points.length < 2) return { x: 1, y: 0, z: 0 };
-    const center = meanVector(points);
-    const cov = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-    for (const p of points) {
-      const d = sub(p, center);
-      cov[0] += d.x * d.x; cov[1] += d.x * d.y; cov[2] += d.x * d.z;
-      cov[3] += d.y * d.x; cov[4] += d.y * d.y; cov[5] += d.y * d.z;
-      cov[6] += d.z * d.x; cov[7] += d.z * d.y; cov[8] += d.z * d.z;
+  function lockAxis(vectors) {
+    if (!vectors.length) return null;
+    let strongest = null;
+    let strongestMag = 0;
+    let weighted = { x: 0, y: 0, z: 0 };
+    for (const v of vectors) {
+      const mag = magnitude(v);
+      if (mag > strongestMag) { strongestMag = mag; strongest = v; }
+      if (mag > 0.08) weighted = add(weighted, scale(v, mag));
     }
-    let v = unit(sub(points[points.length - 1], points[0]));
-    for (let i = 0; i < 12; i += 1) {
-      const next = {
-        x: cov[0] * v.x + cov[1] * v.y + cov[2] * v.z,
-        y: cov[3] * v.x + cov[4] * v.y + cov[5] * v.z,
-        z: cov[6] * v.x + cov[7] * v.y + cov[8] * v.z
-      };
-      if (magnitude(next) < EPS) break;
-      v = unit(next);
-    }
-    const endDelta = sub(points[points.length - 1], points[0]);
-    return dot(v, endDelta) < 0 ? scale(v, -1) : v;
+    const basis = magnitude(weighted) > 0.02 ? weighted : strongest;
+    return basis && magnitude(basis) > 0.08 ? unit(basis) : null;
   }
 
-  function analyzePath(points) {
-    if (points.length < 2) {
-      return { axis: { x: 1, y: 0, z: 0 }, sideRms: 0, pathDistance: 0, finalVector: { x: 0, y: 0, z: 0 } };
-    }
-    const origin = points[0];
-    const axis = dominantAxis(points);
-    let sideSq = 0;
-    let pathDistance = 0;
-    for (let i = 0; i < points.length; i += 1) {
-      const rel = sub(points[i], origin);
-      const axial = scale(axis, dot(rel, axis));
-      const side = sub(rel, axial);
-      sideSq += dot(side, side);
-      if (i > 0) pathDistance += magnitude(sub(points[i], points[i - 1]));
-    }
-    return {
-      axis,
-      sideRms: Math.sqrt(sideSq / points.length),
-      pathDistance,
-      finalVector: sub(points[points.length - 1], origin)
-    };
-  }
-
-  function integrateSamples(samples, calibrationFactor = 1) {
+  function integrateAxisSamples(samples, axis, calibrationFactor = 1, endResidual = { x: 0, y: 0, z: 0 }) {
     const clean = (Array.isArray(samples) ? samples : [])
-      .filter(s => Number.isFinite(s?.t) && s?.a && Number.isFinite(s.a.x) && Number.isFinite(s.a.y) && Number.isFinite(s.a.z))
+      .filter(s => Number.isFinite(s?.t) && s?.a && [s.a.x, s.a.y, s.a.z].every(Number.isFinite))
       .sort((a, b) => a.t - b.t);
+    const safeAxis = unit(axis || { x: 1, y: 0, z: 0 });
     if (clean.length < 2) {
-      return {
-        duration: 0, rawStraightMm: 0, straightMm: 0, rawPathMm: 0, pathMm: 0,
-        finalVectorMm: { x: 0, y: 0, z: 0 }, rawEndVelocity: 0,
-        sideRmsMm: 0, axis: { x: 1, y: 0, z: 0 }, positions: [{ x: 0, y: 0, z: 0 }]
-      };
+      return { duration: 0, rawMm: 0, distanceMm: 0, rawEndVelocity: 0, sideAccelRms: 0, signedMeters: 0 };
     }
 
     const startT = clean[0].t;
     const duration = Math.max(0, clean[clean.length - 1].t - startT);
-    let velocity = { x: 0, y: 0, z: 0 };
-    const rawVelocities = [{ t: clean[0].t, v: velocity }];
-
-    for (let i = 1; i < clean.length; i += 1) {
-      const dt = clamp(clean[i].t - clean[i - 1].t, 0, 0.1);
-      const avgA = scale(add(clean[i - 1].a, clean[i].a), 0.5);
-      velocity = add(velocity, scale(avgA, dt));
-      rawVelocities.push({ t: clean[i].t, v: velocity });
-    }
-
-    const endV = rawVelocities[rawVelocities.length - 1].v;
-    const rawEndVelocity = magnitude(endV);
-    const corrected = rawVelocities.map(item => {
+    const projected = clean.map(item => {
       const ratio = duration > EPS ? clamp((item.t - startT) / duration, 0, 1) : 0;
-      return { t: item.t, v: sub(item.v, scale(endV, ratio)) };
+      const correctedA = sub(item.a, scale(endResidual, ratio));
+      const axial = dot(correctedA, safeAxis);
+      const side = sub(correctedA, scale(safeAxis, axial));
+      return { t: item.t, axial, sideMag: magnitude(side) };
     });
 
-    let position = { x: 0, y: 0, z: 0 };
-    const positions = [position];
-    for (let i = 1; i < corrected.length; i += 1) {
-      const dt = clamp(corrected[i].t - corrected[i - 1].t, 0, 0.1);
-      const avgV = scale(add(corrected[i - 1].v, corrected[i].v), 0.5);
-      position = add(position, scale(avgV, dt));
-      positions.push(position);
+    let velocity = 0;
+    const rawVelocities = [{ t: projected[0].t, v: 0 }];
+    for (let i = 1; i < projected.length; i += 1) {
+      const dt = clamp(projected[i].t - projected[i - 1].t, 0, 0.1);
+      const avgA = (projected[i - 1].axial + projected[i].axial) * 0.5;
+      velocity += avgA * dt;
+      rawVelocities.push({ t: projected[i].t, v: velocity });
     }
 
-    const path = analyzePath(positions);
-    const rawStraightMm = magnitude(path.finalVector) * 1000;
-    const rawPathMm = path.pathDistance * 1000;
-    const factor = Number.isFinite(calibrationFactor) ? clamp(calibrationFactor, 0.2, 5) : 1;
+    const rawEndVelocity = rawVelocities[rawVelocities.length - 1].v;
+    const correctedVelocities = rawVelocities.map(item => {
+      const ratio = duration > EPS ? clamp((item.t - startT) / duration, 0, 1) : 0;
+      return { t: item.t, v: item.v - rawEndVelocity * ratio };
+    });
 
+    let position = 0;
+    for (let i = 1; i < correctedVelocities.length; i += 1) {
+      const dt = clamp(correctedVelocities[i].t - correctedVelocities[i - 1].t, 0, 0.1);
+      position += (correctedVelocities[i - 1].v + correctedVelocities[i].v) * 0.5 * dt;
+    }
+
+    const sideAccelRms = Math.sqrt(projected.reduce((sum, item) => sum + item.sideMag ** 2, 0) / projected.length);
+    const factor = Number.isFinite(calibrationFactor) ? clamp(calibrationFactor, 0.2, 5) : 1;
+    const rawMm = Math.abs(position) * 1000;
     return {
       duration,
-      rawStraightMm,
-      straightMm: rawStraightMm * factor,
-      rawPathMm,
-      pathMm: rawPathMm * factor,
-      finalVectorMm: scale(path.finalVector, 1000 * factor),
-      rawEndVelocity,
-      sideRmsMm: path.sideRms * 1000 * factor,
-      axis: path.axis,
-      positions: positions.map(p => scale(p, 1000 * factor))
+      rawMm,
+      distanceMm: rawMm * factor,
+      rawEndVelocity: Math.abs(rawEndVelocity),
+      sideAccelRms,
+      signedMeters: position
     };
   }
 
-  function chooseProjection(points) {
-    if (!points.length) return { a: 'x', b: 'y' };
-    const mean = meanVector(points);
-    const variance = { x: 0, y: 0, z: 0 };
-    for (const p of points) {
-      variance.x += (p.x - mean.x) ** 2;
-      variance.y += (p.y - mean.y) ** 2;
-      variance.z += (p.z - mean.z) ** 2;
-    }
-    const axes = ['x', 'y', 'z'].sort((a, b) => variance[b] - variance[a]);
-    return { a: axes[0], b: axes[1] };
-  }
-
   return {
-    clamp,
-    add,
-    sub,
-    scale,
-    dot,
-    magnitude,
-    rotationMatrix,
-    rotateVector,
-    meanVector,
-    vectorStd,
-    dominantAxis,
-    analyzePath,
-    integrateSamples,
-    chooseProjection
+    clamp, add, sub, scale, dot, magnitude, unit,
+    rotationMatrix, rotateVector, meanVector, vectorStd,
+    lockAxis, integrateAxisSamples
   };
 });
