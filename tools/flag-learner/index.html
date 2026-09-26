@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="国旗クイズと世界地図で、国旗と国の場所を一緒に覚える学習ツールです。">
+  <meta name="theme-color" content="#f4f7fb">
+  <title>国旗覚える君</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">FLAG LEARNER</p>
+        <h1>国旗覚える君</h1>
+        <p class="subtitle">国旗と場所を、クイズ＋世界地図で覚える。</p>
+      </div>
+      <div class="progress-chip" aria-label="習得進捗">
+        <strong id="knownCount">0</strong><span>/195</span>
+        <small>覚えた</small>
+      </div>
+    </header>
+
+    <nav class="mode-tabs" role="tablist" aria-label="学習モード">
+      <button id="quizTab" type="button" role="tab" aria-selected="true" aria-controls="quizPanel">国旗クイズ</button>
+      <button id="mapTab" type="button" role="tab" aria-selected="false" aria-controls="mapPanel">地図で確認</button>
+    </nav>
+
+    <section id="quizPanel" class="panel" role="tabpanel" aria-labelledby="quizTab">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">10問チャレンジ</p>
+          <h2>4択でテンポよく覚える</h2>
+        </div>
+        <div class="quiz-score"><span>正解 <b id="quizCorrect">0</b></span><span>連続 <b id="quizStreak">0</b></span></div>
+      </div>
+
+      <div class="quiz-settings">
+        <label>問題形式
+          <select id="quizDirection">
+            <option value="flag-to-name">国旗 → 国名</option>
+            <option value="name-to-flag">国名 → 国旗</option>
+          </select>
+        </label>
+        <label>地域
+          <select id="quizRegion"></select>
+        </label>
+      </div>
+
+      <div class="quiz-card" id="quizCard">
+        <div class="quiz-meta"><span id="quizNumber">1 / 10</span><span id="quizRegionLabel"></span></div>
+        <div id="quizPrompt" class="quiz-prompt" aria-live="polite"></div>
+        <div id="quizChoices" class="quiz-choices"></div>
+        <p id="quizFeedback" class="feedback" aria-live="polite"></p>
+        <button id="nextQuestion" class="primary-button" type="button" hidden>次の問題</button>
+      </div>
+
+      <div id="quizResult" class="quiz-result" hidden>
+        <p class="eyebrow">RESULT</p>
+        <strong id="quizResultScore">0 / 10</strong>
+        <p id="quizResultText"></p>
+        <button id="restartQuiz" class="primary-button" type="button">もう10問</button>
+      </div>
+    </section>
+
+    <section id="mapPanel" class="panel map-panel" role="tabpanel" aria-labelledby="mapTab" hidden>
+      <div class="panel-head map-head">
+        <div>
+          <p class="eyebrow">WORLD MAP</p>
+          <h2>世界地図で国旗を確認</h2>
+        </div>
+        <label class="flag-toggle"><input id="showFlags" type="checkbox" checked> 国旗を表示</label>
+      </div>
+
+      <div class="map-controls">
+        <label class="search-field" for="countrySearch">国を検索
+          <input id="countrySearch" type="search" placeholder="日本 / Japan など" autocomplete="off" list="countrySuggestions">
+          <datalist id="countrySuggestions"></datalist>
+        </label>
+        <label>地域
+          <select id="mapRegion"></select>
+        </label>
+        <button id="searchButton" class="secondary-button" type="button">表示</button>
+      </div>
+
+      <div id="mapStatus" class="map-status" role="status" aria-live="polite">世界地図を読み込み中…</div>
+      <div class="map-frame">
+        <svg id="worldMap" viewBox="0 0 1000 500" role="img" aria-label="国をタップして国旗を確認できる世界地図">
+          <g id="countryLayer"></g>
+          <g id="flagLayer"></g>
+        </svg>
+        <div class="zoom-controls" aria-label="地図の拡大縮小">
+          <button id="zoomIn" type="button" aria-label="拡大">＋</button>
+          <button id="zoomOut" type="button" aria-label="縮小">−</button>
+          <button id="zoomReset" type="button" aria-label="全体表示">全体</button>
+        </div>
+      </div>
+      <p class="map-hint">国または国旗をタップすると詳細を表示。拡大すると小さい国の国旗も表示します。</p>
+
+      <article id="countryCard" class="country-card" hidden>
+        <div class="country-card__flag" id="countryFlag" aria-hidden="true">🇯🇵</div>
+        <div class="country-card__main">
+          <p id="countryRegion" class="eyebrow"></p>
+          <h3 id="countryName">日本</h3>
+          <p id="countryEnglish">Japan</p>
+          <div class="status-row" aria-label="習得状態">
+            <button type="button" data-status="none">未学習</button>
+            <button type="button" data-status="learning">練習中</button>
+            <button type="button" data-status="known">覚えた</button>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <footer class="app-footer">
+      <p>学習対象：国連加盟193か国＋国連オブザーバー2。記録はこの端末だけに保存します。</p>
+      <a href="../../index.html">← ツール一覧へ戻る</a>
+    </footer>
+  </main>
+
+  <script src="./script.js"></script>
+</body>
+</html>

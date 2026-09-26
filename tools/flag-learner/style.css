@@ -1,0 +1,53 @@
+:root{
+  color-scheme:light;
+  --bg:#f4f7fb;--panel:#fff;--panel-2:#f0f4f9;--text:#172033;--muted:#687386;
+  --line:#dbe3ee;--accent:#2563eb;--accent-soft:#eaf1ff;--good:#15803d;--bad:#c2410c;
+  --map:#dce7f4;--map-border:#fff;--map-dim:#edf2f7;--selected:#f59e0b;
+  --shadow:0 12px 32px rgba(24,39,75,.08);--safe-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root{color-scheme:dark;--bg:#10141c;--panel:#181e29;--panel-2:#202837;--text:#f4f7fb;--muted:#a5b0c0;
+    --line:#303a4b;--accent:#7aa2ff;--accent-soft:#1f315b;--map:#33445d;--map-border:#161d28;--map-dim:#222b38;
+    --selected:#fbbf24;--shadow:0 12px 32px rgba(0,0,0,.24)}
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;touch-action:manipulation}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Noto Sans JP",sans-serif;min-height:100svh}
+button,input,select{font:inherit}
+button{touch-action:manipulation}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 35%,transparent);outline-offset:2px}
+.app-shell{width:min(1040px,100%);margin:auto;padding:18px 14px calc(28px + var(--safe-bottom))}
+.app-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}.app-header>div:first-child{min-width:0;flex:1}
+.eyebrow{margin:0 0 5px;font-size:.72rem;letter-spacing:.12em;font-weight:850;color:var(--muted)}
+h1,h2,h3,p{overflow-wrap:anywhere}h1{margin:0;font-size:clamp(1.55rem,6vw,2.15rem)}h2{font-size:1.12rem;margin:0}h3{font-size:1.4rem;margin:2px 0 3px}
+.subtitle{margin:4px 0 0;color:var(--muted);font-size:.88rem}
+.progress-chip{flex:0 0 auto;min-width:82px;padding:8px 10px;border:1px solid var(--line);border-radius:14px;background:var(--panel);text-align:center;box-shadow:var(--shadow)}
+.progress-chip strong{font-size:1.3rem}.progress-chip span{color:var(--muted);font-size:.82rem}.progress-chip small{display:block;color:var(--muted);font-size:.68rem;margin-top:1px}
+.mode-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--panel-2);padding:4px;border-radius:14px;margin-bottom:14px}
+.mode-tabs button{min-height:46px;border:0;border-radius:11px;background:transparent;color:var(--muted);font-weight:800;cursor:pointer}
+.mode-tabs button[aria-selected="true"]{background:var(--panel);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow)}
+.panel-head{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-bottom:14px}.quiz-score{display:flex;gap:12px;color:var(--muted);font-size:.78rem}.quiz-score b{color:var(--text);font-size:.95rem}
+.quiz-settings,.map-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.quiz-settings label,.map-controls label{color:var(--muted);font-size:.76rem;font-weight:750}
+select,input[type="search"]{width:100%;height:44px;margin-top:5px;border:1px solid var(--line);border-radius:11px;background:var(--panel-2);color:var(--text);padding:0 11px}
+.quiz-card{border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--panel-2)}.quiz-meta{display:flex;justify-content:space-between;color:var(--muted);font-size:.76rem;font-weight:750}
+.quiz-prompt{min-height:120px;display:grid;place-items:center;text-align:center;font-weight:900;font-size:clamp(1.5rem,7vw,2.2rem);padding:14px 4px}.quiz-prompt .big-flag{font-size:clamp(4.2rem,20vw,7rem);line-height:1}
+.quiz-choices{display:grid;grid-template-columns:1fr 1fr;gap:9px}.choice{min-height:66px;border:1px solid var(--line);border-radius:13px;background:var(--panel);color:var(--text);font-weight:800;padding:8px;cursor:pointer}.choice .choice-flag{font-size:2rem;display:block}.choice.correct{border-color:var(--good);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--good) 28%,transparent)}.choice.wrong{border-color:var(--bad);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--bad) 28%,transparent)}.choice:disabled{cursor:default;opacity:1}
+.feedback{min-height:1.5em;margin:10px 0 0;font-size:.88rem;font-weight:800}.feedback.good{color:var(--good)}.feedback.bad{color:var(--bad)}
+.primary-button,.secondary-button{min-height:44px;border-radius:11px;font-weight:800;cursor:pointer}.primary-button{width:100%;border:0;background:var(--accent);color:#fff;margin-top:10px}.secondary-button{border:1px solid var(--line);background:var(--panel);color:var(--text);align-self:end}
+.quiz-result{text-align:center;padding:24px 8px}.quiz-result strong{display:block;font-size:2.5rem;margin:8px 0}.quiz-result p{color:var(--muted)}
+.flag-toggle{display:flex;align-items:center;gap:8px;font-size:.8rem;font-weight:750;color:var(--muted)}.flag-toggle input{width:20px;height:20px;accent-color:var(--accent)}
+.map-controls{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) auto;align-items:end}.search-field{min-width:0}.map-status{font-size:.8rem;color:var(--muted);min-height:1.4em;margin-bottom:8px}
+.map-frame{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:16px;background:linear-gradient(#dfefff,#eef7ff);touch-action:none;aspect-ratio:2/1;min-height:220px}
+@media (prefers-color-scheme:dark){.map-frame{background:linear-gradient(#15243a,#172033)}}
+#worldMap{display:block;width:100%;height:100%;user-select:none;-webkit-user-select:none}.country{fill:var(--map);stroke:var(--map-border);stroke-width:.65;vector-effect:non-scaling-stroke;cursor:pointer}.country.is-dim{fill:var(--map-dim);opacity:.45}.country.is-selected{fill:var(--selected);opacity:1}.country.is-known{filter:brightness(.9)}
+.flag-marker{font-size:18px;text-anchor:middle;dominant-baseline:central;cursor:pointer;paint-order:stroke;stroke:rgba(255,255,255,.72);stroke-width:2px;stroke-linejoin:round}.flag-marker.is-small{display:none}.map-frame.is-zoomed .flag-marker.is-small{display:block}.flag-marker.is-filtered{display:none}.flags-hidden .flag-marker{display:none!important}
+.zoom-controls{position:absolute;right:8px;bottom:8px;display:flex;gap:5px}.zoom-controls button{min-width:42px;height:40px;border:1px solid var(--line);border-radius:10px;background:color-mix(in srgb,var(--panel) 92%,transparent);color:var(--text);font-weight:850;box-shadow:0 3px 12px rgba(0,0,0,.08)}
+.map-hint{margin:8px 2px 0;color:var(--muted);font-size:.76rem;line-height:1.55}.country-card{display:flex;gap:14px;align-items:center;border:1px solid var(--line);border-radius:16px;background:var(--panel-2);padding:14px;margin-top:14px}.country-card__flag{font-size:clamp(3.8rem,16vw,6.5rem);line-height:1}.country-card__main{min-width:0;flex:1}.country-card__main>p:not(.eyebrow){margin:0;color:var(--muted)}
+.status-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.status-row button{min-height:38px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--text);padding:0 12px;font-size:.78rem;font-weight:800}.status-row button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.app-footer{text-align:center;color:var(--muted);font-size:.76rem;line-height:1.6;padding:16px 4px 0}.app-footer p{margin:0 0 8px}.app-footer a{color:inherit}
+@media (max-width:620px){
+  .app-shell{padding-left:10px;padding-right:10px}.panel{padding:13px;border-radius:16px}.panel-head{align-items:flex-start}.quiz-settings{grid-template-columns:1fr}.quiz-choices{grid-template-columns:1fr 1fr}.choice{min-height:72px}.map-controls{grid-template-columns:1fr 1fr}.map-controls .search-field{grid-column:1/-1}.map-controls .secondary-button{grid-column:1/-1}.map-frame{aspect-ratio:1.65/1}.country-card{align-items:flex-start}.country-card__flag{font-size:3.8rem}.status-row button{flex:1;min-width:76px}.map-head{align-items:center}
+}
+@media (max-width:360px){.app-header{align-items:flex-start}.progress-chip{min-width:72px}.quiz-choices{gap:7px}.choice{font-size:.84rem;padding:6px}.map-frame{min-height:210px}.status-row{gap:5px}.status-row button{padding:0 8px}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
