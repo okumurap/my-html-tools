@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="CSVを読み込み、欠損・重複・型不一致・日付形式・外れ値候補などをブラウザ内ですばやく点検します。">
+  <title>CSV Inspector | My HTML Tools</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="back-link" href="../../index.html">← ツール一覧</a>
+      <span class="privacy-note">端末内処理・外部送信なし</span>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">DATA QUALITY CHECK</p>
+      <h1>CSV Inspector</h1>
+      <p class="lead">「このCSVをそのまま計算に使っていい？」を、欠損・重複・型崩れ・日付形式・外れ値候補からすばやく確認します。</p>
+    </section>
+
+    <section class="panel input-panel" aria-labelledby="input-title">
+      <div class="section-heading">
+        <div>
+          <h2 id="input-title">CSVを読み込む</h2>
+          <p>PCはドラッグ＆ドロップ、スマートフォンはファイル選択または貼り付けで使えます。</p>
+        </div>
+        <button id="sample-button" class="button button--subtle" type="button">サンプルで試す</button>
+      </div>
+
+      <label id="drop-zone" class="drop-zone" for="file-input">
+        <input id="file-input" type="file" accept=".csv,.tsv,text/csv,text/tab-separated-values,text/plain">
+        <span class="drop-zone__title">CSV / TSV を選択</span>
+        <span class="drop-zone__sub">またはここへドラッグ＆ドロップ</span>
+        <span id="file-meta" class="drop-zone__meta">最大20 MBを目安にしてください</span>
+      </label>
+
+      <details class="paste-box">
+        <summary>CSVテキストを貼り付ける</summary>
+        <label for="paste-input">CSV / TSV</label>
+        <textarea id="paste-input" rows="7" spellcheck="false" placeholder="date,price,category&#10;2026-10-01,120,A&#10;2026-10-02,125,A"></textarea>
+        <button id="paste-button" class="button" type="button">貼り付け内容を検査</button>
+      </details>
+      <p id="input-error" class="message message--error" role="alert" hidden></p>
+    </section>
+
+    <section id="results" class="results" hidden aria-live="polite">
+      <section id="verdict" class="verdict" tabindex="-1">
+        <div>
+          <p class="verdict__label">計算前チェック</p>
+          <h2 id="verdict-title">解析中</h2>
+          <p id="verdict-detail"></p>
+        </div>
+        <button id="copy-summary" class="button button--subtle" type="button">結果をコピー</button>
+      </section>
+
+      <section class="metrics" aria-label="CSV概要">
+        <article class="metric"><span>データ行</span><strong id="metric-rows">0</strong></article>
+        <article class="metric"><span>列</span><strong id="metric-columns">0</strong></article>
+        <article class="metric"><span>空欄</span><strong id="metric-blanks">0</strong></article>
+        <article class="metric"><span>重複行</span><strong id="metric-duplicates">0</strong></article>
+        <article class="metric"><span>数値列の文字</span><strong id="metric-numeric-mismatch">0</strong></article>
+        <article class="metric"><span>日付形式不一致</span><strong id="metric-date-mismatch">0</strong></article>
+        <article class="metric"><span>外れ値候補</span><strong id="metric-outliers">0</strong></article>
+        <article class="metric"><span>構造エラー</span><strong id="metric-structure">0</strong></article>
+      </section>
+
+      <section class="panel" aria-labelledby="issues-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="issues-title">まず確認する異常</h2>
+            <p id="issues-summary">異常候補を行・列つきで表示します。</p>
+          </div>
+        </div>
+        <div id="issue-list" class="issue-list"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="columns-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="columns-title">列の自動推定</h2>
+            <p>型は値の割合から推定します。IDやコードなど、数値に見えても文字列として扱いたい列は最終的に分析側で指定してください。</p>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>列</th><th>推定型</th><th>空欄</th><th>異なる値</th><th>詳細</th></tr>
+            </thead>
+            <tbody id="column-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="meta-title">
+        <h2 id="meta-title">解析情報</h2>
+        <dl class="meta-grid">
+          <div><dt>区切り文字</dt><dd id="meta-delimiter">-</dd></div>
+          <div><dt>文字コード注意</dt><dd id="meta-encoding">-</dd></div>
+          <div><dt>空行</dt><dd id="meta-empty-rows">0</dd></div>
+          <div><dt>前後空白セル</dt><dd id="meta-whitespace">0</dd></div>
+        </dl>
+      </section>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="./script.js"></script>
+</body>
+</html>
