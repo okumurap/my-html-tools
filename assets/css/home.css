@@ -106,3 +106,6 @@
 @media (prefers-reduced-motion: reduce) {
   .favorite-button, .compact-toggle, .quick-link { transition: none; }
 }
+
+
+.tool-changes{grid-column:1/-1;padding:0 16px 12px;font-size:.82rem;overflow-wrap:anywhere}.tool-changes summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:700}.tool-changes p{margin:0;line-height:1.6}

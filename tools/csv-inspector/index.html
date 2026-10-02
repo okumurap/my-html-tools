@@ -31,6 +31,7 @@
         <button id="sample-button" class="button button--subtle" type="button">サンプルで試す</button>
       </div>
 
+      <label class="encoding-field" for="encoding">ファイルの文字コード <select id="encoding"><option value="utf-8">UTF-8</option><option value="shift_jis">Shift_JIS（Windows CSV）</option></select></label>
       <label id="drop-zone" class="drop-zone" for="file-input">
         <input id="file-input" type="file" accept=".csv,.tsv,text/csv,text/tab-separated-values,text/plain">
         <span class="drop-zone__title">CSV / TSV を選択</span>
@@ -47,6 +48,14 @@
       <p id="input-error" class="message message--error" role="alert" hidden></p>
     </section>
 
+    <section class="panel" aria-labelledby="rules-title">
+      <h2 id="rules-title">検査条件</h2>
+      <p class="muted">CSVを読み込むと列ごとに指定できます。一意キーを複数選ぶと組み合わせで検査します。空欄のキーはエラーです。列名で照合するため、列順が変わっても同じ条件を使えます。</p>
+      <details id="rules-details"><summary>列の型・必須・数値範囲・一意キーを設定</summary><div id="rule-list" class="rule-list"></div></details>
+      <div class="rule-actions"><button id="apply-rules" class="button" type="button">条件を適用して再検査</button><button id="clear-rules" class="button button--subtle" type="button">条件を解除</button></div>
+      <div class="preset-fields"><label for="preset-name">保存名<input id="preset-name" maxlength="60" placeholder="測定CSV用 / J-Quants用"></label><button id="save-preset" class="button button--subtle" type="button">条件を保存</button><label for="preset-select">保存した検査条件<select id="preset-select"><option value="">保存条件を選択</option></select></label><button id="load-preset" class="button button--subtle" type="button">条件を読み込む</button><button id="delete-preset" class="button button--subtle" type="button">保存条件を削除</button></div>
+      <p id="preset-status" class="muted" role="status">条件のみこのブラウザに保存します。CSV本体は保存しません。</p>
+    </section>
     <section id="results" class="results" hidden aria-live="polite">
       <section id="verdict" class="verdict" tabindex="-1">
         <div>
@@ -66,6 +75,8 @@
         <article class="metric"><span>日付形式不一致</span><strong id="metric-date-mismatch">0</strong></article>
         <article class="metric"><span>外れ値候補</span><strong id="metric-outliers">0</strong></article>
         <article class="metric"><span>構造エラー</span><strong id="metric-structure">0</strong></article>
+        <article class="metric"><span>列ルール違反</span><strong id="metric-rules">0</strong></article>
+        <article class="metric"><span>キー重複</span><strong id="metric-keys">0</strong></article>
       </section>
 
       <section class="panel" aria-labelledby="issues-title">
@@ -81,8 +92,8 @@
       <section class="panel" aria-labelledby="columns-title">
         <div class="section-heading">
           <div>
-            <h2 id="columns-title">列の自動推定</h2>
-            <p>型は値の割合から推定します。IDやコードなど、数値に見えても文字列として扱いたい列は最終的に分析側で指定してください。</p>
+            <h2 id="columns-title">列の型と検査結果</h2>
+            <p>自動では値の割合から推定します。「検査条件」で型を指定すると、その型で検査します。元のCSVの値は書き換えません。</p>
           </div>
         </div>
         <div class="table-scroll">
@@ -111,3 +122,4 @@
   <script src="./script.js"></script>
 </body>
 </html>
+

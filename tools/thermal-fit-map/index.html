@@ -9,6 +9,7 @@
 :root{color-scheme:light;--bg:#f3f6fa;--panel:#fff;--ink:#182538;--muted:#53657c;--line:#d6e0eb;--accent:#155f9e;--soft:#eaf3fc;--red:#c43c45;--amber:#a76a03;--blue:#286ab4;--green:#167750;--shadow:0 7px 24px #18355010}
 @media(prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#101824;--panel:#192534;--ink:#eef4fb;--muted:#b1c0d1;--line:#34465c;--accent:#8ac4ff;--soft:#253b50;--red:#ff858e;--amber:#ffc76a;--blue:#8dbfff;--green:#7bdfa9;--shadow:none}}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;line-height:1.55}a{color:var(--accent)}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}.wrap{max-width:1160px;margin:auto;padding:18px 14px 60px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.back{font-size:.87rem;text-decoration:none}.eyebrow{font-size:.77rem;font-weight:800;letter-spacing:.12em;color:var(--accent)}h1{font-size:clamp(1.5rem,4vw,2.25rem);margin:5px 0}h2{font-size:1.15rem;margin:0 0 12px}h3{font-size:1rem;margin:0 0 10px}.intro{color:var(--muted);margin:0 0 20px;font-size:.92rem}.layout{display:grid;grid-template-columns:minmax(290px,390px) minmax(0,1fr);gap:16px;align-items:start}.stack{display:grid;gap:16px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:17px;box-shadow:var(--shadow);min-width:0}.panelhead{display:flex;justify-content:space-between;gap:10px;align-items:center}.tag{display:inline-block;border:1px solid var(--line);background:var(--soft);padding:3px 9px;border-radius:99px;font-size:.72rem;font-weight:700;color:var(--accent)}.hint,.footnote{font-size:.78rem;color:var(--muted);margin:8px 0 0}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:12px}.field{display:flex;flex-direction:column;min-width:0;gap:4px}.field.wide{grid-column:1/-1}.field label{font-weight:650;font-size:.8rem}.field input,.field select{width:100%;min-width:0;min-height:44px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--ink);padding:8px 10px;font-variant-numeric:tabular-nums}.unit{color:var(--muted);font-size:.74rem}.split{border-top:1px dashed var(--line);margin:14px 0}.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.btn{border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--ink);padding:10px 13px;min-height:43px;font-weight:700}.btn.primary{background:var(--accent);color:var(--bg);border-color:var(--accent)}.btn.small{padding:7px 10px;min-height:38px;font-size:.85rem}.btn:disabled{opacity:.5;cursor:not-allowed}.error{border:1px solid var(--red);border-radius:10px;padding:11px;color:var(--red);background:var(--panel);margin-bottom:15px}.error[hidden],[hidden]{display:none!important}.summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.metric{border:1px solid var(--line);border-radius:11px;padding:12px;min-width:0}.metric small{display:block;color:var(--muted)}.metric strong{display:block;font-size:clamp(1.13rem,2.8vw,1.6rem);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.state{font-size:.73rem;font-weight:800;padding:4px 8px;border-radius:7px;display:inline-block}.state.interference{background:#c43c4525;color:var(--red)}.state.mixed{background:#dba12830;color:var(--amber)}.state.small{background:#286ab428;color:var(--blue)}.state.pass{background:#16775024;color:var(--green)}.condition-list{display:grid;gap:9px}.condition{border:1px solid var(--line);border-radius:12px;padding:12px}.condition-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.condition-top strong{font-size:.92rem}.condition-result{font-size:1.07rem;font-weight:800;font-variant-numeric:tabular-nums;margin:8px 0 2px}.condition-sub{color:var(--muted);font-size:.79rem}.condition-edit{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.condition-edit label{font-size:.75rem;color:var(--muted);display:block}.condition-edit input{width:100%;min-width:0;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:6px;min-height:40px}.maptools{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.maptools .field{width:125px;max-width:calc(50% - 5px)}.legend{display:flex;flex-wrap:wrap;gap:7px 14px;font-size:.76rem;color:var(--muted);margin:14px 0}.swatch{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:4px}.mapframe{min-width:0}.ylabel{font-weight:700;color:var(--muted);font-size:.82rem;margin-bottom:8px}.heatmap{display:grid;gap:3px;touch-action:manipulation}.maprow{display:grid;grid-template-columns:48px minmax(0,1fr);gap:8px;align-items:center;min-width:0}.ytick{text-align:right;font-size:.76rem;color:var(--muted);font-variant-numeric:tabular-nums}.mapcell{display:block;position:relative;width:100%;height:28px;min-height:28px;border:1px solid var(--line);border-radius:5px;padding:0;background:var(--soft);overflow:hidden}.mapcell.selected{outline:3px solid var(--ink);outline-offset:1px;z-index:1}.mapcell:focus-visible{outline:3px solid var(--ink);outline-offset:1px}.rangebar{position:absolute;top:5px;bottom:5px;border-radius:3px;min-width:3px;z-index:2}.rangebar.interference,.swatch.interference{background:#c83e49}.rangebar.mixed,.swatch.mixed{background:#dfab35}.rangebar.small,.swatch.small{background:#4d8dcf}.rangebar.pass,.swatch.pass{background:#249968}.swatch{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:4px}.reference-line{position:absolute;top:0;bottom:0;border-left:1px dashed var(--muted);opacity:.85;z-index:1;pointer-events:none}.reference-line.target-line{border-left:2px dotted var(--accent)}.xaxis{display:grid;grid-template-columns:48px minmax(0,1fr);gap:8px;color:var(--muted);font-size:.76rem;margin-top:7px}.xticks{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums}.axis-caption{text-align:center;font-size:.8rem;color:var(--muted);margin:5px 0 0 56px}.mapnote{font-size:.77rem;color:var(--muted);margin:7px 0 0}.mapnote strong{color:var(--ink)}.mapdetail{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:12px;font-size:.88rem}.inverse-box{border-left:4px solid var(--accent);background:var(--soft);padding:13px;border-radius:0 10px 10px 0;margin:14px 0}.inverse-box strong{font-variant-numeric:tabular-nums;font-size:clamp(1.25rem,3.3vw,1.75rem);display:block;overflow-wrap:anywhere}.tablewrap{overflow-x:auto}.results-table{width:100%;border-collapse:collapse;font-size:.82rem;white-space:nowrap}.results-table th,.results-table td{border-bottom:1px solid var(--line);padding:9px 7px;text-align:right;font-variant-numeric:tabular-nums}.results-table th:first-child,.results-table td:first-child{text-align:left}.storage{display:grid;gap:10px}.storage select,.storage input{width:100%;min-height:44px;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}.notice{border:1px solid var(--line);border-radius:12px;padding:15px;font-size:.82rem;color:var(--muted);background:var(--panel);margin-top:16px}.notice p{margin:6px 0}.statusline{min-height:1.3em;font-size:.78rem;color:var(--muted)}@media(max-width:790px){.layout{grid-template-columns:1fr}.panel{padding:14px}.wrap{padding:13px 11px 45px}}@media(max-width:370px){.summary{grid-template-columns:1fr}.condition-result{font-size:1rem}.heatmap{gap:1px}}@media print{body{background:#fff;color:#111}.layout{display:block}.panel{box-shadow:none;break-inside:avoid;margin:12px 0}.back,.storage,.maptools button,.notice{display:none!important}}
+.compare-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}.compare-card{min-width:0;background:var(--soft);padding:12px;border-radius:10px;overflow-wrap:anywhere}.compare-card p{margin:6px 0;font-size:.84rem}.compare-card h3{font-size:.95rem}.compare-card strong{font-variant-numeric:tabular-nums}.compare-table th,.compare-table td{white-space:normal;min-width:110px}#compareStatus{overflow-wrap:anywhere}.storage input[type=file]{max-width:100%;min-width:0}button{touch-action:manipulation}@media(max-width:480px){.compare-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -40,7 +41,7 @@
     <div class="split"></div><div class="field"><label for="target">必要な最小直径すきま <span class="unit">mm</span></label><input id="target" type="number" step="any" min="0" value="0.010"></div>
    </section>
    <section class="panel storage" aria-labelledby="save-title"><h2 id="save-title">条件保存・出力</h2><div class="field"><label for="caseName">保存名</label><input id="caseName" maxlength="60" placeholder="例：インサート組付け条件"></div><div class="row"><button type="button" class="btn primary" id="save">端末に保存</button><button type="button" class="btn" id="reset">例に戻す</button></div>
-    <div class="field"><label for="savedCases">保存した条件（最大12件）</label><select id="savedCases"><option value="">保存データを選択</option></select></div><div class="row"><button type="button" class="btn small" id="load">読み込む</button><button type="button" class="btn small" id="remove">削除</button><button type="button" class="btn small" id="csv">結果CSV</button></div><p id="saveStatus" class="statusline" role="status"></p><p class="hint">保存データはこの端末・ブラウザ内だけに残ります。入力値は送信しません。</p>
+    <div class="field"><label for="savedCases">保存した条件（最大12件）</label><select id="savedCases"><option value="">保存データを選択</option></select></div><div class="row"><button type="button" class="btn small" id="load">読み込む</button><button type="button" class="btn small" id="remove">削除</button><button type="button" class="btn small" id="csv">結果CSV</button></div><div class="row"><button id="exportCases" class="btn small" type="button">保存条件をJSON出力</button></div><label for="importCases">条件JSONを読み込む（既存条件は残します）</label><input id="importCases" type="file" accept=".json,application/json"><p class="hint">現在の入力は「端末に保存」してからJSON出力してください。</p><p id="saveStatus" class="statusline" role="status"></p><p class="hint">保存データはこの端末・ブラウザ内だけに残ります。入力値は送信しません。</p>
    </section>
   </div>
   <div class="stack">
@@ -50,6 +51,11 @@
     <div class="legend"><span><i class="swatch interference"></i>干渉確定</span><span><i class="swatch mixed"></i>公差次第</span><span><i class="swatch small"></i>目標未満</span><span><i class="swatch pass"></i>目標達成</span></div>
     <div class="mapframe"><div class="ylabel">インサート温度（℃） ↑ 上ほど高温</div><div id="heatmap" class="heatmap" role="group" aria-label="金型温度固定・インサート温度別の直径すきまマップ"></div></div><div class="xaxis"><span aria-hidden="true"></span><div class="xticks"><span id="xMin">—</span><span id="xMax">—</span></div></div><div class="axis-caption">直径すきま（mm） →</div><p class="mapnote">色付きの帯＝<strong>最小～最大すきま</strong>。破線＝0 mm（干渉境界）、点線＝設定した目標すきま。</p>
     <div id="mapDetail" class="mapdetail" role="status">帯をタップすると温度と最小・最大すきまを表示します。</div><p class="hint">インサート温度を10点に分割します。金型は固定温度。帯の色は公差の最悪組み合わせと目標すきまで判定します。</p>
+   </section>
+   <section class="panel" aria-labelledby="compare-title"><h2 id="compare-title">条件A / Bを比較</h2><p class="hint">Aを基準、Bを変更案として比較します。「現在の入力」は編集に追従します。差はB−Aです。温度境界は小数2桁に丸めた概算です。</p>
+    <div class="fields"><div class="field"><label for="compareA">A：基準条件</label><select id="compareA"></select></div><div class="field"><label for="compareB">B：変更条件</label><select id="compareB"></select></div></div>
+    <p id="compareStatus" class="hint" role="status"></p><div id="compareOverview" class="compare-grid"></div>
+    <div class="tablewrap"><table class="results-table compare-table"><thead><tr><th>温度条件</th><th>A 最小～最大 mm</th><th>B 最小～最大 mm</th><th>差 B−A 最小 / 最大 mm</th></tr></thead><tbody id="compareRows"></tbody></table></div>
    </section>
    <section class="panel" aria-labelledby="inverse-title"><h2 id="inverse-title">寸法・必要加熱温度を逆算</h2><div class="field"><label for="inverseCondition">評価する条件</label><select id="inverseCondition"><option value="all">全4条件で目標すきまを保証</option></select></div><div id="inverseResult" class="inverse-box" aria-live="polite"></div><p class="hint">凸径の上限を20℃基準で逆算します。公差幅を維持する場合は基準寸法を同じ量だけ変更してください。</p><div class="split"></div><div class="field"><label for="heatCondition">インサート必要温度を求める条件</label><select id="heatCondition"></select></div><div id="heatResult" class="inverse-box" aria-live="polite"></div></section>
    <section class="panel" aria-labelledby="table-title"><h2 id="table-title">詳細数値</h2><div class="tablewrap"><table class="results-table"><thead><tr><th>条件</th><th>穴 下限</th><th>穴 上限</th><th>軸 下限</th><th>軸 上限</th><th>最小すきま</th><th>最大すきま</th></tr></thead><tbody id="detailRows"></tbody></table></div><p class="hint">単位：すべて mm。各温度の自由膨張寸法を表示。</p></section>
@@ -126,13 +132,13 @@
  const text=(tag,value,className)=>{const el=document.createElement(tag);el.textContent=value;if(className)el.className=className;return el};
  function render(){
   const errors=validate();$('errors').hidden=errors.length===0;$('errors').textContent=errors.join(' ');
-  const outputs=['summary','conditionResults','heatmap','detailRows','inverseResult','heatResult'];
-  if(errors.length){outputs.forEach(id=>$(id).replaceChildren());$('mapDetail').textContent='入力値を確認してください。';return;}
+  const outputs=['summary','conditionResults','heatmap','detailRows','inverseResult','heatResult','compareOverview','compareRows'];
+  if(errors.length){outputs.forEach(id=>$(id).replaceChildren());$('mapDetail').textContent='入力値を確認してください。';$('compareStatus').textContent='入力エラーを修正してください。';return;}
   const v=read();
   $('holeBounds').textContent=`20℃ 内径：${fmt(v.holeNom+v.holeLower)} ～ ${fmt(v.holeNom+v.holeUpper)} mm`;
   $('shaftBounds').textContent=`20℃ 凸径：${fmt(v.shaftNom+v.shaftLower)} ～ ${fmt(v.shaftNom+v.shaftUpper)} mm`;
   const rows=v.conditions.map(c=>({...c,...calculate(v,c.hole,c.shaft)}));
-  renderSummary(rows,v);renderConditions(rows);renderMap(v);renderInverse(v,rows);renderTable(rows);
+  renderSummary(rows,v);renderConditions(rows);renderMap(v);renderInverse(v,rows);renderTable(rows);renderComparison();
  }
  function renderSummary(rows,v){
   const el=$('summary');el.replaceChildren();
@@ -189,20 +195,73 @@
  function renderTable(rows){const root=$('detailRows');root.replaceChildren();rows.forEach(r=>{const tr=document.createElement('tr');[r.name,r.hLow,r.hHigh,r.sLow,r.sHigh,r.min,r.max].forEach((value,i)=>tr.append(text('td',i===0?value:fmt(value,5))));root.append(tr)});}
  function saved(){try{const parsed=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(parsed)?parsed.filter(x=>x&&typeof x.name==='string'&&x.data):[];}catch{return[]}}
  function saveList(items){try{localStorage.setItem(KEY,JSON.stringify(items));return true}catch{$('saveStatus').textContent='保存できません。ブラウザの保存制限・空き容量を確認してください。';return false}}
- function refreshSaved(){const select=$('savedCases'),previous=select.value;select.replaceChildren(new Option('保存データを選択',''));saved().forEach(item=>select.add(new Option(item.name,item.name)));select.value=previous;}
+ function refreshSaved(){const select=$('savedCases'),previous=select.value;select.replaceChildren(new Option('保存データを選択',''));saved().forEach(item=>select.add(new Option(item.name,item.name)));select.value=previous;refreshComparisons();renderComparison();}
  function doSave(){if(validate().length){$('saveStatus').textContent='入力エラーがあるため保存できません。';return}const name=$('caseName').value.trim();if(!name){$('saveStatus').textContent='保存名を入力してください。';$('caseName').focus();return}
-  const items=saved().filter(x=>x.name!==name);items.unshift({name,data:read()});if(items.length>12)items.length=12;
+  const previous=saved();if(previous.some(x=>x.name===name)&&!confirm(`「${name}」を上書きしますか？`))return;const items=previous.filter(x=>x.name!==name);if(items.length>=12){$('saveStatus').textContent='保存は12件までです。不要な条件を削除してください。';return}items.unshift({name,data:read()});
   if(saveList(items)){$('saveStatus').textContent=`「${name}」を保存しました。`;refreshSaved();$('savedCases').value=name;}
  }
- function validStored(data){return data&&inputs.every(id=>id==='mapShaft'||Object.hasOwn(data,id))&&Array.isArray(data.conditions)&&data.conditions.length===4&&data.conditions.every(c=>c&&Number.isFinite(c.hole)&&Number.isFinite(c.shaft));}
- function doLoad(){const item=saved().find(x=>x.name===$('savedCases').value);if(!item){$('saveStatus').textContent='読み込む保存データを選択してください。';return}if(!validStored(item.data)){$('saveStatus').textContent='保存データの形式が不正です。';return}restore(item.data);$('caseName').value=item.name;$('saveStatus').textContent=`「${item.name}」を読み込みました。`}
+ // 旧形式ではmapShaftのみ欠ける場合がある。既存データは120℃で移行する。
+ function normalizeStored(data){
+  if(!data||!Array.isArray(data.conditions)||data.conditions.length!==4)throw new Error('条件データの形式が不正です。');
+  const v={...data,mapShaft:data.mapShaft??DEFAULT.mapShaft};
+  if(!inputs.every(id=>Object.hasOwn(v,id))||!numeric.every(id=>typeof v[id]==='number'&&Number.isFinite(v[id])))throw new Error('数値条件が不正です。');
+  if(!['scm','nak','custom'].includes(v.holeMaterial)||!['scm','nak','custom'].includes(v.shaftMaterial))throw new Error('材質条件が不正です。');
+  if(!['holeNom','shaftNom'].every(id=>numericRange(v[id],.001,10000))||!['holeAlpha','shaftAlpha','target'].every(id=>numericRange(v[id],0,100))||!['holeLower','holeUpper','shaftLower','shaftUpper'].every(id=>numericRange(v[id],-100,100))||!['mapShaft','mapMin','mapMax'].every(id=>numericRange(v[id],-50,300)))throw new Error('条件の数値が許容範囲外です。');
+  if(v.holeLower>v.holeUpper||v.shaftLower>v.shaftUpper||v.holeNom+v.holeLower<=0||v.shaftNom+v.shaftLower<=0||v.mapMin>=v.mapMax)throw new Error('寸法・公差・温度範囲の上下限が不正です。');
+  if(!v.conditions.every(c=>c&&numericRange(c.hole,-50,300)&&numericRange(c.shaft,-50,300)))throw new Error('温度条件が不正です。');
+  const result=Object.fromEntries(inputs.map(id=>[id,v[id]]));result.conditions=v.conditions.map((c,i)=>({name:names[i],hole:c.hole,shaft:c.shaft}));return result;
+ }
+ function validStored(data){try{normalizeStored(data);return true}catch{return false}}
+ function doLoad(){const item=saved().find(x=>x.name===$('savedCases').value);if(!item){$('saveStatus').textContent='読み込む保存データを選択してください。';return}if(!validStored(item.data)){$('saveStatus').textContent='保存データの形式が不正です。';return}restore(normalizeStored(item.data));$('caseName').value=item.name;$('saveStatus').textContent=`「${item.name}」を読み込みました。`}
  function doRemove(){const name=$('savedCases').value;if(!name){$('saveStatus').textContent='削除する保存データを選択してください。';return}if(!window.confirm(`「${name}」を削除しますか？`))return;const items=saved().filter(x=>x.name!==name);if(saveList(items)){refreshSaved();$('saveStatus').textContent=`「${name}」を削除しました。`}}
- function downloadCSV(){if(validate().length){$('saveStatus').textContent='入力エラーを修正してから出力してください。';return}const v=read();const rows=[['金型の熱膨張 × 公差マップ','20℃基準・直径すきま(mm)'],['項目','値'],...inputs.map(id=>[id,v[id]]),[],['条件','穴温度(℃)','軸温度(℃)','穴下限(mm)','穴上限(mm)','軸下限(mm)','最小すきま(mm)','最大すきま(mm)','判定']];
+ function downloadCSV(){if(validate().length){$('saveStatus').textContent='入力エラーを修正してから出力してください。';return}const v=read();const rows=[['金型の熱膨張 × 公差マップ','20℃基準・直径すきま(mm)'],['項目','値'],...inputs.map(id=>[id,v[id]]),[],['条件','穴温度(℃)','軸温度(℃)','穴下限(mm)','穴上限(mm)','軸下限(mm)','軸上限(mm)','最小すきま(mm)','最大すきま(mm)','判定']];
   v.conditions.forEach(c=>{const r=calculate(v,c.hole,c.shaft);rows.push([c.name,c.hole,c.shaft,r.hLow,r.hHigh,r.sLow,r.sHigh,r.min,r.max,stateLabels[r.kind]])});
   const csv='\ufeff'+rows.map(row=>row.map((cell,i)=>escapeCSV(typeof cell==='string'&&i===0&&/^[=+@]/.test(cell)?`'${cell}`:cell)).join(',')).join('\r\n');
   const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download='thermal-fit-results.csv';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);$('saveStatus').textContent='計算結果をCSVで出力しました。';
  }
- initConditions();restore(DEFAULT);refreshSaved();
+ function refreshComparisons(){
+  for(const id of ['compareA','compareB']){const node=$(id),old=node.value;node.replaceChildren(new Option('現在の入力','current'));saved().forEach(item=>node.add(new Option(item.name,`saved:${item.name}`)));node.value=[...node.options].some(o=>o.value===old)?old:'current';}
+ }
+ // 線膨張は温度に対して一次式。10点のサンプル間も解析的に境界を求める。
+ function temperatureRange(v,which,threshold,less){
+  const lo=v.mapMin,hi=v.mapMax,start=calculate(v,lo,v.mapShaft)[which],end=calculate(v,hi,v.mapShaft)[which];
+  const match=x=>less?x<threshold-1e-10:x>=threshold-1e-10;
+  if(match(start)&&match(end))return `${fmt(lo,2)} ～ ${fmt(hi,2)}℃（全域）`;
+  if(!match(start)&&!match(end))return '該当なし';
+  const t=lo+(threshold-start)*(hi-lo)/(end-start);
+  return less?`${fmt(lo,2)}℃以上 ～ ${fmt(t,2)}℃未満`:`${fmt(t,2)} ～ ${fmt(hi,2)}℃`;
+ }
+ function selectedCase(id){const key=$(id).value;if(key==='current'||!key)return{name:'現在の入力',data:read()};const item=saved().find(item=>item.name===key.slice(6));if(!item)throw new Error('比較する条件を選択してください。');return{name:item.name,data:normalizeStored(item.data)};}
+ function renderComparison(){
+  const root=$('compareOverview'),body=$('compareRows');root.replaceChildren();body.replaceChildren();
+  if(validate().length){$('compareStatus').textContent='入力エラーを修正してください。';return}
+  try{
+   const a=selectedCase('compareA'),b=selectedCase('compareB');
+   $('compareStatus').textContent=`A：${a.name} ／ B：${b.name}。各条件の温度・目標値を用いて計算します。`;
+   for(const [label,item] of [['A',a],['B',b]]){const v=item.data,card=text('div','','compare-card');card.append(text('h3',`${label}：${item.name}`),text('p',`内径 φ${fmt(v.holeNom,5)} / 凸径 φ${fmt(v.shaftNom,5)} mm`),text('p',`必要すきま ${fmt(v.target)} mm`),text('p',`金型 ${fmt(v.mapShaft,1)}℃固定 / インサート ${fmt(v.mapMin,1)}～${fmt(v.mapMax,1)}℃`),text('p',`干渉の可能性（最小＜0）：${temperatureRange(v,'min',0,true)}`),text('p',`干渉確定（最大＜0）：${temperatureRange(v,'max',0,true)}`),text('p',`目標達成（最小≧目標）：${temperatureRange(v,'min',v.target,false)}`));root.append(card);}
+   names.forEach((name,i)=>{const ca=a.data.conditions[i],cb=b.data.conditions[i],ra=calculate(a.data,ca.hole,ca.shaft),rb=calculate(b.data,cb.hole,cb.shaft),tr=document.createElement('tr');tr.append(text('td',name));
+    for(const [c,r] of [[ca,ra],[cb,rb]]){const td=text('td',`${signed(r.min)} ～ ${signed(r.max)} mm`);td.append(text('div',`穴 ${fmt(c.hole,1)}℃ / 軸 ${fmt(c.shaft,1)}℃`,'hint'),statusSpan(r.kind));tr.append(td)}tr.append(text('td',`${signed(rb.min-ra.min)} / ${signed(rb.max-ra.max)}`));body.append(tr);
+   });
+  }catch(e){root.replaceChildren();body.replaceChildren();$('compareStatus').textContent=e.message;}
+ }
+ function exportCases(){
+  try{const items=saved();if(!items.length)throw new Error('先に条件を端末に保存してください。');const cases=items.map(item=>({name:item.name,data:normalizeStored(item.data)}));
+   const url=URL.createObjectURL(new Blob([JSON.stringify({app:'thermal-fit-map',version:1,cases},null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='thermal-fit-conditions.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);$('saveStatus').textContent=`${cases.length}件の保存条件をJSON出力しました。`;
+  }catch(e){$('saveStatus').textContent=e.message;}
+ }
+ async function importCases(event){
+  try{const file=event.target.files[0];if(!file)return;if(file.size>1024*1024)throw new Error('条件JSONは1 MB以下にしてください。');const doc=JSON.parse(await file.text());
+   if(doc.app!=='thermal-fit-map'||doc.version!==1||!Array.isArray(doc.cases)||!doc.cases.length||doc.cases.length>12)throw new Error('対応する条件JSONではありません。');
+   const incoming=doc.cases.map(item=>{if(!item||typeof item.name!=='string'||!item.name.trim()||item.name.length>60)throw new Error('保存名が不正です。');return{name:item.name.trim(),data:normalizeStored(item.data)}});
+   const items=saved();if(items.length+incoming.length>12)throw new Error('読み込み後に12件を超えます。既存条件は変更していません。');
+   for(const item of incoming){let name=item.name,n=2;while(items.some(x=>x.name===name)){name=`${item.name.slice(0,48)} (${n++})`;}items.push({...item,name});}
+   if(saveList(items)){refreshSaved();$('saveStatus').textContent=`${incoming.length}件を追加しました。同名条件は別名で保存しました。`;}
+  }catch(e){$('saveStatus').textContent=`読み込めません：${e.message}`;}finally{event.target.value='';}
+ }
+ initConditions();refreshComparisons();restore(DEFAULT);refreshSaved();
+ ['compareA','compareB'].forEach(id=>$(id).addEventListener('change',renderComparison));
+ $('exportCases').addEventListener('click',exportCases);$('importCases').addEventListener('change',importCases);
+
  for(const id of inputs){$(id).addEventListener('input',render)}
  for(const side of ['hole','shaft']){$(`${side}Material`).addEventListener('change',()=>{const key=$(`${side}Material`).value;if(key!=='custom')$(`${side}Alpha`).value=PRESETS[key];render()});$(`${side}Alpha`).addEventListener('input',()=>{$(`${side}Material`).value='custom';render()});}
  ['inverseCondition','heatCondition'].forEach(id=>$(id).addEventListener('change',render));
