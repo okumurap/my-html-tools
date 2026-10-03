@@ -214,10 +214,12 @@ python3 -m http.server 8000
 1. `tools/<app-name>/` を作成します。
 2. フォルダ内に最低限 `index.html` を置きます。
 3. 必要に応じて `style.css`、`script.js`、`README.md` を追加します。
-4. ルートの `index.html` と、このREADMEのアプリ一覧にリンクと概要を追加します。
+4. `assets/js/catalog.js` の `tools` に一覧データを登録し、このREADMEのアプリ一覧にリンクと概要を追加します。一覧の構造を変えない限り、ルートの `index.html` へのリンク直書きは不要です。
 5. PCとスマートフォンの両方で表示と操作を確認します。
 
 パスはGitHub Pagesで動作するよう、`./tools/example-tool/` のような相対パスを使用します。
+
+作業ルールは [AGENTS.md](AGENTS.md) と [tools/AGENTS.md](tools/AGENTS.md)、テストの実行方法は [tests/README.md](tests/README.md)、雛形は [開発参考資料](docs/development-reference.md) を参照してください。
 
 ## デプロイ
 
