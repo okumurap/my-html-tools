@@ -15,6 +15,16 @@
   const FALLBACK_REGIONS = {
     AD:'Europe',AG:'North America',BS:'North America',BB:'North America',BH:'Asia',BZ:'North America',BN:'Asia',CV:'Africa',KM:'Africa',DM:'North America',GD:'North America',KI:'Oceania',KN:'North America',LC:'North America',LI:'Europe',LU:'Europe',MH:'Oceania',MT:'Europe',FM:'Oceania',PW:'Oceania',SM:'Europe',ST:'Africa',SC:'Africa',SG:'Asia',VC:'North America',WS:'Oceania',TO:'Oceania',TT:'North America',PS:'Asia',MV:'Asia',MC:'Europe',NR:'Oceania',TV:'Oceania',VA:'Europe'
   };
+  // Region fallback derived from the bundled Natural Earth dataset.
+  const MAP_REGIONS = Object.fromEntries([
+    ['Asia', 'AF AM AZ BH BD BT BN KH CN CY GE IN ID IR IQ IL JP JO KZ KP KR KW KG LA LB MY MN MM NP OM PK PH QA SA SG LK SY TJ TH TL TR TM AE UZ VN YE PS'],
+    ['Europe', 'AL AD AT BY BE BA BG HR CZ DK EE FI FR DE GR HU IS IE IT LV LI LT LU MT MD ME NL MK NO PL PT RO RU SM RS SK SI ES SE CH UA GB'],
+    ['Africa', 'DZ AO BJ BW BF BI CV CM CF TD KM CG CD CI DJ EG GQ ER SZ ET GA GM GH GN GW KE LS LR LY MG MW ML MR MU MA MZ NA NE NG RW ST SN SC SL SO ZA SS SD TZ TG TN UG ZM ZW'],
+    ['North America', 'AG BS BB BZ CA CR CU DM DO SV GD GT HT HN JM MX NI PA KN LC VC TT US'],
+    ['South America', 'AR BO BR CL CO EC GY PY PE SR UY VE'],
+    ['Oceania', 'AU FJ KI MH FM NZ PW PG WS SB TO VU']
+  ].flatMap(([region, codes]) => codes.split(' ').map(code => [code, region])));
+  const englishNames = typeof Intl.DisplayNames === 'function' ? new Intl.DisplayNames(['en'], {type:'region'}) : null;
   const regionNames = typeof Intl.DisplayNames === 'function' ? new Intl.DisplayNames(['ja'], {type:'region'}) : null;
   const countryByCode = new Map();
   const featureByCode = new Map();
@@ -33,7 +43,7 @@
   let state = loadState();
   function saveState(){
     try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-    catch(_){ $('mapStatus').textContent = '学習記録を保存できません。ブラウザの保存設定を確認してください。'; }
+    catch(_){ $('storageNotice').hidden=false; $('storageNotice').textContent = '学習記録を保存できません。この画面では続けられますが、閉じると今回の記録は失われます。'; }
   }
 
   function flagEmoji(code){ return /^[A-Z]{2}$/.test(code) ? String.fromCodePoint(...[...code].map(c => 127397 + c.charCodeAt(0))) : '🏳️'; }
@@ -50,14 +60,14 @@
   }
 
   function buildCountries(features){
-    TARGET_CODES.forEach(code => countryByCode.set(code, {code, nameJa:jaName(code), nameEn:code, region:FALLBACK_REGIONS[code] || ''}));
+    TARGET_CODES.forEach(code => countryByCode.set(code, {code, nameJa:jaName(code), nameEn:englishNames?.of(code)||code, region:FALLBACK_REGIONS[code] || MAP_REGIONS[code] || ''}));
     features.forEach(feature => {
       const code = normalizeFeatureCode(feature);
       if (!code) return;
       featureByCode.set(code, feature);
       const props = feature.properties || {};
       const current = countryByCode.get(code);
-      countryByCode.set(code, {...current, nameEn:props.name || current.nameEn, region:props.continent || current.region});
+      countryByCode.set(code, {...current, nameEn:englishNames?.of(code) || props.name || current.nameEn, region:current.region || props.continent});
     });
     Object.entries(EXTRA_POINTS).forEach(([code,point]) => {
       const current = countryByCode.get(code);
@@ -188,73 +198,175 @@
     return TARGET_CODES.find(code=>{ const c=countryByCode.get(code); return `${c.nameJa} ${c.nameEn} ${code}`.normalize('NFKC').toLocaleLowerCase('ja').includes(q); }) || '';
   }
 
-  function updateKnownCount(){ $('knownCount').textContent=TARGET_CODES.filter(code=>countryStatus(code)==='known').length; }
-
-  function setMode(mode){
-    const quiz=mode==='quiz'; $('quizTab').setAttribute('aria-selected',String(quiz)); $('mapTab').setAttribute('aria-selected',String(!quiz));
-    $('quizPanel').hidden=!quiz; $('mapPanel').hidden=quiz; if(!quiz) requestAnimationFrame(()=>setView(view));
+  const STATUS_LABELS = {none:'未学習', learning:'練習中', known:'覚えた'};
+  const node = (tag, className, text) => {
+    const element = document.createElement(tag);
+    if(className) element.className = className;
+    if(text !== undefined) element.textContent = text;
+    return element;
+  };
+  const normalized = text => String(text).normalize('NFKC').trim().toLocaleLowerCase('ja');
+  function renderAtlas(){
+    const query=normalized($('countrySearch').value);
+    const status=$('atlasStatus').value;
+    const codes=TARGET_CODES.filter(code=>{
+      const c=countryByCode.get(code);
+      return (activeMapRegion==='all'||c.region===activeMapRegion) && (status==='all'||countryStatus(code)===status) && normalized(`${c.nameJa} ${c.nameEn} ${code}`).includes(query);
+    }).sort((a,b)=>countryByCode.get(a).nameJa.localeCompare(countryByCode.get(b).nameJa,'ja'));
+    $('atlasCount').textContent=`${codes.length}か国`;
+    $('atlasEmpty').hidden=codes.length>0;
+    $('countryGrid').replaceChildren(...codes.map(code=>{
+      const button=node('button','country-tile'); button.type='button'; button.dataset.code=code;
+      button.setAttribute('aria-pressed',String(code===selectedCode));
+      button.append(node('span','tile-flag',flagEmoji(code)),node('span','tile-name',countryByCode.get(code).nameJa),node('span','tile-status',STATUS_LABELS[countryStatus(code)]));
+      return button;
+    }));
   }
-
-  let quiz={index:0,correct:0,streak:0,answered:false,questions:[]};
+  function updateKnownCount(){
+    const known=TARGET_CODES.filter(code=>countryStatus(code)==='known').length;
+    $('knownCount').textContent=known; $('knownProgress').value=known;
+    $('learningCount').textContent=TARGET_CODES.filter(code=>countryStatus(code)==='learning').length;
+    updateSetup();
+  }
+  function setMode(mode){
+    const isQuiz=mode==='quiz';
+    $('quizTab').setAttribute('aria-pressed',String(isQuiz)); $('mapTab').setAttribute('aria-pressed',String(!isQuiz));
+    $('quizPanel').hidden=!isQuiz; $('mapPanel').hidden=isQuiz;
+    $('resumeQuiz').hidden=!quiz.active;
+    if(!isQuiz){ renderAtlas(); requestAnimationFrame(()=>setView(view)); }
+  }
+  let quiz={active:false,index:0,correct:0,streak:0,answered:false,questions:[],mistakes:[],results:[]};
   function shuffled(list){ const a=[...list]; for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-  function quizPool(){ const region=$('quizRegion').value; const pool=TARGET_CODES.filter(code=>region==='all'||countryByCode.get(code).region===region); return pool.length>=4?pool:TARGET_CODES; }
-  function startQuiz(){ quiz={index:0,correct:0,streak:0,answered:false,questions:shuffled(quizPool()).slice(0,10)}; $('quizResult').hidden=true; $('quizCard').hidden=false; updateQuizScore(); renderQuestion(); }
+  function quizPool(){ return TARGET_CODES.filter(code=>$('quizRegion').value==='all'||countryByCode.get(code)?.region===$('quizRegion').value); }
+  function updateSetup(){
+    const pool=quizPool(); const review=pool.filter(code=>countryStatus(code)==='learning');
+    $('setupHint').textContent=`${pool.length}か国から ${Math.min(Number($('quizLength').value),pool.length)}問を出題`;
+    $('startQuiz').disabled=pool.length===0;
+    $('startReview').disabled=review.length===0;
+    $('startReview').textContent=review.length?`練習中の国を復習（${review.length}か国）`:'練習中の国はまだありません';
+  }
+  function showSetup(){
+    quiz.active=false; $('quizSetup').hidden=false; $('quizSession').hidden=true; updateSetup(); setMode('quiz'); $('startQuiz').focus();
+  }
+  function startQuiz(codes, review=false){
+    const pool=quizPool(); const questions=shuffled(codes||pool).slice(0,Number($('quizLength').value));
+    if(!questions.length) return;
+    quiz={active:true,index:0,correct:0,streak:0,answered:false,questions,mistakes:[],results:[],direction:$('quizDirection').value,pool,review};
+    $('quizSetup').hidden=true; $('quizSession').hidden=false; $('quizResult').hidden=true; $('quizCard').hidden=false;
+    setMode('quiz'); updateQuizScore(); renderQuestion();
+  }
   function updateQuizScore(){ $('quizCorrect').textContent=quiz.correct; $('quizStreak').textContent=quiz.streak; }
   function makeChoices(answer,pool){ const others=shuffled(pool.filter(code=>code!==answer)).slice(0,3); return shuffled([answer,...others]); }
   function renderQuestion(){
     const answer=quiz.questions[quiz.index]; if(!answer){ finishQuiz(); return; }
-    quiz.answered=false; $('nextQuestion').hidden=true; $('quizFeedback').textContent=''; $('quizFeedback').className='feedback';
-    $('quizNumber').textContent=`${quiz.index+1} / ${quiz.questions.length}`; const country=countryByCode.get(answer); $('quizRegionLabel').textContent=REGION_LABELS[country.region]||'';
-    const direction=$('quizDirection').value; const prompt=$('quizPrompt');
-    prompt.innerHTML=''; if(direction==='flag-to-name'){ const flag=document.createElement('span'); flag.className='big-flag'; flag.textContent=flagEmoji(answer); prompt.append(flag); } else { prompt.textContent=country.nameJa; }
-    const choices=makeChoices(answer,quizPool()); $('quizChoices').replaceChildren(...choices.map(code=>{
-      const button=document.createElement('button'); button.type='button'; button.className='choice'; button.dataset.code=code;
-      if(direction==='flag-to-name'){ button.textContent=countryByCode.get(code).nameJa; }
-      else { const flag=document.createElement('span'); flag.className='choice-flag'; flag.textContent=flagEmoji(code); const label=document.createElement('span'); label.textContent=countryByCode.get(code).nameJa; button.append(flag,label); }
+    quiz.answered=false; $('answerPanel').hidden=true; $('quizFeedback').textContent='';
+    $('quizNumber').textContent=`${quiz.index+1} / ${quiz.questions.length} 問`;
+    $('quizProgress').max=quiz.questions.length; $('quizProgress').value=quiz.index;
+    const country=countryByCode.get(answer);
+    $('quizRegionLabel').textContent=REGION_LABELS[country.region]||'';
+    $('questionInstruction').textContent=quiz.direction==='flag-to-name'?'この国旗は、どこの国？':'この国の国旗は、どれ？';
+    const prompt=$('quizPrompt'); prompt.replaceChildren();
+    if(quiz.direction==='flag-to-name'){
+      const flag=node('span','big-flag',flagEmoji(answer)); flag.setAttribute('role','img'); flag.setAttribute('aria-label','出題の国旗'); prompt.append(flag);
+    } else { prompt.textContent=country.nameJa; }
+    const choices=makeChoices(answer,quiz.pool.length>=4?quiz.pool:TARGET_CODES);
+    $('quizChoices').replaceChildren(...choices.map((code,index)=>{
+      const button=node('button','choice'); button.type='button'; button.dataset.code=code;
+      if(quiz.direction==='flag-to-name') button.textContent=countryByCode.get(code).nameJa;
+      else {
+        const flag=node('span','choice-flag',flagEmoji(code)); flag.setAttribute('aria-hidden','true');
+        button.append(flag); button.setAttribute('aria-label',`国旗の選択肢 ${index+1}`);
+      }
       return button;
     }));
+    $('questionInstruction').focus({preventScroll:true});
+    $('quizSession').scrollIntoView({block:'start'});
+  }
+  function refreshKnownButton(){
+    const known=countryStatus(quiz.questions[quiz.index])==='known';
+    $('markKnown').textContent=known?'✓ 覚えた（解除する）':'覚えたにする';
+    $('markKnown').setAttribute('aria-pressed',String(known));
   }
   function answerQuiz(code){
-    if(quiz.answered) return; quiz.answered=true; const answer=quiz.questions[quiz.index]; const ok=code===answer;
-    if(ok){quiz.correct++;quiz.streak++;}else{quiz.streak=0;if(countryStatus(answer)==='none')state.statuses[answer]='learning';saveState();}
-    updateQuizScore(); const answerCountry=countryByCode.get(answer); $('quizFeedback').textContent=ok?`正解！ ${answerCountry.nameJa}`:`正解は ${flagEmoji(answer)} ${answerCountry.nameJa}`; $('quizFeedback').className=`feedback ${ok?'good':'bad'}`;
-    $('quizChoices').querySelectorAll('.choice').forEach(button=>{button.disabled=true; if(button.dataset.code===answer)button.classList.add('correct'); else if(button.dataset.code===code&&!ok)button.classList.add('wrong');});
-    $('nextQuestion').hidden=false;
+    if(!quiz.active||quiz.answered||!quiz.questions[quiz.index]) return;
+    quiz.answered=true; const answer=quiz.questions[quiz.index]; const ok=code===answer;
+    quiz.results.push({code:answer,ok});
+    if(ok){ quiz.correct++; quiz.streak++; } else { quiz.streak=0; quiz.mistakes.push(answer); }
+    // A missed answer needs practice again, including countries previously marked known.
+    if(!ok||countryStatus(answer)==='none') state.statuses[answer]='learning';
+    saveState(); updateKnownCount(); updateQuizScore();
+    const c=countryByCode.get(answer);
+    $('quizFeedback').textContent=`${ok?'✓ 正解！':'もう一度覚えよう。正解は'} ${flagEmoji(answer)} ${c.nameJa}（${REGION_LABELS[c.region]||''}）`;
+    $('quizFeedback').className=`feedback ${ok?'good':'bad'}`;
+    $('quizChoices').querySelectorAll('.choice').forEach(button=>{
+      button.disabled=true;
+      if(quiz.direction==='name-to-flag'){
+        button.removeAttribute('aria-label'); button.append(node('span','choice-label',countryByCode.get(button.dataset.code).nameJa));
+      }
+      if(button.dataset.code===answer){ button.classList.add('correct'); button.append(node('span','choice-result','✓ 正解')); }
+      else if(button.dataset.code===code){button.classList.add('wrong');button.append(node('span','choice-result','×'));}
+    });
+    $('quizProgress').value=quiz.index+1;
+    refreshKnownButton(); $('answerPanel').hidden=false;
+    $('nextQuestion').textContent=quiz.index===quiz.questions.length-1?'結果を見る →':'次の問題 →';
+    $('nextQuestion').focus({preventScroll:true});
   }
   function finishQuiz(){
-    $('quizCard').hidden=true; $('quizResult').hidden=false; $('quizResultScore').textContent=`${quiz.correct} / ${quiz.questions.length}`;
-    $('quizResultText').textContent=quiz.correct===quiz.questions.length?'全問正解。かなり定着しています。':quiz.correct>=7?'いい感じ。間違えた国は「練習中」に入れました。':'地図で位置も一緒に確認すると覚えやすくなります。';
+    quiz.active=false; $('quizCard').hidden=true; $('quizResult').hidden=false;
+    $('quizResultScore').textContent=`${quiz.correct} / ${quiz.questions.length}`;
+    $('quizResultText').textContent=quiz.mistakes.length?`${quiz.mistakes.length}か国をもう一度。下の国を押すと、図鑑で確認できます。`:'全問正解！ 次は別の地域にも挑戦してみよう。';
+    $('retryMistakes').hidden=quiz.mistakes.length===0;
+    $('resultCountries').replaceChildren(...quiz.results.map(({code,ok})=>{
+      const button=node('button','result-country'); button.type='button'; button.dataset.code=code;
+      button.append(node('span','',flagEmoji(code)),node('span','',countryByCode.get(code).nameJa),node('small','',ok?'✓ 正解　↗':'要復習　↗')); return button;
+    }));
+    $('resultHeading').focus({preventScroll:true}); $('quizSession').scrollIntoView({block:'start'});
+  }
+  function openAtlasCountry(code){
+    activeMapRegion='all'; $('mapRegion').value='all'; $('countrySearch').value=''; $('atlasStatus').value='all';
+    setMode('map'); selectCountry(code,{focus:true}); renderAtlas(); $('countryCard').scrollIntoView({block:'start'});
   }
 
   function bindEvents(){
     $('quizTab').addEventListener('click',()=>setMode('quiz')); $('mapTab').addEventListener('click',()=>setMode('map'));
     $('quizChoices').addEventListener('click',e=>{const b=e.target.closest('.choice');if(b)answerQuiz(b.dataset.code);});
-    $('nextQuestion').addEventListener('click',()=>{quiz.index++;renderQuestion();}); $('restartQuiz').addEventListener('click',startQuiz);
-    $('quizDirection').addEventListener('change',startQuiz); $('quizRegion').addEventListener('change',startQuiz);
+    $('nextQuestion').addEventListener('click',()=>{quiz.index++;renderQuestion();}); $('restartQuiz').addEventListener('click',()=>startQuiz(quiz.review?quiz.questions:undefined,quiz.review));
+    $('startQuiz').addEventListener('click',()=>startQuiz());
+    $('startReview').addEventListener('click',()=>startQuiz(quizPool().filter(code=>countryStatus(code)==='learning'),true));
+    $('retryMistakes').addEventListener('click',()=>startQuiz(quiz.mistakes,true));
+    $('quizRegion').addEventListener('change',updateSetup); $('quizLength').addEventListener('change',updateSetup);
+    $('exitQuiz').addEventListener('click',()=>{if(!quiz.active||window.confirm('今回のクイズを終了して設定に戻りますか？ 習得記録は残ります。'))showSetup();});
+    $('resultHome').addEventListener('click',showSetup);
+    $('resumeQuiz').addEventListener('click',()=>setMode('quiz'));
+    $('answerMap').addEventListener('click',()=>{openAtlasCountry(quiz.questions[quiz.index]);document.querySelector('.map-disclosure').open=true;});
+    $('markKnown').addEventListener('click',()=>{const code=quiz.questions[quiz.index];state.statuses[code]=countryStatus(code)==='known'?'learning':'known';saveState();updateKnownCount();refreshKnownButton();refreshMapClasses();});
+    $('countryGrid').addEventListener('click',e=>{const b=e.target.closest('[data-code]');if(b){selectCountry(b.dataset.code,{focus:true});renderAtlas();$('countryCard').scrollIntoView({block:'start'});}});
+    $('resultCountries').addEventListener('click',e=>{const b=e.target.closest('[data-code]');if(b)openAtlasCountry(b.dataset.code);});
+    $('countrySearch').addEventListener('input',renderAtlas); $('atlasStatus').addEventListener('change',renderAtlas);
     $('showFlags').checked=state.showFlags; $('showFlags').addEventListener('change',()=>{state.showFlags=$('showFlags').checked;saveState();refreshMapClasses();});
-    $('mapRegion').addEventListener('change',()=>{activeMapRegion=$('mapRegion').value;refreshMapClasses();});
-    const runSearch=()=>{const code=findCountry($('countrySearch').value);if(code){selectCountry(code,{focus:true});$('mapStatus').textContent=`${countryByCode.get(code).nameJa} を表示しました。`;}else{$('mapStatus').textContent='該当する国が見つかりません。';}};
+    $('mapRegion').addEventListener('change',()=>{activeMapRegion=$('mapRegion').value;refreshMapClasses();renderAtlas();});
+    const runSearch=()=>{const code=findCountry($('countrySearch').value);if(code){openAtlasCountry(code);document.querySelector('.map-disclosure').open=true;$('mapStatus').textContent=`${countryByCode.get(code).nameJa} を表示しました。`;}else{document.querySelector('.map-disclosure').open=true;$('mapStatus').textContent='該当する国が見つかりません。';}};
     $('searchButton').addEventListener('click',runSearch); $('countrySearch').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();runSearch();}});
     $('countryLayer').addEventListener('click',e=>{if(suppressMapClick)return;const node=e.target.closest('[data-code]');if(node)selectCountry(node.dataset.code);});
     $('flagLayer').addEventListener('click',e=>{if(suppressMapClick)return;const node=e.target.closest('[data-code]');if(node)selectCountry(node.dataset.code);});
     $('worldMap').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.dataset.code){e.preventDefault();selectCountry(e.target.dataset.code,{focus:true});}});
-    $('countryCard').addEventListener('click',e=>{const b=e.target.closest('[data-status]');if(!b||!selectedCode)return;const next=b.dataset.status;if(next==='none')delete state.statuses[selectedCode];else state.statuses[selectedCode]=next;saveState();updateKnownCount();selectCountry(selectedCode);});
+    $('countryCard').addEventListener('click',e=>{const b=e.target.closest('[data-status]');if(!b||!selectedCode)return;const next=b.dataset.status;if(next==='none')delete state.statuses[selectedCode];else state.statuses[selectedCode]=next;saveState();updateKnownCount();selectCountry(selectedCode);renderAtlas();if(quiz.active&&quiz.answered)refreshKnownButton();});
     $('zoomIn').addEventListener('click',()=>zoom(.7)); $('zoomOut').addEventListener('click',()=>zoom(1.4)); $('zoomReset').addEventListener('click',()=>setView({x:0,y:0,w:1000,h:500}));
     const map=$('worldMap');
-    map.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,view:{...view},moved:false};map.setPointerCapture?.(e.pointerId);});
-    map.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const rect=map.getBoundingClientRect();const dx=(e.clientX-drag.x)/rect.width*drag.view.w,dy=(e.clientY-drag.y)/rect.height*drag.view.h;if(Math.abs(dx)+Math.abs(dy)>2)drag.moved=true;setView({...drag.view,x:drag.view.x-dx,y:drag.view.y-dy});});
+    map.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,view:{...view},moved:false};});
+    map.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const rect=map.getBoundingClientRect();const dx=(e.clientX-drag.x)/rect.width*drag.view.w,dy=(e.clientY-drag.y)/rect.height*drag.view.h;if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)>6){drag.moved=true;map.setPointerCapture?.(e.pointerId);}setView({...drag.view,x:drag.view.x-dx,y:drag.view.y-dy});});
     map.addEventListener('pointerup',e=>{if(drag?.id===e.pointerId){suppressMapClick=drag.moved;if(suppressMapClick)setTimeout(()=>{suppressMapClick=false;},0);drag=null;}}); map.addEventListener('pointercancel',()=>{drag=null;suppressMapClick=false;});
     map.addEventListener('wheel',e=>{e.preventDefault();const rect=map.getBoundingClientRect();const x=view.x+(e.clientX-rect.left)/rect.width*view.w;const y=view.y+(e.clientY-rect.top)/rect.height*view.h;zoom(e.deltaY>0?1.15:.85,x,y);},{passive:false});
   }
 
   async function init(){
-    populateRegionSelect($('quizRegion'),'全世界'); populateRegionSelect($('mapRegion'),'全世界'); bindEvents(); updateKnownCount();
+    populateRegionSelect($('quizRegion'),'全世界'); populateRegionSelect($('mapRegion'),'全世界'); buildCountries([]); initSuggestions(); bindEvents(); updateKnownCount(); renderAtlas();
     try{
       const response=await fetch('./world.geojson',{cache:'force-cache'}); if(!response.ok)throw new Error(`HTTP ${response.status}`); const geo=await response.json();
       if(!geo||!Array.isArray(geo.features))throw new Error('invalid geojson');
-      buildCountries(geo.features); initSuggestions(); renderMap(geo.features); $('mapStatus').textContent='国や国旗をタップして確認できます。'; startQuiz();
+      buildCountries(geo.features); initSuggestions(); renderMap(geo.features); $('mapStatus').textContent='国や国旗をタップして確認できます。'; updateSetup();
     }catch(_){
-      buildCountries([]); initSuggestions(); startQuiz(); $('mapStatus').textContent='世界地図を読み込めませんでした。通信またはファイル配置を確認してください。クイズは利用できます。';
+      buildCountries([]); initSuggestions(); updateSetup(); $('mapStatus').textContent='世界地図を読み込めませんでした。通信またはファイル配置を確認してください。クイズは利用できます。';
     }
   }
   init();
