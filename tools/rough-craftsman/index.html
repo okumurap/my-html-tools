@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f4f0e6">
+  <meta name="description" content="目分量の10cm、体内時計の5秒、勘の45度。3つの感覚を試して職人ランクを目指すミニゲーム。">
+  <title>だいたい職人 | 感覚の腕だめし</title>
+  <link rel="stylesheet" href="./style.css">
+  <script src="./math.js" defer></script>
+  <script src="./script.js" defer></script>
+</head>
+<body>
+  <div class="shell">
+    <header class="site-header"><a class="wordmark" href="./">だいたい職人<span>DAITAI WORKSHOP</span></a><a class="back-link" href="../../index.html">ツール一覧 ↗</a></header>
+    <main>
+      <section id="home" aria-labelledby="homeTitle">
+        <div class="hero-top"><span class="eyebrow">感覚の腕だめし / PROTOTYPE 01</span><span class="open-tag">本日も修行中</span></div>
+        <div class="hero"><div><h1 id="homeTitle">その感覚、<br><em>何級</em>ですか。</h1><p class="lead">道具を置いて、感覚だけで。<br>あなたの「だいたい」を試そう。</p></div><div class="hero-mark" aria-hidden="true"><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="88"/><path d="M40 140 L40 60 L155 140 Z"/><path class="mark-dash" d="M40 140 L135 45"/><circle class="mark-dot" cx="40" cy="140" r="6"/></svg><span>勘と経験で<br>やってます。</span></div></div>
+        <div class="challenge-list"><div><span class="number">01</span><strong>目分量</strong><span>10cmの線を引く</span><b aria-hidden="true">↔</b></div><div><span class="number">02</span><strong>体内時計</strong><span>5秒でぴたりと止める</span><b aria-hidden="true">◷</b></div><div><span class="number">03</span><strong>角度感覚</strong><span>45°のつもりで合わせる</span><b aria-hidden="true">∠</b></div></div>
+        <div class="start-row"><button class="primary" id="startBtn" type="button">腕だめしを始める <span>→</span></button><p>全3種目・1回およそ1分<br>目指せ、感覚の神職人。</p></div>
+        <div class="record-strip"><span>自己ベスト <strong id="bestHome">―</strong></span><span>修行回数 <strong id="playsHome">0</strong> 回</span></div>
+      </section>
+
+      <section id="game" hidden aria-labelledby="roundTitle">
+        <div class="round-top"><button id="quitBtn" class="text-button" type="button">← 修行をやめる</button><span id="roundCount" class="eyebrow">01 / 03</span></div>
+        <div class="round-progress" aria-label="修行の進み具合"><i></i><i></i><i></i></div>
+        <p id="roundCategory" class="eyebrow round-category"></p>
+        <h1 id="roundTitle" tabindex="-1"></h1><p id="roundHelp" class="round-help"></p>
+        <div id="drawingArea" class="workbench">
+          <span class="bench-label" aria-hidden="true">感覚作業台</span>
+          <svg id="board" viewBox="0 0 720 320" role="img" aria-label="線や角度を調整する作業台">
+            <defs><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="currentColor" stroke-opacity=".09"/></pattern></defs>
+            <rect width="720" height="320" fill="url(#grid)"/>
+            <g id="lengthDrawing"><line x1="36" y1="150" x2="684" y2="150" class="guide-line"/><line id="lengthTarget" x1="36" y1="150" x2="396" y2="150" class="target-line" hidden/><line id="lengthLine" x1="36" y1="150" x2="144" y2="150" class="draw-line"/><circle cx="36" cy="150" r="7" class="start-dot"/><circle id="lengthHandle" cx="144" cy="150" r="12" class="handle"/><g class="sample"><path d="M36 242v-8m0 4h36m0-4v8"/><text x="36" y="271">この幅が1cm</text></g></g>
+            <g id="angleDrawing" hidden><line x1="250" y1="265" x2="490" y2="265" class="guide-line"/><path d="M300 265A50 50 0 0 0 250 215" class="angle-arc"/><line id="angleTarget" x1="250" y1="265" x2="391.42" y2="123.58" class="target-line" hidden/><line id="angleLine" x1="250" y1="265" x2="443.19" y2="213.24" class="draw-line"/><circle cx="250" cy="265" r="7" class="start-dot"/><circle id="angleHandle" cx="443.19" cy="213.24" r="12" class="handle"/><text x="508" y="272" class="axis-label">水平 0°</text></g>
+          </svg>
+          <div class="bench-bottom"><span id="boardHint">点を左右にドラッグ</span><span><i class="ink-key"></i> あなたの感覚 <i class="target-key" hidden></i><span id="targetKey" hidden> 正解</span></span></div>
+        </div>
+        <div id="fineControls" class="fine-controls"><button id="minusBtn" type="button" aria-label="少し小さくする">−</button><span>タップで微調整<br><small>PCは ← → キーでもOK</small></span><button id="plusBtn" type="button" aria-label="少し大きくする">＋</button></div>
+        <div id="timerArea" class="timer-area" hidden><span class="timer-ring" id="timerRing" aria-hidden="true"><span>◷</span></span><p id="timerState" role="status">心の準備はできましたか？</p><p class="muted">数字は出ません。自分の時計を信じよう。</p></div>
+        <button class="primary game-action" id="judgeBtn" type="button">これで判定する →</button>
+        <div id="roundResult" class="round-result" hidden aria-live="polite"><div><p class="eyebrow">お見事？ それとも、だいたい？</p><h2 id="roundMessage"></h2><p id="roundActual"></p></div><strong id="roundScore"></strong></div>
+        <button id="nextBtn" class="primary game-action" type="button" hidden>次の修行へ →</button>
+        <p id="roundNote" class="small-note"></p>
+      </section>
+
+      <section id="result" hidden aria-labelledby="resultTitle">
+        <p class="eyebrow">本日の修行、これにて終了。</p><div class="result-heading"><div><h1 id="resultTitle" tabindex="-1">あなたの感覚は</h1><p id="rankName" class="rank-name"></p><p id="rankMessage"></p></div><div class="rank-seal" id="rankSeal" aria-hidden="true">認定</div></div>
+        <div class="total-score"><span>総合得点</span><strong id="totalScore">0</strong><span>/ 300点</span></div>
+        <p id="newBest" class="new-best" hidden>自己ベスト更新！ 今日の勘、さえています。</p>
+        <div id="scoreRows" class="score-rows"></div>
+        <div class="result-actions"><button id="replayBtn" class="primary" type="button">もう一度、腕だめし →</button><button id="copyBtn" class="secondary" type="button">結果をコピー</button><button id="homeBtn" class="text-button" type="button">はじめの画面へ</button></div>
+        <p id="copyStatus" class="small-note" role="status"></p><textarea id="copyFallback" aria-label="コピーする結果" readonly hidden></textarea>
+      </section>
+      <p id="gameNotice" class="notice" role="status" hidden></p>
+      <p id="storageNotice" class="notice" role="status" hidden></p>
+    </main>
+    <footer><p>だいたい、だから面白い。<br>長さは画面内の見本が基準です。実寸を測る道具ではありません。</p><div><span>記録はこのブラウザ内だけに保存</span><button class="text-button" id="resetRecordBtn" type="button">記録をリセット</button></div></footer>
+  </div>
+</body>
+</html>

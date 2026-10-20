@@ -41,3 +41,8 @@ Playwrightが通常のrequireで見つからない場合は `TEST_PLAYWRIGHT_MOD
 - 日本語フォントを使用したスクリーンショットで確認。ページ全体の意図しない横はみ出し、実行時エラーは確認した範囲でなし。
 - GitHub Pages相当の `/my-html-tools/` サブパスで検証。
 - iPhone Safari / Androidの実機は未確認。投資シミュレーターは説明のみ更新し、計算コードは変更・再検証していない。
+
+## だいたい職人
+
+採点の代表値・境界・ランク判定：`node tests/rough-craftsman.cjs`。
+ローカルHTTPサーバーとPlaywrightがある環境では `node tests/rough-craftsman.cjs --browser` で、4画面幅・3種目のタッチ入力・タイマー・結果・保存・再プレイを確認します。`TEST_BASE_URL`、`TEST_PLAYWRIGHT_MODULE`、`TEST_BROWSER_PATH`、`TEST_SCREENSHOT_DIR` に対応します。
