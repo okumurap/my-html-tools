@@ -151,19 +151,23 @@
       path.setAttribute('d',pathFromGeometry(feature.geometry)); path.setAttribute('class','country'); path.dataset.code=code;
       path.setAttribute('aria-label',c.nameJa); path.setAttribute('tabindex','0'); path.setAttribute('role','button');
       countryFrag.append(path); pathByCode.set(code,path);
-      const rep=representative(feature); createFlagMarker(code,rep.x,rep.y,rep.area < 48,flagFrag,ns);
+      const rep=representative(feature); createFlagMarker(code,rep.x,rep.y,flagFrag,ns);
     });
     Object.entries(EXTRA_POINTS).forEach(([code,[lon,lat]]) => {
-      if(markerByCode.has(code)) return; const [x,y]=project([lon,lat]); createFlagMarker(code,x,y,true,flagFrag,ns);
+      if(markerByCode.has(code)) return; const [x,y]=project([lon,lat]); createFlagMarker(code,x,y,flagFrag,ns);
     });
     countryLayer.replaceChildren(countryFrag); flagLayer.replaceChildren(flagFrag);
     refreshMapClasses();
   }
 
-  function createFlagMarker(code,x,y,isSmall,fragment,ns){
-    const marker=document.createElementNS(ns,'image'); marker.setAttribute('x',(x-10).toFixed(2)); marker.setAttribute('y',(y-7.5).toFixed(2));
-    marker.setAttribute('width','20'); marker.setAttribute('height','15'); marker.setAttribute('href',flagSource(code));
-    marker.setAttribute('class',`flag-marker${isSmall?' is-small':''}`); marker.dataset.code=code;
+  function createFlagMarker(code,x,y,fragment,ns){
+    const marker=document.createElementNS(ns,'g'); marker.setAttribute('transform',`translate(${x.toFixed(2)} ${y.toFixed(2)})`);
+    marker.setAttribute('class','flag-marker'); marker.dataset.code=code; marker.dataset.x=x; marker.dataset.y=y;
+    const line=document.createElementNS(ns,'line'); line.setAttribute('class','flag-leader');
+    const pin=document.createElementNS(ns,'circle'); pin.setAttribute('class','flag-pin');
+    const image=document.createElementNS(ns,'image'); image.setAttribute('href',flagSource(code));
+    image.setAttribute('aria-hidden','true');
+    marker.append(line,pin,image);
     marker.setAttribute('aria-label',`${countryByCode.get(code).nameJa}の国旗`); marker.setAttribute('role','button'); marker.setAttribute('tabindex','0');
     markerByCode.set(code,marker); fragment.append(marker);
   }
@@ -173,6 +177,7 @@
     const minW=250,maxW=1000; const w=Math.min(maxW,Math.max(minW,next.w)); const h=w/2;
     let x=Math.min(1000-w,Math.max(0,next.x)); let y=Math.min(500-h,Math.max(0,next.y));
     view={x,y,w,h}; $('worldMap').setAttribute('viewBox',`${x} ${y} ${w} ${h}`); $('worldMap').parentElement.classList.toggle('is-zoomed',w<720);
+    updateFlagMarkers();
   }
   function zoom(factor, centerX=view.x+view.w/2, centerY=view.y+view.h/2){
     const newW=view.w*factor; const ratio=newW/view.w; setView({w:newW,h:newW/2,x:centerX-(centerX-view.x)*ratio,y:centerY-(centerY-view.y)*ratio});
@@ -189,8 +194,27 @@
       const c=countryByCode.get(code); path.classList.toggle('is-dim',activeMapRegion!=='all'&&c.region!==activeMapRegion);
       path.classList.toggle('is-selected',code===selectedCode); path.classList.toggle('is-known',countryStatus(code)==='known');
     });
-    markerByCode.forEach((marker,code) => marker.classList.toggle('is-filtered',activeMapRegion!=='all'&&countryByCode.get(code).region!==activeMapRegion));
+    updateFlagMarkers();
     $('worldMap').classList.toggle('flags-hidden',!state.showFlags);
+  }
+
+  function updateFlagMarkers(){
+    // Show only the selected country, with a fixed screen-size flag above its location.
+    const unit=view.w/($('worldMap').clientWidth || 1000);
+    markerByCode.forEach((marker,code)=>{
+      const visible=code===selectedCode&&(activeMapRegion==='all'||countryByCode.get(code).region===activeMapRegion);
+      marker.classList.toggle('is-filtered',!visible);
+      marker.setAttribute('aria-hidden',String(!visible||!state.showFlags));
+      marker.setAttribute('tabindex',visible&&state.showFlags?'0':'-1');
+      const image=marker.querySelector('image');
+      const x=Number(marker.dataset.x),y=Number(marker.dataset.y);
+      const below=y-38*unit<view.y;
+      const offsetX=Math.max(view.x-x+2*unit,Math.min(-16*unit,view.x+view.w-x-34*unit));
+      image.setAttribute('x',offsetX); image.setAttribute('y',(below?14:-38)*unit);
+      image.setAttribute('width',32*unit); image.setAttribute('height',24*unit);
+      const pin=marker.querySelector('circle'); pin.setAttribute('r',3*unit);
+      const line=marker.querySelector('line'); line.setAttribute('y1',(below?14:-14)*unit); line.setAttribute('y2',(below?3:-3)*unit);
+    });
   }
 
   function selectCountry(code,{focus=false}={}){
@@ -363,6 +387,8 @@
     $('countryCard').addEventListener('click',e=>{const b=e.target.closest('[data-status]');if(!b||!selectedCode)return;const next=b.dataset.status;if(next==='none')delete state.statuses[selectedCode];else state.statuses[selectedCode]=next;saveState();updateKnownCount();selectCountry(selectedCode);renderAtlas();if(quiz.active&&quiz.answered)refreshKnownButton();});
     $('zoomIn').addEventListener('click',()=>zoom(.7)); $('zoomOut').addEventListener('click',()=>zoom(1.4)); $('zoomReset').addEventListener('click',()=>setView({x:0,y:0,w:1000,h:500}));
     const map=$('worldMap');
+    if(typeof ResizeObserver==='function') new ResizeObserver(updateFlagMarkers).observe(map);
+    else window.addEventListener('resize',updateFlagMarkers);
     map.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,view:{...view},moved:false};});
     map.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const rect=map.getBoundingClientRect();const dx=(e.clientX-drag.x)/rect.width*drag.view.w,dy=(e.clientY-drag.y)/rect.height*drag.view.h;if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)>6){drag.moved=true;map.setPointerCapture?.(e.pointerId);}setView({...drag.view,x:drag.view.x-dx,y:drag.view.y-dy});});
     map.addEventListener('pointerup',e=>{if(drag?.id===e.pointerId){suppressMapClick=drag.moved;if(suppressMapClick)setTimeout(()=>{suppressMapClick=false;},0);drag=null;}}); map.addEventListener('pointercancel',()=>{drag=null;suppressMapClick=false;});

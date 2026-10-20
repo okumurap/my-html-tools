@@ -930,3 +930,9 @@ img.tile-flag{width:48px;height:36px;margin:auto}
 .flag-postcards .flag-image{width:64px;height:48px}
 .result-country>.flag-image{width:40px;height:30px}
 .flag-marker{pointer-events:all}
+
+/* Keep the selected flag clear of the country outline and mark its exact location. */
+.flag-marker{stroke:none}
+.flag-marker .flag-leader{stroke:var(--text);stroke-width:1.5px;vector-effect:non-scaling-stroke}
+.flag-marker .flag-pin{fill:var(--selected);stroke:var(--text);stroke-width:1.5px;vector-effect:non-scaling-stroke}
+.map-frame{width:100%;min-width:0;min-height:0;aspect-ratio:auto;height:clamp(220px,45vw,480px)}

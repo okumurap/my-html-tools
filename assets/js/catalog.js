@@ -29,7 +29,7 @@
   ].map(([id, category, title, description, meta, action, created, updated]) =>
     ({ id, category, title, description, meta, action, created, updated, href: `./tools/${id}/` }));
   const changeNotes = {
-    'flag-learner': '2026-10-20：国旗を同梱SVGに変更し、Windows等でもクイズ・図鑑・地図に表示。',
+    'flag-learner': '2026-10-20：国旗を同梱SVGに変更。地図は選択中の国旗だけを表示し、点と線で位置を確認。',
     'table-editor': '2026-10-03：形式指定・プレビュー、再読込Undo、タップ操作、作業の保存・復元を追加。',
     'csv-inspector': '2026-10-03：列ルール・複合キー・検査条件保存・Shift_JIS読込を追加。',
     'thermal-fit-map': '2026-10-03：条件A/B比較、保存条件のJSON入出力を追加。',
@@ -210,4 +210,5 @@
   });
   render();
 })();
+
 

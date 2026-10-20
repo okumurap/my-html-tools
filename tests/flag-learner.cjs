@@ -72,12 +72,28 @@ const base = process.env.TEST_BASE_URL || 'http://localhost:8000';
     await click('mapTab');await page.locator('#countrySearch').fill('Japan');
     assert.equal(await page.locator('.country-tile').count(),1);await page.locator('.country-tile').click();
     await page.locator('[data-status="known"]').click();
+    // A location check must isolate its flag instead of covering nearby countries.
+    await page.locator('.map-disclosure').evaluate(details=>{details.open=true;});
+    assert.equal(await page.locator('#flagLayer .flag-marker:visible').count(),1);
+    assert.equal(await page.locator('#flagLayer .flag-marker:visible').getAttribute('data-code'),'JP');
+    assert.equal(await page.locator('#flagLayer .flag-pin:visible').count(),1);
+    await page.locator('#countrySearch').fill('Monaco');await click('searchButton');
+    for(const width of [320,375,768,1280]){
+      await page.setViewportSize({width,height:812});
+      assert.equal(await page.locator('#flagLayer .flag-marker:visible').count(),1);
+      assert.equal(await page.locator('#flagLayer .flag-marker:visible').getAttribute('data-code'),'MC');
+      await overflow();
+    }
+    await page.locator('#zoomReset').click();
+    assert.equal(await page.locator('#flagLayer .flag-marker:visible').getAttribute('data-code'),'MC');
+    await page.locator('#countrySearch').fill('Japan');await click('searchButton');
     assert.equal(await page.locator('#countryName').innerText(),'日本');
     await click('searchButton');
     const before=await page.locator('#worldMap').getAttribute('viewBox');await click('zoomIn');
     assert.notEqual(await page.locator('#worldMap').getAttribute('viewBox'),before);await click('zoomReset');
     assert.equal(await page.locator('#worldMap').getAttribute('viewBox'),'0 0 1000 500');
     await page.locator('#showFlags').uncheck();
+    assert.equal(await page.locator('#flagLayer .flag-marker:visible').count(),0);
     await page.locator('#countrySearch').fill('Germany');await click('searchButton');
     await page.locator('#countryLayer [data-code="DE"]').click();
     assert.equal(await page.locator('#countryName').innerText(),'ドイツ');
