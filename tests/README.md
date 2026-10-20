@@ -46,3 +46,8 @@ Playwrightが通常のrequireで見つからない場合は `TEST_PLAYWRIGHT_MOD
 
 採点の代表値・境界・ランク判定：`node tests/rough-craftsman.cjs`。
 ローカルHTTPサーバーとPlaywrightがある環境では `node tests/rough-craftsman.cjs --browser` で、4画面幅・3種目のタッチ入力・タイマー・結果・保存・再プレイを確認します。`TEST_BASE_URL`、`TEST_PLAYWRIGHT_MODULE`、`TEST_BROWSER_PATH`、`TEST_SCREENSHOT_DIR` に対応します。
+
+## S電鉄 スマホ表示・速度推移
+
+ローカルHTTPサーバーとPlaywrightを用意し `node tests/sakamoto-railway.cjs`。`TEST_BASE_URL`、`TEST_PLAYWRIGHT_MODULE`、`TEST_BROWSER_PATH`、`TEST_SCREENSHOT_DIR` に対応します。
+320/375/768/1280pxと横向きで表示・操作を確認し、運転・ドア・非常制動・再開、グラフのズーム・タッチスクロール・追従切替・折りたたみを検証します。グラフ位置の境界確認にはDOM入力の固定値0/50/100%を使用し、運転物理の実測とは区別します。

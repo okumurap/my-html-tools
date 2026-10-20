@@ -29,12 +29,46 @@
   $('.speed-chart-wrap', speedMap)?.remove();
   const chart = document.createElement('div');
   chart.className = 'speed-chart-wrap';
-  chart.innerHTML = '<div class="speed-chart-head"><div class="speed-chart-legend"><span class="speed-chart-key">実速度</span><span class="speed-chart-key limit">制限速度</span></div><strong class="speed-chart-now">0 / 35 km/h</strong></div><canvas class="speed-chart-canvas" aria-label="路線距離ごとの実速度、制限速度、駅位置グラフ"></canvas>';
+  chart.innerHTML = `<div class="speed-chart-head"><div class="speed-chart-legend"><span class="speed-chart-key">実速度</span><span class="speed-chart-key limit">制限速度</span><span class="speed-chart-key position">現在地</span></div><strong class="speed-chart-now">0 / 35 km/h</strong></div>
+    <div class="speed-chart-tools"><label>表示区間<select class="speed-chart-zoom" aria-label="速度推移の拡大率"><option value="1">全線</option><option value="2">区間 2倍</option><option value="4">詳細 4倍</option></select></label><button type="button" class="speed-chart-follow" aria-pressed="true">現在地を追う</button></div>
+    <div class="speed-chart-plot"><div class="speed-chart-axis" aria-hidden="true"><span data-speed="80">80</span><span data-speed="60">60</span><span data-speed="40">40</span><span data-speed="20">20</span><span data-speed="0">0</span></div><div class="speed-chart-viewport" tabindex="0" role="region" aria-label="速度推移グラフ。拡大後は左右へスクロールできます"><canvas class="speed-chart-canvas" role="img" aria-label="路線距離ごとの実速度、制限速度、駅位置グラフ"></canvas></div></div>
+    <div class="speed-chart-footer"><span class="speed-chart-range">表示 0.0–4.2 km</span><span>左右へ動かすと追従を停止</span></div>`;
   speedMap.append(chart);
 
   const graph = $('.speed-chart-canvas', chart);
   const ctx = graph.getContext('2d');
   const nowLabel = $('.speed-chart-now', chart);
+  const viewport=$('.speed-chart-viewport',chart),zoomSelect=$('.speed-chart-zoom',chart),followButton=$('.speed-chart-follow',chart);
+  const rangeLabel=$('.speed-chart-range',chart),axisLabels=[...chart.querySelectorAll('.speed-chart-axis span')];
+  let zoomLevel=1,following=true,lastDrawTime=-Infinity;
+  function setFollowing(value){following=value;followButton.setAttribute('aria-pressed',String(value));}
+  function updateRange(){
+    const width=graph.getBoundingClientRect().width;
+    if(!width||!viewport.clientWidth)return;
+    const plot=Math.max(1,width-16);
+    const from=clamp((viewport.scrollLeft-8)/plot,0,1)*routeLength;
+    const to=clamp((viewport.scrollLeft+viewport.clientWidth-8)/plot,0,1)*routeLength;
+    rangeLabel.textContent=`表示 ${(from/1000).toFixed(1)}–${(to/1000).toFixed(1)} km`;
+  }
+  function followPosition(){
+    if(!following||!viewport.clientWidth)return;
+    const width=graph.getBoundingClientRect().width;
+    viewport.scrollLeft=clamp(8+routePosition()/routeLength*(width-16)-viewport.clientWidth*.4,0,Math.max(0,width-viewport.clientWidth));
+    updateRange();
+  }
+  zoomSelect.addEventListener('change',()=>{
+    const oldWidth=graph.getBoundingClientRect().width;
+    const center=(viewport.scrollLeft+viewport.clientWidth/2)/Math.max(1,oldWidth);
+    zoomLevel=Number(zoomSelect.value);viewport.style.setProperty('--chart-width',`${zoomLevel*100}%`);
+    if(following)followPosition();else viewport.scrollLeft=center*graph.getBoundingClientRect().width-viewport.clientWidth/2;
+    updateRange();draw();
+  });
+  followButton.addEventListener('click',()=>{setFollowing(!following);if(following)followPosition();});
+  viewport.addEventListener('pointerdown',()=>setFollowing(false));
+  viewport.addEventListener('wheel',()=>setFollowing(false),{passive:true});
+  viewport.addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight','Home','End','PageUp','PageDown'].includes(event.key))setFollowing(false);});
+  viewport.addEventListener('scroll',updateRange,{passive:true});
+  if(typeof ResizeObserver==='function')new ResizeObserver(()=>{if(viewport.clientWidth){followPosition();updateRange();draw();}}).observe(viewport);
   const samples = [{ pos: 0, speed: 0 }];
   let lastSamplePos = 0;
   let lastSampleTime = 0;
@@ -43,7 +77,7 @@
   function resize() {
     const rect = graph.getBoundingClientRect();
     const dpr = Math.min(devicePixelRatio || 1, 2);
-    const w = Math.max(300, Math.round(rect.width * dpr));
+    const w = Math.max(80, Math.round(rect.width * dpr));
     const h = Math.max(120, Math.round(rect.height * dpr));
     if (graph.width !== w || graph.height !== h) {
       graph.width = w;
@@ -53,13 +87,15 @@
   }
 
   function draw() {
+    if(!graph.getClientRects().length)return;
     const { w, h, dpr } = resize();
-    const pad = { l: 32 * dpr, r: 10 * dpr, t: 23 * dpr, b: 20 * dpr };
+    const pad = { l: 8 * dpr, r: 8 * dpr, t: 30 * dpr, b: 24 * dpr };
     const pw = w - pad.l - pad.r;
     const ph = h - pad.t - pad.b;
     const x = p => pad.l + p / routeLength * pw;
     const y = v => pad.t + (1 - clamp(v, 0, 80) / 80) * ph;
 
+    axisLabels.forEach(label=>{label.style.top=`${y(Number(label.dataset.speed))/dpr}px`;});
     ctx.clearRect(0, 0, w, h);
     ctx.strokeStyle = 'rgba(255,255,255,.16)';
     ctx.lineWidth = dpr;
@@ -72,14 +108,14 @@
       ctx.moveTo(pad.l, y(v));
       ctx.lineTo(w - pad.r, y(v));
       ctx.stroke();
-      ctx.fillText(String(v), pad.l - 5 * dpr, y(v));
+
     });
 
     ctx.save();
     ctx.setLineDash([3 * dpr, 4 * dpr]);
     ctx.strokeStyle = 'rgba(255,255,255,.42)';
     ctx.fillStyle = 'rgba(240,247,250,.88)';
-    ctx.font = `700 ${7.5 * dpr}px sans-serif`;
+    ctx.font = `700 ${11 * dpr}px sans-serif`;
     ctx.textBaseline = 'top';
     stations.forEach((station, index) => {
       const sx = x(station.pos);
@@ -125,7 +161,10 @@
     ctx.fillStyle = 'rgba(230,240,245,.72)';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    [['0', 0], ['1.4', 1400], ['2.9', 2900], ['4.2km', 4200]].forEach(([label, p]) => ctx.fillText(label, x(p), h - 15 * dpr));
+    ctx.font=`${10*dpr}px sans-serif`;
+    const ticks=zoomLevel===1?[0,1400,2900,4200]:[0,500,1000,1500,2000,2500,3000,3500,4000,4200];
+    ticks.forEach((p,index)=>{ctx.textAlign=index===0?'left':index===ticks.length-1?'right':'center';ctx.fillText(`${(p/1000).toFixed(1)}`,x(p),h-17*dpr);});
+    followPosition();updateRange();
   }
 
   function tick(now) {
@@ -145,9 +184,14 @@
       lastSamplePos = pos;
       lastSampleTime = now;
     }
-    draw();
+    if(now-lastDrawTime>=60){draw();lastDrawTime=now;}
     requestAnimationFrame(tick);
   }
 
+  function clearHistory(){
+    samples.length=1;samples[0]={pos:0,speed:0};lastSamplePos=0;lastSampleTime=0;
+    setFollowing(true);viewport.scrollLeft=0;updateRange();
+  }
+  document.querySelectorAll('#resetBtn,#retryBtn').forEach(button=>button.addEventListener('click',clearHistory));
   requestAnimationFrame(tick);
 })();

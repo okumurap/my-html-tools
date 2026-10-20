@@ -1,29 +1,28 @@
 (() => {
   'use strict';
-  const scene = document.querySelector('.scene-wrap');
-  const hudLeft = document.querySelector('.hud-left');
-  const speedCenter = document.querySelector('.speed-center');
-  const speedometer = document.querySelector('.speedometer');
-  const meterCluster = document.querySelector('.meter-cluster');
-  const statusBadge = document.querySelector('#statusBadge');
+  const $=selector=>document.querySelector(selector);
+  const scene=$('.scene-wrap');
+  const speed=$('.speed-center'),limit=$('.limit-row');
+  const next=$('#nextStation'),distance=$('.distance-row'),clock=$('#clock'),status=$('#statusBadge');
+  document.querySelectorAll('.curve-ground-cover,.curve-overlay,.curve-badge').forEach(el=>el.remove());
 
-  document.querySelectorAll('.curve-ground-cover,.curve-overlay,.curve-badge').forEach(el => el.remove());
-
-  if (scene && hudLeft && speedCenter && !document.querySelector('.hud-speed')) {
-    const speedBox = document.createElement('div');
-    speedBox.className = 'hud-speed';
-    speedBox.innerHTML = '<span class="hud-speed-label">速度</span>';
-    speedBox.append(speedCenter);
-    hudLeft.insertBefore(speedBox, hudLeft.firstChild);
+  // Move instruments below the view, leaving the sky and track unobstructed.
+  if(scene&&speed&&next&&clock&&!$('.drive-readout')){
+    const readout=document.createElement('section');readout.className='drive-readout';readout.setAttribute('aria-label','速度・次駅・運行状態');
+    readout.innerHTML='<div class="drive-speed"><span class="readout-label">速度</span></div><div class="drive-next"><span class="readout-label">次の停車駅</span></div><div class="drive-clock"><span class="readout-label">現在時刻</span></div>';
+    readout.querySelector('.drive-speed').append(speed);if(limit)readout.querySelector('.drive-speed').append(limit);
+    readout.querySelector('.drive-next').append(next);if(distance)readout.querySelector('.drive-next').append(distance);
+    readout.querySelector('.drive-clock').append(clock);if(status)readout.querySelector('.drive-clock').append(status);
+    scene.insertAdjacentElement('afterend',readout);
+    $('.hud-left')?.remove();$('.hud-right')?.remove();$('.scene-status-wrap')?.remove();
   }
+  $('.speedometer')?.classList.add('speedometer-relocated');$('.meter-cluster')?.classList.add('route-wide');
 
-  if (scene && statusBadge && !document.querySelector('.scene-status-wrap')) {
-    const statusWrap = document.createElement('div');
-    statusWrap.className = 'scene-status-wrap';
-    scene.append(statusWrap);
-    statusWrap.append(statusBadge);
+  const cab=$('.cab-panel'),cluster=$('.meter-cluster'),controls=$('.controls'),mini=$('.mini-grid');
+  if(cab&&cluster&&controls&&!$('.speed-history')){
+    if(mini){mini.classList.add('cab-summary');cab.prepend(mini);}
+    const history=document.createElement('details');history.className='speed-history';history.open=true;
+    history.innerHTML='<summary><span>速度推移・運行記録<small>区間を拡大・左右にスクロール</small></span></summary>';
+    controls.insertAdjacentElement('afterend',history);history.append(cluster);
   }
-
-  speedometer?.classList.add('speedometer-relocated');
-  meterCluster?.classList.add('route-wide');
 })();

@@ -1,0 +1,44 @@
+/* Room for the view; instruments and history remain reachable by page scrolling. */
+.drive-readout{display:grid;grid-template-columns:105px minmax(0,1fr) auto;align-items:center;gap:16px;padding:12px 18px;background:#09283d;color:#fff;border-top:1px solid #ffffff24;border-bottom:1px solid #ffffff24}
+.readout-label{display:block;color:#b9d4e4;font-size:10px;letter-spacing:.06em;margin-bottom:5px}
+.drive-speed .speed-center{position:static;transform:none;display:flex;align-items:baseline;gap:4px;text-align:left}
+.drive-speed .speed-center span{font-size:32px!important;line-height:1;font-weight:900}
+.drive-speed .speed-center small{font-size:10px}
+.drive-speed .limit-row{text-align:left;margin-top:5px;color:#b9d4e4;font-size:10px}
+.drive-speed .limit-row strong{color:#ffd166;font-size:13px}
+.drive-next{min-width:0}.drive-next .next-station{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drive-next .distance-row{font-size:15px;margin-top:4px}.drive-next .distance-row small{font-size:10px;margin-left:3px}
+.drive-clock{text-align:right}.drive-clock .clock{font-size:16px}.drive-clock .status-badge{font-size:11px!important;margin-top:6px!important;padding:4px 8px!important}
+.cab-summary{margin-bottom:8px!important}.cab-summary div{padding:7px!important}.cab-summary span{font-size:10px!important}.cab-summary strong{font-size:13px!important}
+.speed-history{margin-top:10px;border-radius:10px;border:1px solid #7b909b;background:#e1e9ed;min-width:0;overflow:hidden}
+.speed-history>summary{min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;cursor:pointer;color:#183e56;font-size:13px;font-weight:800;list-style:none}
+.speed-history>summary::-webkit-details-marker{display:none}.speed-history>summary::after{content:'＋';font-size:22px}.speed-history[open]>summary::after{content:'−'}
+.speed-history>summary small{display:block;color:#536d7c;font-size:10px;margin-top:4px;font-weight:500}
+.speed-history .route-monitor{border:0;border-radius:0;background:#e1e9ed;padding:8px!important}
+.speed-history .route-head{padding:0 4px 4px}.speed-history .route-head span{font-size:11px}
+.speed-history .meter-cluster{min-width:0}.speed-history .speedometer{display:none!important}
+button:focus-visible,summary:focus-visible,select:focus-visible,.speed-chart-viewport:focus-visible{outline:3px solid #f29f3d;outline-offset:2px}
+@media(max-width:760px){
+  .topbar{height:auto;min-height:48px;padding:7px 10px;gap:8px}.company{font-size:8px}h1{font-size:18px}h1 span{font-size:10px}
+  .top-actions{gap:5px;min-width:0}.top-actions .icon-btn{min-width:44px;min-height:44px;padding:0 9px}
+  .duty-running-info{max-width:44vw;margin:0;padding:4px 5px}.duty-running-info strong{font-size:10px}.duty-change-btn{min-height:36px;font-size:10px;padding:0 8px}
+  .scene-wrap{height:clamp(260px,38svh,370px)!important;max-height:none!important;aspect-ratio:auto!important}
+  .message-panel{bottom:10px!important;padding:9px 12px!important;pointer-events:none}.message-panel div{font-size:12px}.message-panel p{font-size:11px!important;line-height:1.5}
+  .station-board{top:24%;padding:6px 15px}.station-board strong{font-size:17px}
+  .drive-readout{grid-template-columns:78px minmax(0,1fr) auto;gap:10px;padding:11px 12px}
+  .drive-speed .speed-center span{font-size:29px!important}.readout-label{font-size:9px;margin-bottom:4px}
+  .drive-next .next-station{font-size:15px}.drive-next .distance-row{font-size:14px}.drive-clock .clock{font-size:13px}
+  .drive-clock .status-badge{font-size:10px!important;min-height:0;margin-top:5px!important}
+  .cab-panel{padding:8px!important}.cab-summary{gap:5px!important}.cab-summary div{padding:7px 3px!important}.cab-summary span{font-size:9px!important}.cab-summary strong{font-size:13px!important}
+  .controls{margin-top:0!important;gap:8px!important}.control-title{font-size:12px}.drag-lever-head span{font-size:9px}.drag-lever-readout{font-size:13px}
+  .drag-lever-body{height:192px!important}.drag-notch{min-height:29px;height:29px!important;font-size:11px!important}
+  .drag-lever-foot{font-size:10px}.controls .sub-controls button{min-height:48px!important;font-size:11px!important}
+  .drag-slot{min-width:0}.speed-history{margin-top:10px}
+}
+@media(max-width:360px){
+  .topbar h1{font-size:16px}.topbar h1 span{font-size:9px}.duty-running-info>div{display:none}.duty-running-info{padding:3px;border:0;background:transparent}
+  .drive-readout{grid-template-columns:70px minmax(0,1fr) auto;gap:6px;padding:10px 8px}.drive-next .next-station{font-size:13px}.drive-clock .clock{font-size:12px}
+  .drive-speed .speed-center span{font-size:27px!important}.drive-speed .limit-row{font-size:9px}.drive-speed .limit-row strong{font-size:12px}
+}
+@media(orientation:landscape) and (max-height:520px){.scene-wrap{height:60svh!important;min-height:180px!important;max-height:340px!important}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}

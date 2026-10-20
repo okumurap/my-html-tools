@@ -1,1 +1,15 @@
 .speed-chart-wrap{margin-top:7px;padding:6px 7px 5px;border-radius:9px;background:#101f29;color:#fff;box-shadow:inset 0 0 0 1px #ffffff22}.speed-chart-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;font-size:9px;font-weight:850}.speed-chart-legend{display:flex;gap:10px;align-items:center;color:#dce8ed}.speed-chart-key{display:inline-flex;align-items:center;gap:4px}.speed-chart-key::before{content:"";width:16px;height:3px;border-radius:3px;background:#5fc3ff}.speed-chart-key.limit::before{background:#ffd166}.speed-chart-now{font-variant-numeric:tabular-nums;color:#fff}.speed-chart-canvas{display:block;width:100%;height:112px;border-radius:6px;background:linear-gradient(#112b3b,#091821)}.curve-overlay{position:absolute;inset:0;z-index:2;width:100%;height:100%;pointer-events:none}.curve-badge{position:absolute;z-index:5;left:50%;top:12%;transform:translateX(-50%);padding:5px 10px;border-radius:999px;background:#071824d9;color:#fff;font-size:10px;font-weight:850;opacity:0;transition:opacity .2s}.curve-badge.visible{opacity:1}.curve-badge strong{color:#ffd38e;margin-right:5px}@media(min-width:761px){.speed-chart-canvas{height:132px}.route-monitor{min-height:330px}}@media(max-width:760px){.speed-chart-wrap{margin-top:5px;padding:5px}.speed-chart-canvas{height:88px}.speed-chart-head{font-size:8px}.speed-chart-legend{gap:7px}.speed-chart-key::before{width:12px}.curve-badge{top:17%;font-size:9px}}
+.speed-chart-tools{display:flex;align-items:end;justify-content:space-between;gap:8px;margin:9px 0 8px}
+.speed-chart-tools label{display:flex;align-items:center;gap:7px;font-size:11px;color:#dce8ed}
+.speed-chart-tools select,.speed-chart-follow{min-height:44px;border:1px solid #8299a8;border-radius:7px;padding:0 10px;background:#18394d;color:#fff;font:inherit;font-size:12px}
+.speed-chart-follow[aria-pressed="true"]{background:#f9cb64;color:#102b3d;border-color:#f9cb64;font-weight:800}
+.speed-chart-plot{display:grid;grid-template-columns:28px minmax(0,1fr);min-width:0}
+.speed-chart-axis{position:relative;min-width:0;background:#102431;color:#d6e5ee;font-size:10px;font-variant-numeric:tabular-nums;border-radius:6px 0 0 6px}
+.speed-chart-axis span{position:absolute;right:5px;transform:translateY(-50%)}
+.speed-chart-viewport{overflow-x:auto;overflow-y:hidden;min-width:0;width:100%;touch-action:pan-x pan-y;overscroll-behavior-x:contain;scrollbar-color:#728f9f #102431;scrollbar-width:thin;border-radius:0 6px 6px 0}
+.speed-chart-viewport .speed-chart-canvas{width:var(--chart-width,100%)!important;max-width:none!important;height:164px!important;border-radius:0}
+.speed-chart-footer{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:#b8d0dc;font-size:10px;line-height:1.5;padding:8px 2px 3px}
+.speed-history .speed-chart-head{font-size:11px!important;min-height:22px}.speed-chart-now{font-size:12px}
+@media(max-width:360px){.speed-chart-tools label{gap:5px;font-size:10px}.speed-chart-tools select,.speed-chart-follow{padding:0 7px;font-size:11px}}
+
+.speed-chart-key.position::before{background:#ff6b6b;width:2px;height:12px}
