@@ -163,7 +163,7 @@
     const routeLength = 4200;
     const map = document.createElement('div');
     map.className = 'speed-limit-map';
-    map.innerHTML = `<div class="speed-limit-caption"><span>速度制限区間</span><strong id="routeLimitNow">現在 35 km/h</strong></div><div class="speed-limit-track" aria-label="路線上の速度制限">${zones.map((zone, index) => { const left = zone.start / routeLength * 100; const width = (zone.end - zone.start) / routeLength * 100; return `<div class="speed-limit-zone" data-zone="${index}" style="left:${left}%;width:${width}%">${zone.limit}</div>`; }).join('')}<div id="speedLimitCursor" class="speed-limit-cursor" style="left:0%"></div></div><div class="speed-limit-legend"><span>坂本車庫</span><span>滑走台跡前</span><span>河和海岸</span><span>釣り桟橋</span></div>`;
+    map.innerHTML = `<div class="speed-limit-caption"><span>速度制限区間</span><strong id="routeLimitNow">現在 35 km/h</strong></div><div class="speed-limit-track" aria-label="路線上の速度制限">${zones.map((zone, index) => { const left = zone.start / routeLength * 100; const width = (zone.end - zone.start) / routeLength * 100; return `<div class="speed-limit-zone" data-zone="${index}" style="left:${left}%;width:${width}%">${zone.limit}</div>`; }).join('')}<div id="speedLimitCursor" class="speed-limit-cursor" style="left:0%"></div></div><div class="speed-limit-legend"><span>S車庫</span><span>滑走台跡前</span><span>河和海岸</span><span>釣り桟橋</span></div>`;
     routeLine.insertAdjacentElement('afterend', map);
     const cursor = $('#speedLimitCursor');
     const nowLabel = $('#routeLimitNow');
@@ -189,11 +189,11 @@
     const nextStation = $('#nextStation');
     const speedValue = $('#speed');
     if (!scene || !routeProgress || !nextStation || $('.station-scenery')) return;
-    const stationPositions = { '坂本車庫': 0, '滑走台跡前': 1400, '河和海岸': 2900, '釣り桟橋': 4200 };
+    const stationPositions = { 'S車庫': 0, '滑走台跡前': 1400, '河和海岸': 2900, '釣り桟橋': 4200 };
     const routeLength = 4200;
     const scenery = document.createElement('div');
     scenery.className = 'station-scenery';
-    scenery.innerHTML = '<div class="scene-platform"><div class="scene-platform-edge"></div></div><div class="scene-shelter"></div><div class="scene-bench"></div><div class="scene-station-sign"><small>SAKAMOTO RAILWAY</small><strong></strong></div><div class="scene-passengers"><i class="scene-person"></i><i class="scene-person"></i><i class="scene-person"></i></div>';
+    scenery.innerHTML = '<div class="scene-platform"><div class="scene-platform-edge"></div></div><div class="scene-shelter"></div><div class="scene-bench"></div><div class="scene-station-sign"><small>S RAILWAY</small><strong></strong></div><div class="scene-passengers"><i class="scene-person"></i><i class="scene-person"></i><i class="scene-person"></i></div>';
     const callout = document.createElement('div');
     callout.className = 'scene-station-callout';
     callout.innerHTML = '<strong>次駅</strong><span></span>';

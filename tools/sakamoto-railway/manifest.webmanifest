@@ -1,7 +1,7 @@
 {
-  "name": "坂本電鉄 海岸線",
-  "short_name": "坂本電鉄",
-  "description": "坂本電鉄 海岸線を運転するスマホ向けPWAゲーム",
+  "name": "S電鉄 海岸線",
+  "short_name": "S電鉄",
+  "description": "S電鉄 海岸線を運転するスマホ向けPWAゲーム",
   "lang": "ja",
   "start_url": "./",
   "scope": "./",

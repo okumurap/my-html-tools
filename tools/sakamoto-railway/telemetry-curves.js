@@ -13,7 +13,7 @@
     { start: 3900, end: 4200, limit: 30 }
   ];
   const stations = [
-    { name: '坂本車庫', pos: 0 },
+    { name: 'S車庫', pos: 0 },
     { name: '滑走台跡', pos: 1400 },
     { name: '河和海岸', pos: 2900 },
     { name: '釣り桟橋', pos: 4200 }

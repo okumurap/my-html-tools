@@ -4,9 +4,9 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const data = {
     train: [
-      { value: '0901', title: '普通 0901列車', note: '09:00 坂本車庫発', start: 9 * 3600 },
-      { value: '0911', title: '普通 0911列車', note: '09:15 坂本車庫発', start: 9 * 3600 + 15 * 60 },
-      { value: '0921', title: '普通 0921列車', note: '09:30 坂本車庫発', start: 9 * 3600 + 30 * 60 }
+      { value: '0901', title: '普通 0901列車', note: '09:00 S車庫発', start: 9 * 3600 },
+      { value: '0911', title: '普通 0911列車', note: '09:15 S車庫発', start: 9 * 3600 + 15 * 60 },
+      { value: '0921', title: '普通 0921列車', note: '09:30 S車庫発', start: 9 * 3600 + 30 * 60 }
     ],
     weather: [
       { value: 'clear', title: '晴れ', note: '通常の視界' },
@@ -47,13 +47,13 @@
   screen.innerHTML = `
     <div class="duty-card">
       <div class="duty-hero">
-        <div class="duty-kicker">SAKAMOTO RAILWAY / CREW ASSIGNMENT</div>
+        <div class="duty-kicker">S RAILWAY / CREW ASSIGNMENT</div>
         <div class="duty-title-row">
           <h2 id="dutySelectionTitle" class="duty-title">乗務選択<small>本日の乗務内容を設定してください</small></h2>
           <div class="duty-line-badge"><span>路線</span><strong>海岸線</strong></div>
         </div>
         <div class="duty-route">
-          <div class="duty-route-station"><strong>坂本車庫</strong><small>SAKAMOTO DEPOT</small></div>
+          <div class="duty-route-station"><strong>S車庫</strong><small>S DEPOT</small></div>
           <div class="duty-route-track"><i></i></div>
           <div class="duty-route-station" style="text-align:right"><strong>釣り桟橋</strong><small>FISHING PIER</small></div>
         </div>

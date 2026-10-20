@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#073d55">
-<meta name="description" content="回遊する魚群を探して爆釣！120秒勝負・坂本対決・図鑑を楽しめるキス釣りゲーム。">
-<title>坂本のキス釣り 2 - 群れを探せ！</title>
+<meta name="description" content="回遊する魚群を探して爆釣！120秒勝負・S対決・図鑑を楽しめるキス釣りゲーム。">
+<title>Sのキス釣り 2 - 群れを探せ！</title>
 <link rel="stylesheet" href="./style-v2.css">
 <link rel="stylesheet" href="../../assets/css/mobile-touch.css">
 <script src="./game-v3.js" defer></script>
@@ -13,7 +13,7 @@
 <body class="mobile-touch-game">
 <div class="app">
 <header class="top">
- <div class="brand"><div class="brand-icon">🎣</div><div><div class="brand-title">坂本のキス釣り <span style="font-size:11px;color:#ee6e4c">2</span></div><div class="brand-sub">狙え、探れ、群れを釣れ。</div></div></div>
+ <div class="brand"><div class="brand-icon">🎣</div><div><div class="brand-title">Sのキス釣り <span style="font-size:11px;color:#ee6e4c">2</span></div><div class="brand-sub">狙え、探れ、群れを釣れ。</div></div></div>
  <div class="stat"><small>のこり</small><strong id="clock">3:00</strong></div><div class="stat"><small>スコア</small><strong id="score">0</strong></div>
  <button class="tiny" id="catalogBtn" aria-label="魚図鑑を開く">📖</button><button class="tiny" id="soundBtn" aria-label="効果音切り替え">🔊</button>
 </header>
@@ -25,7 +25,7 @@
 <div class="controls"><button class="action" id="actionBtn" aria-label="釣りの操作">長押しで投げる<small>離すとキャスト</small><i class="meter" id="powerMeter"></i></button><button class="side ready" id="sonarBtn"><span>📡</span><span id="sonarLabel">魚探</span></button><button class="side" id="menuBtn"><span>☰</span>メニュー</button></div>
 </div>
 <div class="overlay" id="startOverlay"><div class="card">
- <div class="intro"><div><div class="eyebrow">SAKAMOTO'S FISHING · V2</div><h1>坂本の<br>キス釣り 2</h1><p>魚が本当に泳ぐ海で、群れを探して釣り上げよう。</p></div><div class="intro-art" aria-hidden="true">🎣🐟</div></div>
+ <div class="intro"><div><div class="eyebrow">S'S FISHING · V2</div><h1>Sの<br>キス釣り 2</h1><p>魚が本当に泳ぐ海で、群れを探して釣り上げよう。</p></div><div class="intro-art" aria-hidden="true">🎣🐟</div></div>
  <div class="label-row"><b>① 遊ぶモード</b><small id="bestText">自己ベスト 0点</small></div>
  <div class="mode-options" id="modes"><button class="choice selected" data-mode="challenge"><span>⏱️</span>3分勝負</button><button class="choice" data-mode="free"><span>🌊</span>のんびり</button><button class="choice" data-mode="daily"><span>🏆</span>日替わり</button></div>
  <div class="label-row"><b>② 釣る時間帯</b><small>キスの動きや魚種が変化</small></div>
@@ -36,6 +36,6 @@
  <button class="primary" id="startBtn">釣りを始める！</button><div class="footer-note">セーブはこのブラウザ内に保存されます</div>
 </div></div>
 <div class="overlay hidden" id="resultOverlay"><div class="card" id="resultCard"></div></div>
-<div class="overlay hidden" id="catalogOverlay"><div class="card"><h2>📖 坂本の釣魚図鑑</h2><p>釣った魚と最大サイズを記録。大物を狙おう！</p><div class="catalog-grid" id="catalogGrid"></div><p id="catalogTotal"></p><button class="primary" id="closeCatalog">釣り場に戻る</button></div></div>
+<div class="overlay hidden" id="catalogOverlay"><div class="card"><h2>📖 Sの釣魚図鑑</h2><p>釣った魚と最大サイズを記録。大物を狙おう！</p><div class="catalog-grid" id="catalogGrid"></div><p id="catalogTotal"></p><button class="primary" id="closeCatalog">釣り場に戻る</button></div></div>
 </body>
 </html>
