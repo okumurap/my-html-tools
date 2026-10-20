@@ -4,19 +4,30 @@ const assert = require('node:assert/strict');
 const {chromium} = require(process.env.TEST_PLAYWRIGHT_MODULE || 'playwright');
 const base = process.env.TEST_BASE_URL || 'http://localhost:8000';
 (async () => {
-  const browser = await chromium.launch({headless:true, channel:process.env.TEST_BROWSER_CHANNEL || 'chrome'});
+  const browser = await chromium.launch({headless:true, ...(process.env.TEST_BROWSER_PATH ? {executablePath:process.env.TEST_BROWSER_PATH} : {channel:process.env.TEST_BROWSER_CHANNEL || 'chrome'})});
   const context = await browser.newContext();
   const page = await context.newPage();
   const errors=[]; page.on('pageerror',error=>errors.push(error.message));
   const open = () => page.goto(`${base}/tools/flag-learner/`);
   const click = id => page.locator(`#${id}`).click();
   const overflow = async () => assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
-  const answerCode = async () => [...await page.locator('#quizPrompt').innerText()].map(char=>String.fromCharCode(char.codePointAt(0)-127397)).join('');
+  const answerCode = async () => page.locator('#quizPrompt img').getAttribute('data-code');
   try {
     await open();
     await page.waitForFunction(()=>document.querySelectorAll('#countryLayer path').length>0);
     assert.equal(await page.locator('#quizSetup').isVisible(),true);
     assert.equal(await page.locator('.country-tile').count(),195);
+    // Every flag must load as an image, independent of OS emoji fonts.
+    const loadedFlags = async selector => {
+      await page.locator(selector).evaluateAll(images => Promise.all(images.map(image => image.decode())));
+      assert.equal(await page.locator(selector).evaluateAll(images => images.every(image => image.naturalWidth > 0 && image.naturalHeight > 0)),true);
+    };
+    await loadedFlags('.flag-postcards img');
+    assert.equal(await page.locator('#countryGrid img').count(),195);
+    await loadedFlags('#countryGrid img');
+    assert.equal(await page.locator('#flagLayer text').count(),0);
+    assert.ok(await page.locator('#flagLayer image').count()>0);
+    assert.equal(await page.locator('#flagLayer image').first().getAttribute('href').then(href=>href.startsWith('./flags/')),true);
     let regionTotal=0;
     for(const region of ['Asia','Europe','Africa','North America','South America','Oceania']){
       await page.locator('#quizRegion').selectOption(region);
@@ -33,6 +44,7 @@ const base = process.env.TEST_BASE_URL || 'http://localhost:8000';
     const wrong=[];
     for(let i=0;i<5;i++){
       const code=await answerCode();
+      await loadedFlags('#quizPrompt img');
       assert.equal(await page.locator('.choice').count(),4);
       if(i<2){wrong.push(code);await page.locator(`.choice:not([data-code="${code}"])`).first().click();}
       else await page.locator(`.choice[data-code="${code}"]`).click();
@@ -45,6 +57,7 @@ const base = process.env.TEST_BASE_URL || 'http://localhost:8000';
       await click('nextQuestion');
     }
     assert.equal(await page.locator('#quizResultScore').innerText(),'3 / 5');
+    await loadedFlags('#resultCountries img');
     for(const width of [320,375,768,1280]){await page.setViewportSize({width,height:812});await overflow();}
     await click('retryMistakes');
     for(let i=0;i<2;i++){const code=await answerCode();assert.ok(wrong.includes(code));await page.locator(`.choice[data-code="${code}"]`).click();await click('nextQuestion');}
@@ -52,6 +65,8 @@ const base = process.env.TEST_BASE_URL || 'http://localhost:8000';
     assert.equal(await page.locator('#retryMistakes').isVisible(),false);
     await click('resultHome');await page.locator('#quizDirection').selectOption('name-to-flag');await click('startQuiz');
     assert.equal(await page.locator('.choice-label').count(),0);
+    assert.equal(await page.locator('.choice img').count(),4);
+    await loadedFlags('.choice img');
     assert.equal(await page.locator('.choice').first().getAttribute('aria-label'),'国旗の選択肢 1');
     await page.locator('.choice').first().click();assert.equal(await page.locator('.choice-label').count(),4);
     await click('mapTab');await page.locator('#countrySearch').fill('Japan');
@@ -102,3 +117,4 @@ const base = process.env.TEST_BASE_URL || 'http://localhost:8000';
     console.log('OK: 4 widths; both directions; quiz/result/retry; atlas/search/regions; map zoom; persistence/legacy data; map/storage failure; touch; no runtime errors.');
   } finally { await browser.close(); }
 })().catch(error=>{console.error(error);process.exitCode=1;});
+

@@ -25,7 +25,7 @@
           <p class="eyebrow">ひとつ覚えると、世界が近くなる。</p>
           <h2>この国旗、<br>どこの国？</h2>
           <p class="intro-copy">まずは5問から。<br>国旗と名前を、あなたのペースで。</p>
-          <div class="flag-postcards" aria-hidden="true"><span>🇯🇵<small>JAPAN</small></span><span>🇧🇷<small>BRAZIL</small></span><span>🇸🇪<small>SWEDEN</small></span></div>
+          <div class="flag-postcards" aria-hidden="true"><span><img class="flag-image" src="./flags/jp.svg" width="64" height="48" alt=""><small>JAPAN</small></span><span><img class="flag-image" src="./flags/br.svg" width="64" height="48" alt=""><small>BRAZIL</small></span><span><img class="flag-image" src="./flags/se.svg" width="64" height="48" alt=""><small>SWEDEN</small></span></div>
           <div class="learning-stats"><div><strong id="knownCount">0</strong><span> / 195 か国 覚えた</span></div><div><strong id="learningCount">0</strong><span> か国 練習中</span></div></div>
           <progress id="knownProgress" max="195" value="0" aria-label="覚えた国の割合"></progress>
         </div>
@@ -88,7 +88,7 @@
       </div>
 
       <article id="countryCard" class="country-card" hidden>
-        <div class="country-card__flag" id="countryFlag" aria-hidden="true">🇯🇵</div>
+        <div class="country-card__flag" id="countryFlag" aria-hidden="true"></div>
         <div class="country-card__main">
           <p id="countryRegion" class="eyebrow"></p>
           <h3 id="countryName">日本</h3>
@@ -122,8 +122,9 @@
     </section>
 
 
-    <footer class="app-footer"><p>195か国の小さな旅。学習記録はこのブラウザに保存されます。</p><p>国連加盟193か国＋国連オブザーバー2。国旗の見え方は端末により異なります。</p></footer>
+    <footer class="app-footer"><p>195か国の小さな旅。学習記録はこのブラウザに保存されます。</p><p>国連加盟193か国＋国連オブザーバー2。国旗は端末に依存しない画像で表示します。</p></footer>
   </main>
   <script src="./script.js"></script>
 </body>
 </html>
+

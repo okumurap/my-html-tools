@@ -46,7 +46,16 @@
     catch(_){ $('storageNotice').hidden=false; $('storageNotice').textContent = '学習記録を保存できません。この画面では続けられますが、閉じると今回の記録は失われます。'; }
   }
 
-  function flagEmoji(code){ return /^[A-Z]{2}$/.test(code) ? String.fromCodePoint(...[...code].map(c => 127397 + c.charCodeAt(0))) : '🏳️'; }
+  function flagSource(code){
+    if(!TARGET_SET.has(code)) throw new Error('Unknown flag code');
+    return `./flags/${code.toLowerCase()}.svg`;
+  }
+  function flagImage(code, className='', label=''){
+    const image=document.createElement('img');
+    image.className=`flag-image ${className}`.trim(); image.src=flagSource(code);
+    image.alt=label; image.dataset.code=code; image.width=64; image.height=48;
+    return image;
+  }
   function jaName(code, fallback=''){ try{ return regionNames?.of(code) || fallback || code; }catch(_){ return fallback || code; } }
   function project([lon,lat]){ return [(lon + 180) / 360 * 1000, (90 - lat) / 180 * 500]; }
   function unproject([x,y]){ return [x / 1000 * 360 - 180, 90 - y / 500 * 180]; }
@@ -152,8 +161,9 @@
   }
 
   function createFlagMarker(code,x,y,isSmall,fragment,ns){
-    const marker=document.createElementNS(ns,'text'); marker.setAttribute('x',x.toFixed(2)); marker.setAttribute('y',y.toFixed(2));
-    marker.setAttribute('class',`flag-marker${isSmall?' is-small':''}`); marker.dataset.code=code; marker.textContent=flagEmoji(code);
+    const marker=document.createElementNS(ns,'image'); marker.setAttribute('x',(x-10).toFixed(2)); marker.setAttribute('y',(y-7.5).toFixed(2));
+    marker.setAttribute('width','20'); marker.setAttribute('height','15'); marker.setAttribute('href',flagSource(code));
+    marker.setAttribute('class',`flag-marker${isSmall?' is-small':''}`); marker.dataset.code=code;
     marker.setAttribute('aria-label',`${countryByCode.get(code).nameJa}の国旗`); marker.setAttribute('role','button'); marker.setAttribute('tabindex','0');
     markerByCode.set(code,marker); fragment.append(marker);
   }
@@ -185,7 +195,7 @@
 
   function selectCountry(code,{focus=false}={}){
     if(!TARGET_SET.has(code)) return; selectedCode=code; const c=countryByCode.get(code);
-    $('countryCard').hidden=false; $('countryFlag').textContent=flagEmoji(code); $('countryName').textContent=c.nameJa;
+    $('countryCard').hidden=false; $('countryFlag').replaceChildren(flagImage(code)); $('countryName').textContent=c.nameJa;
     $('countryEnglish').textContent=c.nameEn; $('countryRegion').textContent=REGION_LABELS[c.region] || c.region;
     document.querySelectorAll('[data-status]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.status===countryStatus(code))));
     if(focus) focusCountry(code); refreshMapClasses();
@@ -218,7 +228,7 @@
     $('countryGrid').replaceChildren(...codes.map(code=>{
       const button=node('button','country-tile'); button.type='button'; button.dataset.code=code;
       button.setAttribute('aria-pressed',String(code===selectedCode));
-      button.append(node('span','tile-flag',flagEmoji(code)),node('span','tile-name',countryByCode.get(code).nameJa),node('span','tile-status',STATUS_LABELS[countryStatus(code)]));
+      button.append(flagImage(code,'tile-flag'),node('span','tile-name',countryByCode.get(code).nameJa),node('span','tile-status',STATUS_LABELS[countryStatus(code)]));
       return button;
     }));
   }
@@ -267,14 +277,14 @@
     $('questionInstruction').textContent=quiz.direction==='flag-to-name'?'この国旗は、どこの国？':'この国の国旗は、どれ？';
     const prompt=$('quizPrompt'); prompt.replaceChildren();
     if(quiz.direction==='flag-to-name'){
-      const flag=node('span','big-flag',flagEmoji(answer)); flag.setAttribute('role','img'); flag.setAttribute('aria-label','出題の国旗'); prompt.append(flag);
+      prompt.append(flagImage(answer,'big-flag','出題の国旗'));
     } else { prompt.textContent=country.nameJa; }
     const choices=makeChoices(answer,quiz.pool.length>=4?quiz.pool:TARGET_CODES);
     $('quizChoices').replaceChildren(...choices.map((code,index)=>{
       const button=node('button','choice'); button.type='button'; button.dataset.code=code;
       if(quiz.direction==='flag-to-name') button.textContent=countryByCode.get(code).nameJa;
       else {
-        const flag=node('span','choice-flag',flagEmoji(code)); flag.setAttribute('aria-hidden','true');
+        const flag=flagImage(code,'choice-flag'); flag.setAttribute('aria-hidden','true');
         button.append(flag); button.setAttribute('aria-label',`国旗の選択肢 ${index+1}`);
       }
       return button;
@@ -296,7 +306,7 @@
     if(!ok||countryStatus(answer)==='none') state.statuses[answer]='learning';
     saveState(); updateKnownCount(); updateQuizScore();
     const c=countryByCode.get(answer);
-    $('quizFeedback').textContent=`${ok?'✓ 正解！':'もう一度覚えよう。正解は'} ${flagEmoji(answer)} ${c.nameJa}（${REGION_LABELS[c.region]||''}）`;
+    $('quizFeedback').replaceChildren(document.createTextNode(`${ok?'✓ 正解！':'もう一度覚えよう。正解は'} `),flagImage(answer),document.createTextNode(` ${c.nameJa}（${REGION_LABELS[c.region]||''}）`));
     $('quizFeedback').className=`feedback ${ok?'good':'bad'}`;
     $('quizChoices').querySelectorAll('.choice').forEach(button=>{
       button.disabled=true;
@@ -318,7 +328,7 @@
     $('retryMistakes').hidden=quiz.mistakes.length===0;
     $('resultCountries').replaceChildren(...quiz.results.map(({code,ok})=>{
       const button=node('button','result-country'); button.type='button'; button.dataset.code=code;
-      button.append(node('span','',flagEmoji(code)),node('span','',countryByCode.get(code).nameJa),node('small','',ok?'✓ 正解　↗':'要復習　↗')); return button;
+      button.append(flagImage(code),node('span','',countryByCode.get(code).nameJa),node('small','',ok?'✓ 正解　↗':'要復習　↗')); return button;
     }));
     $('resultHeading').focus({preventScroll:true}); $('quizSession').scrollIntoView({block:'start'});
   }
@@ -371,3 +381,4 @@
   }
   init();
 })();
+

@@ -920,3 +920,13 @@
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   .map-frame{
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     background:#152b30}
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   }
+
+/* Bundled SVG flags keep the same appearance on Windows and mobile devices. */
+.flag-image{display:inline-block;width:1.5em;height:1.125em;object-fit:contain;vertical-align:middle;flex-shrink:0}
+.quiz-prompt img.big-flag{width:clamp(128px,32vw,200px);height:auto}
+.choice img.choice-flag{width:64px;height:48px;margin:auto}
+img.tile-flag{width:48px;height:36px;margin:auto}
+.country-card__flag .flag-image{width:96px;height:72px}
+.flag-postcards .flag-image{width:64px;height:48px}
+.result-country>.flag-image{width:40px;height:30px}
+.flag-marker{pointer-events:all}
