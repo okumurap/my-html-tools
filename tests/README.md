@@ -51,3 +51,9 @@ Playwrightが通常のrequireで見つからない場合は `TEST_PLAYWRIGHT_MOD
 
 ローカルHTTPサーバーとPlaywrightを用意し `node tests/sakamoto-railway.cjs`。`TEST_BASE_URL`、`TEST_PLAYWRIGHT_MODULE`、`TEST_BROWSER_PATH`、`TEST_SCREENSHOT_DIR` に対応します。
 320×568からのスマホ表示、PC・横向き・回転・表示領域縮小で、縦スクロール不要かつ速度推移が常時見え、主要操作が押せることを確認します。運転・ドア・レバーのタッチドラッグ・非常制動・再開、停車時の景色の静止・走行時の変化、グラフの高さ・常時表示・拡大パネル開閉・ズーム・タッチスクロール・追従切替、得点画面の終了操作も検証します。雨天は複数画面サイズの操作・グラフの可視性、停車中の雨の動き、視差効果低減設定による静止と復帰、晴天への切替も検証します。グラフ位置の境界確認にはDOM入力の固定値0/50/100%を使用し、運転物理の実測とは区別します。
+
+## でんしゃを走らせよう！
+
+`TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/train-crossing.cjs`。既存のPlaywrightを使い、`TEST_PLAYWRIGHT_MODULE` と `TEST_SCREENSHOT_DIR` に対応します。
+
+320×568・375px・768px・PC・横向きで、縦横のはみ出しと44px以上のタップ領域を確認します。3車種の出発→踏切・トンネル→星3つ→到着→再出発、実際のタッチ長押しブレーキ・解除、キーボード、車種・音・到着回数の保存を検証します。保存・音・全画面APIが使えない場合、モーション低減設定、GitHub Pages相当のサブパスも確認します。エミュレーションであり実機確認ではありません。

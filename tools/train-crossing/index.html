@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="description" content="でんしゃをえらんで、踏切とトンネルを通って駅まで走ろう。小さな子でも遊べる電車ゲーム。">
-  <meta name="theme-color" content="#83d9f8">
+  <meta name="theme-color" content="#a7ced0">
   <title>でんしゃを走らせよう！ | My HTML Tools</title>
   <link rel="stylesheet" href="./style.css">
   <link rel="stylesheet" href="../../assets/css/mobile-touch.css">
@@ -14,7 +14,7 @@
 
   <header class="topbar">
     <a class="back-link" href="../../index.html" aria-label="ツール一覧へ戻る">←</a>
-    <p class="title">🚆 でんしゃを走らせよう！</p>
+    <p class="title"><small>ちいさな てつどうの たび</small>でんしゃを走らせよう！</p>
     <div class="buttons">
       <button type="button" id="soundButton" aria-label="音を切る" title="音を切る">🔊</button>
       <button type="button" id="fullscreenButton" aria-label="全画面で表示" title="全画面で表示">⛶</button>
@@ -23,27 +23,30 @@
 
   <section class="trip-hud" aria-label="旅のようす">
     <div class="route"><span id="routeName">パンダえき → おはなえき</span><small id="routePhase">しゅっぱつ じゅんび</small></div>
-    <div class="collect"><span aria-hidden="true">⭐</span><span id="starCount">0 / 3</span><span class="trip-count" id="tripCount">のった 0かい</span></div>
+    <div class="collect"><span aria-hidden="true">★</span><span id="starCount">0 / 3</span><span class="trip-count" id="tripCount">のった 0かい</span></div>
     <div class="progress" aria-label="駅、踏切、トンネル、到着の進行状況">
-      <span class="dot is-current" aria-label="駅" aria-current="step"></span>
-      <span class="dot" aria-label="踏切"></span>
-      <span class="dot" aria-label="トンネル"></span>
-      <span class="dot" aria-label="到着"></span>
+      <span class="journey-line" aria-hidden="true"><span class="journey-fill" id="journeyFill"></span></span><span class="journey-train" id="journeyTrain" aria-hidden="true"><svg viewBox="0 0 24 16" width="21" height="14"><rect x="1" y="1" width="22" height="11" rx="3" fill="#56816b"/><path d="M4 4h6v4H4zm9 0h6v4h-6z" fill="#e3eedc"/><circle cx="6" cy="13" r="2" fill="#365c55"/><circle cx="18" cy="13" r="2" fill="#365c55"/></svg></span>
+      <span class="dot is-current" data-label="えき" aria-label="駅" aria-current="step"></span>
+      <span class="dot" data-label="ふみきり" aria-label="踏切"></span>
+      <span class="dot" data-label="トンネル" aria-label="トンネル"></span>
+      <span class="dot" data-label="とうちゃく" aria-label="到着"></span>
     </div>
   </section>
 
   <section id="tapCard" class="tap-card" aria-label="出発の操作">
+    <span class="ticket-label" aria-hidden="true">RAILWAY TICKET</span>
     <span id="cardTitle" class="tap-card__title">どのでんしゃに する？</span>
     <span id="cardText" class="tap-card__text">えらんで しゅっぱつしよう！</span>
     <div class="train-picker" role="group" aria-label="電車の種類">
-      <button type="button" class="train-choice is-selected" data-train="local" aria-pressed="true"><span aria-hidden="true">🚃</span>ふつう</button>
-      <button type="button" class="train-choice" data-train="bullet" aria-pressed="false"><span aria-hidden="true">🚅</span>しんかんせん</button>
-      <button type="button" class="train-choice" data-train="steam" aria-pressed="false"><span aria-hidden="true">🚂</span>きかんしゃ</button>
+      <button type="button" class="train-choice is-selected" data-train="local" aria-pressed="true"><svg viewBox="0 0 110 49" aria-hidden="true"><rect x="8" y="11" width="94" height="29" rx="6" fill="#ececd9" stroke="#416464" stroke-width="2"/><rect x="9" y="29" width="92" height="7" fill="#c97658"/><path d="M16 10h78" stroke="#6b8e81" stroke-width="5"/><path d="M20 17h17v10H20zm24 0h17v10H44zm24 0h17v10H68z" fill="#83aeb4"/><g fill="#3f5e63"><circle cx="24" cy="41" r="5"/><circle cx="35" cy="41" r="5"/><circle cx="78" cy="41" r="5"/><circle cx="89" cy="41" r="5"/></g></svg>ふつう</button>
+      <button type="button" class="train-choice" data-train="bullet" aria-pressed="false"><svg viewBox="0 0 110 49" aria-hidden="true"><path d="M6 39V20q0-10 12-10h48q17 0 36 24l2 5z" fill="#f8f5e8" stroke="#4a7180" stroke-width="2"/><path d="M7 30h84l12 7H7" fill="#6793a5"/><path d="M19 17h40v9H19zm48-2 18 14H73z" fill="#7cb2bd"/><g fill="#3f5e63"><circle cx="24" cy="41" r="5"/><circle cx="35" cy="41" r="5"/><circle cx="78" cy="41" r="5"/><circle cx="89" cy="41" r="5"/></g></svg>しんかんせん</button>
+      <button type="button" class="train-choice" data-train="steam" aria-pressed="false"><svg viewBox="0 0 110 49" aria-hidden="true"><path d="M8 39V14h27v9h54v16z" fill="#53776c" stroke="#31545a" stroke-width="2"/><path d="M74 12h9v13h-9zM7 12h30" stroke="#31545a" stroke-width="5"/><path d="M13 19h15v12H13" fill="#a5cbca"/><path d="M8 37h89" stroke="#bf795b" stroke-width="5"/><g fill="#3f5e63"><circle cx="24" cy="41" r="5"/><circle cx="35" cy="41" r="5"/><circle cx="78" cy="41" r="5"/><circle cx="89" cy="41" r="5"/></g></svg>きかんしゃ</button>
     </div>
     <button type="button" id="startButton" class="start-button">▶ しゅっぱつ！</button>
   </section>
 
   <div class="drive-controls" id="driveControls" hidden>
+    <div class="speed-meter"><span id="speedText">とまってる</span><span class="speed-track" aria-hidden="true"><span id="speedFill"></span></span></div>
     <button type="button" class="drive-button horn" id="hornButton" aria-label="警笛を鳴らす"><span aria-hidden="true">📣</span><span>プップー！</span></button>
     <button type="button" class="drive-button brake" id="brakeButton" aria-label="押している間ブレーキをかける"><span aria-hidden="true">✋</span><span>ブレーキ</span></button>
     <button type="button" class="drive-button boost" id="boostButton" aria-label="電車をスピードアップ"><span aria-hidden="true">⚡</span><span>スピードアップ！</span></button>
