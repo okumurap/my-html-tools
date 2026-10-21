@@ -69,3 +69,9 @@ Playwrightが通常のrequireで見つからない場合は `TEST_PLAYWRIGHT_MOD
 `TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/gyro-rush.cjs`。Playwright/Chromiumを使い、`TEST_PLAYWRIGHT_MODULE` と `TEST_SCREENSHOT_DIR` に対応します。
 
 320pxからPCの画面、下部の左・中央・右・フッターへのブーストタッチ、移動との分離、2本指、49/50/100のエネルギー境界、重複発動・キャンセル・キーボード、一時停止・回転・再プレイ・記録を検証します。許可拒否・未対応・タイムアウト・模擬gamma・中央設定も確認します。中央から±0.25/±1/±2度の微小傾きと0度で、左右の入力が連続しデッドゾーンを持たないことを独立した期待座標と比較します。終了と被弾は明示的な状態設定を使い、観測口は本番に含めません。実機のジャイロ性能確認とは区別します。保存・音が使えない場合、モーション低減設定、公開サブパスも確認します。
+
+## レールタウン・レイアウト
+
+`node tests/plarail-layout.cjs` で曲線中点・直線・弧長を独立した期待値と照合します。Playwright/Chromiumを用意し、`TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/plarail-layout.cjs --browser`。`TEST_PLAYWRIGHT_MODULE` と `TEST_SCREENSHOT_DIR` に対応します。
+
+320pxからPC・横向きの操作、3両の曲線・分岐走行、駅の停車と発車、ポイントの占有ロック、最後尾と踏切、位置を保つ折り返し、複数周回を確認します。タッチ配置・回転・長押し削除・キャンセル・Undo、拡大と移動、保存と旧形式、不正データと保存失敗、公開サブパスを検証します。経路や折り返し等の境界は明示的なテスト状態で確認し、観測口は本番に含めません。実機の確認とは区別します。

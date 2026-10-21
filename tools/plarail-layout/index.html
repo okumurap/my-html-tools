@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ecf5df">
 <title>レールタウン・レイアウト</title>
 <style>
@@ -49,13 +49,18 @@ button{font:inherit;color:inherit}
 .card button{width:100%;height:45px;border:0;border-radius:13px;background:#263832;color:#fff;font-weight:900;margin-top:8px}
 @media(max-width:700px){.hint{display:none}.palette{grid-template-columns:repeat(6,1fr)}.part{height:57px}.part strong{font-size:23px}.part span{font-size:9px}.top-actions .optional{display:none}.stage{border-radius:14px}}
 @media(max-width:390px){.logo{width:34px;height:34px}.small{width:38px;height:38px}.mode{min-width:78px}.palette{gap:4px}.part{padding:2px}.part strong{font-size:21px}}
+
+:root{--paper:#f4f1e4;--ink:#315449}button{cursor:pointer}button:focus-visible{outline:3px solid #c69253;outline-offset:2px}.app{height:100dvh;background:#edf0e0}.small{min-width:44px;min-height:44px;border-radius:10px}.mode{min-height:44px;color:#5b7565}.mode.active{background:#527963}.modebar{background:#f8f6e8ed;border-radius:12px}.badge{top:64px;left:10px;font-size:10px;background:#f8f6e8e8;color:#52715b;max-width:calc(100% - 20px)}.run-details{position:absolute;bottom:10px;left:10px;right:10px;padding:7px 10px;border:1px solid #e7e8cfa6;border-radius:9px;background:#f7f5e7e8;color:#59745f;font-size:10px;font-weight:600;pointer-events:none}.run-details[hidden]{display:none}.toast{bottom:46px;max-width:calc(100% - 20px);white-space:normal;text-align:center;border-radius:10px;background:#345b4dea;font-size:11px}.logo{background:#bd795a;box-shadow:none}.stage{border-color:#bfceb0;box-shadow:0 6px 18px #26352d14}.part{border-color:#cbd4bd;background:#f9f7e9;border-radius:11px;box-shadow:none}.part.active{border-color:#8b9f79;background:#e2e9d3;box-shadow:inset 0 0 0 1px #8b9f79}.big.primary{background:#ae7456;border-color:#9f6d51}.big.stop{background:#507563}.action{min-height:44px}.top-actions .optional{display:block!important}.card{background:#f8f6e8}.card button{background:#527963}.palette{margin-bottom:6px}
+@media(max-width:390px){.logo{display:none}.title{font-size:15px}.small{width:44px;height:44px}.top{gap:5px}.top-actions{gap:4px}.badge{font-size:9px}.run-details{font-size:9px}.toast{font-size:10px}}
+@media(max-height:430px){.app{gap:4px;padding-top:4px;padding-bottom:4px}.part{height:48px}.part strong{font-size:18px}.part span{font-size:8px}.run-details{bottom:5px;padding:4px 6px}.badge{top:auto;bottom:37px;font-size:9px}.toast{bottom:65px}}
+.mode{min-width:100px;padding:0 9px;white-space:nowrap}.viewbar{display:flex;align-items:center;justify-content:flex-end;gap:5px}.viewbar span{margin-right:auto;font-size:10px;color:#7d8e76;white-space:nowrap}.viewbar button{min-width:44px;min-height:44px;border:1px solid #cbd4bd;border-radius:9px;background:#f8f7e9;color:#5c765f;font-weight:700;font-size:12px}.viewbar button[aria-pressed="true"]{background:#587e67;color:#fff;border-color:#587e67}.viewbar #panView{padding:0 10px}.viewbar #zoomFit{padding:0 8px}
 </style>
 </head>
 <body>
 <div class="app">
 <header class="top"><div class="brand"><div class="logo">🚆</div><div><div class="title">レールタウン</div><div class="hint">置く・つなぐ・走らせる</div></div></div><div class="top-actions"><button class="small optional" id="save" aria-label="保存">💾</button><button class="small optional" id="load" aria-label="読込">📂</button><button class="small" id="sound" aria-label="音">🔊</button><button class="small" id="help" aria-label="遊び方">？</button></div></header>
-<main class="stage" id="stage"><canvas id="cv"></canvas><div class="badge" id="badge">直線を置く</div><div class="modebar"><button class="mode active" data-mode="edit">つくる</button><button class="mode" data-mode="run">走らせる</button></div><div class="toast" id="toast"></div></main>
-<section class="bottom">
+<main class="stage" id="stage"><canvas id="cv"></canvas><div class="badge" id="badge">直線を置く</div><div class="modebar"><button class="mode active" data-mode="edit">つくる</button><button class="mode" data-mode="run">走らせる</button></div><div class="toast" id="toast"></div><div class="run-details" id="runDetails" hidden></div></main>
+<section class="bottom"><div class="viewbar"><span id="zoomLabel">表示 100%</span><button type="button" id="zoomOut" aria-label="縮小">−</button><button type="button" id="zoomFit">全体</button><button type="button" id="zoomIn" aria-label="拡大">＋</button><button type="button" id="panView" aria-pressed="false">移動</button></div>
 <div id="editUI">
 <div class="palette" id="palette">
 <button class="part active" data-tool="straight"><strong>━</strong><span>直線</span></button>
@@ -70,17 +75,18 @@ button{font:inherit;color:inherit}
 <div class="runpanel" id="runUI"><button class="big primary" id="start">▶ 出発</button><button class="big" id="slower">− ゆっくり</button><button class="big" id="faster">＋ はやく</button></div>
 </section>
 </div>
-<div class="modal" id="modal"><div class="card"><h2>遊び方</h2><p><b>空いているマスをタップ</b>すると、選んだ線路を置けます。</p><p><b>同じパーツを選んでタップ</b>すると回転し、<b>別のパーツを選んでタップ</b>すると上書きします。<b>長押し</b>すると消えます。指でなぞると、同じパーツを続けて置けます。</p><p>「列車」を選び、線路をタップすると列車を置けます。置いた列車をもう一度タップすると消せます。「走らせる」に切り替えて出発してください。運転中はポイントをタップして進路を変えられます。<b>緑色の線と白い矢印</b>が現在の進行方向です。</p><button id="close">わかった</button></div></div>
+<div class="modal" id="modal"><div class="card"><h2>遊び方</h2><p><b>空いているマスをタップ</b>すると、選んだ線路を置けます。</p><p><b>同じパーツを選んでタップ</b>すると回転し、<b>別のパーツを選んでタップ</b>すると上書きします。<b>長押し</b>すると消えます。指でなぞると、同じパーツを続けて置けます。下の「＋／−」で拡大・縮小、「移動」をオンにしてなぞると表示範囲を動かせます。「全体」で全マスを見渡せます。</p><p>「列車」を選び、線路をタップすると列車を置けます。置いた列車をもう一度タップすると消せます。「走らせる」に切り替えて出発してください。列車は最大3両が連結し、カーブや分岐では先頭が通った経路をたどります。駅では減速して停車し、ドアを閉めて発車します。線路の端では編成の先頭を交代して折り返します。運転中はポイントをタップして進路を変えられます。編成が通過中のポイントは切り替えできません。踏切は最後尾が通り過ぎるまで閉じます。<b>緑色の線と白い矢印</b>が現在の進行方向です。</p><button id="close">わかった</button></div></div>
 <script>
 (()=>{'use strict';
 const cv=document.querySelector('#cv'),ctx=cv.getContext('2d'),stage=document.querySelector('#stage');
 const COLS=12,ROWS=8,DIRS=['N','E','S','W'],V={N:[0,-1],E:[1,0],S:[0,1],W:[-1,0]},OPP={N:'S',E:'W',S:'N',W:'E'};
+let revision=0,zoom=1,panX=0,panY=0,panMode=false,panStart=null;
 let grid=makeGrid(),trains=[],tool='straight',mode='edit',running=false,speed=1,history=[],view={},dpr=1,lastTime=performance.now(),soundOn=true,audio=null,toastTimer=0;
 const crossingGates=new Map();let lastCrossingChime=0;
 let pointer={down:false,startX:0,startY:0,startTime:0,lastCell:'',longTimer:null,longDone:false,moved:false};
 function makeGrid(){return Array.from({length:ROWS},()=>Array(COLS).fill(null))}
 function cloneState(){return JSON.parse(JSON.stringify({grid,trains}))}
-function remember(){history.push(cloneState());if(history.length>30)history.shift()}
+function remember(){revision++;history.push(cloneState());if(history.length>30)history.shift()}
 function inside(x,y){return x>=0&&y>=0&&x<COLS&&y<ROWS}
 function at(x,y){return inside(x,y)?grid[y][x]:null}
 function connections(p){if(!p)return[];const r=p.r||0;if(['straight','station','crossing'].includes(p.t))return r%2?['N','S']:['W','E'];if(p.t==='curve')return [['N','E'],['E','S'],['S','W'],['W','N']][r%4];if(p.t==='switch'){const routes=switchRoutes(p);return [...new Set(routes.flat())]}return[]}
@@ -95,26 +101,22 @@ function switchDirectionText(p){
   return `${labels[entry]}から${labels[exit]}へ`;
 }
 function drawSwitchGuide(e,p){
-  const [entry,exit]=selectedSwitchRoute(p),[dx,dy]=V[exit],c=e.c;
-  ctx.save();ctx.lineJoin='round';ctx.lineCap='round';
-  ctx.beginPath();ctx.moveTo(...e[entry]);ctx.lineTo(e.mx,e.my);ctx.lineTo(...e[exit]);
-  ctx.strokeStyle='#fffaf0';ctx.lineWidth=Math.max(4,c*.18);ctx.stroke();
-  ctx.strokeStyle='#138665';ctx.lineWidth=Math.max(2.5,c*.115);ctx.stroke();
-  // Arrowhead on the actual exit, not on the unused branch.
-  const tipX=e.mx+dx*c*.43,tipY=e.my+dy*c*.43;
-  const baseX=e.mx+dx*c*.22,baseY=e.my+dy*c*.22;
-  const wing=c*.12;
-  ctx.beginPath();ctx.moveTo(tipX,tipY);
-  ctx.lineTo(baseX-dy*wing,baseY+dx*wing);
-  ctx.lineTo(baseX+dy*wing,baseY-dx*wing);
-  ctx.closePath();ctx.fillStyle='#fff';ctx.fill();
-  ctx.strokeStyle='#075a43';ctx.lineWidth=Math.max(1,c*.032);ctx.stroke();
-  ctx.restore();
+ const [entry,exit]=selectedSwitchRoute(p);ctx.save();ctx.lineCap='round';
+ ctx.beginPath();for(let i=0;i<=24;i++){const q=trackPoint(entry,exit,i/24),px=e.l+q.x*e.c,py=e.t+q.y*e.c;i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.strokeStyle='#377e66';ctx.lineWidth=Math.max(2,e.c*.055);ctx.stroke();
+ const arrow=trackPoint(entry,exit,.82),px=e.l+arrow.x*e.c,py=e.t+arrow.y*e.c;ctx.translate(px,py);ctx.rotate(arrow.angle);ctx.beginPath();ctx.moveTo(e.c*.09,0);ctx.lineTo(-e.c*.065,-e.c*.06);ctx.lineTo(-e.c*.065,e.c*.06);ctx.closePath();ctx.fillStyle='#fff7db';ctx.fill();ctx.strokeStyle='#34654e';ctx.lineWidth=Math.max(.5,e.c*.015);ctx.stroke();ctx.restore();
 }
-function resize(){const r=stage.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);const cell=Math.min((r.width-12)/COLS,(r.height-12)/ROWS);view={w:r.width,h:r.height,c:cell,ox:(r.width-cell*COLS)/2,oy:(r.height-cell*ROWS)/2}}
+function resize(){const r=stage.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);const cell=Math.min((r.width-12)/COLS,(r.height-12)/ROWS)*zoom;const limitX=Math.max(0,(cell*COLS-r.width)/2+10),limitY=Math.max(0,(cell*ROWS-r.height)/2+10);panX=Math.max(-limitX,Math.min(limitX,panX));panY=Math.max(-limitY,Math.min(limitY,panY));view={w:r.width,h:r.height,c:cell,ox:(r.width-cell*COLS)/2+panX,oy:(r.height-cell*ROWS)/2+panY}}
 function cellFromEvent(e){const r=cv.getBoundingClientRect(),x=Math.floor((e.clientX-r.left-view.ox)/view.c),y=Math.floor((e.clientY-r.top-view.oy)/view.c);return inside(x,y)?{x,y}:null}
 function endpoints(x,y){const c=view.c,l=view.ox+x*c,t=view.oy+y*c,mx=l+c/2,my=t+c/2;return{N:[mx,t],E:[l+c,my],S:[mx,t+c],W:[l,my],M:[mx,my],l,t,mx,my,c}}
-function railLine(a,b,e){ctx.beginPath();ctx.moveTo(...e[a]);ctx.lineTo(e.mx,e.my);ctx.lineTo(...e[b]);ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#756958';ctx.lineWidth=e.c*.25;ctx.stroke();ctx.strokeStyle='#e3dccd';ctx.lineWidth=e.c*.13;ctx.stroke();ctx.strokeStyle='#8a7e6e';ctx.lineWidth=2;ctx.setLineDash([3,5]);ctx.stroke();ctx.setLineDash([])}
+function railLine(a,b,e){
+ const points=Array.from({length:25},(_,i)=>trackPoint(a,b,i/24));
+ const stroke=(color,width,offset=0)=>{ctx.beginPath();points.forEach((point,i)=>{const px=e.l+(point.x-Math.sin(point.angle)*offset)*e.c,py=e.t+(point.y+Math.cos(point.angle)*offset)*e.c;i?ctx.lineTo(px,py):ctx.moveTo(px,py);});ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap='butt';ctx.lineJoin='round';ctx.stroke();};
+ stroke('#9d9f8b',e.c*.37);stroke('#c0bda3',e.c*.29);
+ const length=trackLength(a,b),ties=Math.max(4,Math.round(length*8));
+ ctx.strokeStyle='#817b61';ctx.lineWidth=Math.max(1,e.c*.045);
+ for(let i=0;i<=ties;i++){const point=trackPoint(a,b,(i+.15)/(ties+.3)),px=e.l+point.x*e.c,py=e.t+point.y*e.c,nx=-Math.sin(point.angle)*e.c*.155,ny=Math.cos(point.angle)*e.c*.155;ctx.beginPath();ctx.moveTo(px-nx,py-ny);ctx.lineTo(px+nx,py+ny);ctx.stroke();}
+ for(const side of[-1,1]){stroke('#65796f',Math.max(1,e.c*.043),side*.075);stroke('#e5e9d5',Math.max(.5,e.c*.018),side*.075);}
+}
 // A Japanese level crossing: asphalt runs perpendicular to the track.
 function drawCrossingRoad(e,verticalTrack){
   const c=e.c;
@@ -184,7 +186,7 @@ function updateCrossings(dt,now){
     const key=`${x},${y}`;
     let gate=crossingGates.get(key);
     if(!gate){gate={closed:0,alarm:false};crossingGates.set(key,gate)}
-    gate.alarm=running&&trains.some(t=>trainApproachesCrossing(t,x,y));
+    gate.alarm=trains.some(t=>occupiesCell(t,x,y))||(running&&trains.some(t=>trainApproachesCrossing(t,x,y)));
     gate.closed=Math.max(0,Math.min(1,gate.closed+(gate.alarm?1.4:-1.6)*dt));
     anyAlarm ||=gate.alarm;
   }
@@ -194,6 +196,17 @@ function updateCrossings(dt,now){
     tone(810,.11);
     setTimeout(()=>{if(running&&soundOn)tone(580,.12)},140);
   }
+}
+function drawStation(e,p){
+ const c=e.c,waiting=trains.some(t=>t.x===Math.floor((e.l-view.ox)/c+.01)&&t.y===Math.floor((e.t-view.oy)/c+.01)&&t.doorOpen);
+ ctx.save();ctx.translate(e.mx,e.my);ctx.rotate((p.r||0)%2?Math.PI/2:0);
+ ctx.fillStyle='#53765722';ctx.fillRect(-c*.53,-c*.55,c*1.1,c*.32);
+ ctx.fillStyle='#d8d3b8';ctx.fillRect(-c*.52,-c*.5,c*1.04,c*.29);ctx.fillStyle='#f1e4ac';ctx.fillRect(-c*.52,-c*.24,c*1.04,c*.035);
+ ctx.fillStyle='#9cab91';ctx.fillRect(-c*.43,-c*.48,c*.86,c*.05);ctx.fillStyle='#527b6c';ctx.fillRect(-c*.44,-c*.55,c*.88,c*.12);
+ ctx.strokeStyle='#bdd0b7';ctx.lineWidth=Math.max(.5,c*.012);for(let i=0;i<6;i++){const x=-c*.4+i*c*.155;ctx.beginPath();ctx.moveTo(x,-c*.55);ctx.lineTo(x,-c*.43);ctx.stroke();}
+ ctx.fillStyle='#698275';for(const x of[-.32,.32])ctx.fillRect(x*c,-c*.42,c*.025,c*.18);
+ for(let i=0;i<3;i++){const px=(-.26+i*.22)*c,py=-c*(waiting?.23:.32);ctx.fillStyle=['#a9826b','#78948d','#b5a36f'][i];ctx.beginPath();ctx.arc(px,py,c*.035,0,Math.PI*2);ctx.fill();}
+ ctx.fillStyle='#f2efda';ctx.fillRect(-c*.27,-c*.51,c*.54,c*.09);ctx.fillStyle='#395c51';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`600 ${Math.max(5,c*.085)}px sans-serif`;ctx.fillText(p.name||'STATION',0,-c*.465,c*.52);ctx.restore();
 }
 function drawPiece(x,y,p){
   if(!p)return;
@@ -205,40 +218,169 @@ function drawPiece(x,y,p){
   }else{
     const c=connections(p);railLine(c[0],c[1],e);
   }
-  if(p.t==='station'){
-    ctx.fillStyle='#fffaf0';ctx.fillRect(e.l+e.c*.1,e.t+e.c*.08,e.c*.8,e.c*.19);
-    ctx.fillStyle='#ef604d';ctx.fillRect(e.l+e.c*.1,e.t+e.c*.08,e.c*.8,e.c*.045);
-  }
+  if(p.t==='station')drawStation(e,p);
   if(p.t==='crossing'){
     const gate=crossingGates.get(`${x},${y}`)||{closed:0,alarm:false};
     drawJapaneseCrossing(e,p,gate,performance.now());
   }
 }
-function trainPos(t,p){const e=endpoints(t.x,t.y),a=e[t.entry]||e.M,b=e[t.exit]||e.M;if(p<.5){const u=p*2;return[a[0]+(e.mx-a[0])*u,a[1]+(e.my-a[1])*u]}const u=(p-.5)*2;return[e.mx+(b[0]-e.mx)*u,e.my+(b[1]-e.my)*u]}
-function drawTrain(t){const a=trainPos(t,t.p),b=trainPos(t,Math.min(1,t.p+.04)),ang=Math.atan2(b[1]-a[1],b[0]-a[0]),c=view.c;ctx.save();ctx.translate(...a);ctx.rotate(ang);ctx.fillStyle=t.color;ctx.strokeStyle='#fff';ctx.lineWidth=2;roundRect(-c*.29,-c*.145,c*.58,c*.29,c*.08);ctx.fill();ctx.stroke();ctx.fillStyle='#ddecf7';ctx.fillRect(-c*.13,-c*.1,c*.13,c*.2);ctx.fillStyle='#fff4ad';ctx.beginPath();ctx.arc(c*.22,-c*.06,c*.036,0,Math.PI*2);ctx.fill();ctx.restore()}
+// One geometry is shared by the rails, the switch guide and every carriage.
+function trackPoint(entry,exit,p){
+ const ends={N:[.5,0],E:[1,.5],S:[.5,1],W:[0,.5]},a=ends[entry],b=ends[exit];
+ p=Math.max(0,Math.min(1,p));
+ if(!a||!b)return {x:.5,y:.5,angle:0};
+ if(a[0]===b[0]||a[1]===b[1])return {x:a[0]+(b[0]-a[0])*p,y:a[1]+(b[1]-a[1])*p,angle:Math.atan2(b[1]-a[1],b[0]-a[0])};
+ const cx=a[0]===.5?b[0]:a[0],cy=a[1]===.5?b[1]:a[1];
+ const start=Math.atan2(a[1]-cy,a[0]-cx),end=Math.atan2(b[1]-cy,b[0]-cx);
+ let turn=end-start;while(turn>Math.PI)turn-=Math.PI*2;while(turn< -Math.PI)turn+=Math.PI*2;
+ const angle=start+turn*p,sign=Math.sign(turn);
+ return {x:cx+Math.cos(angle)*.5,y:cy+Math.sin(angle)*.5,angle:Math.atan2(Math.cos(angle)*sign,-Math.sin(angle)*sign)};
+}
+function trackLength(entry,exit){return ({N:'S',S:'N',E:'W',W:'E'})[entry]===exit?1:Math.PI/4;}
+function trainPose(t,p=t.p){const point=trackPoint(t.entry,t.exit,p);return {...point,x:t.x+point.x,y:t.y+point.y,cellX:t.x,cellY:t.y,entry:t.entry,exit:t.exit,p};}
+function stationName(x,y){return at(x,y)?.name||['みどり駅','ひなた駅','さくら駅','こはる駅'][(x+y)%4];}
+function seedTrail(t){
+ let cursor={...t},distance=0;const points=[{...trainPose(cursor),distance:0}];
+ for(let step=0;step<100&&distance> -1.65;step++){
+  const length=trackLength(cursor.entry,cursor.exit),move=Math.min(cursor.p*length,.035);
+  if(move>1e-8){cursor.p-=move/length;distance-=move;points.push({...trainPose(cursor),distance});continue;}
+  const dir=V[cursor.entry];if(!dir)break;const nx=cursor.x+dir[0],ny=cursor.y+dir[1],piece=at(nx,ny),exit=OPP[cursor.entry];
+  if(!piece)break;
+  const candidates=piece.t==='switch'?[selectedSwitchRoute(piece),...switchRoutes(piece)]:[connections(piece)];
+  const route=candidates.find(pair=>pair.includes(exit));if(!route)break;
+  cursor={x:nx,y:ny,entry:route.find(d=>d!==exit),exit,p:1};
+ }
+ t.travel=0;t.trail=points.reverse();t.pathRevision=revision;
+}
+function ensureTrain(t){
+ const piece=at(t.x,t.y);if(!piece)return false;
+ if(t.pathRevision!==revision||!Array.isArray(t.trail)||!t.trail.length){
+  const conn=connections(piece);
+  if(!conn.includes(t.entry)||!conn.includes(t.exit)||t.entry===t.exit){t.entry=conn[0];t.exit=exitDir(piece,t.entry);t.p=.5;}
+  t.p=Math.max(0,Math.min(1,Number(t.p)||0));t.velocity=0;t.stops=Number(t.stops)||0;t.status='待機中';seedTrail(t);
+ }
+ return true;
+}
+function historyPose(t,distance){
+ const path=t.trail;if(!path?.length||distance<path[0].distance-1e-6)return null;
+ let i=path.length-1;while(i>0&&path[i-1].distance>distance)i--;
+ const a=path[Math.max(0,i-1)],b=path[i],u=b.distance===a.distance?1:Math.max(0,Math.min(1,(distance-a.distance)/(b.distance-a.distance)));
+ let turn=b.angle-a.angle;while(turn>Math.PI)turn-=Math.PI*2;while(turn< -Math.PI)turn+=Math.PI*2;
+ const same=a.cellX===b.cellX&&a.cellY===b.cellY&&a.entry===b.entry&&a.exit===b.exit;
+ return {...(u<.5?a:b),x:a.x+(b.x-a.x)*u,y:a.y+(b.y-a.y)*u,angle:a.angle+turn*u,p:same?a.p+(b.p-a.p)*u:(u<.5?a.p:b.p),distance};
+}
+function carPoses(t){if(!ensureTrain(t))return[];const poses=[trainPose(t)];for(let i=1;i<3;i++){const point=historyPose(t,t.travel-i*.62);if(point)poses.push(point);}return poses;}
+function appendTrail(t,distance){
+ t.travel+=distance;
+ const point={...trainPose(t),distance:t.travel},previous=t.trail[t.trail.length-1];
+ const anchor=t.trail[Math.max(0,t.trail.length-2)];
+ if(point.distance-anchor.distance>=.03||previous.distance===0||point.cellX!==previous.cellX||point.cellY!==previous.cellY)t.trail.push(point);
+ else if(t.trail.length>1&&previous.distance!==0)t.trail[t.trail.length-1]=point;
+ // Keep enough actual route to cover the full train, including switch crossings.
+ while(t.trail.length>2&&t.trail[1].distance<t.travel-1.8)t.trail.shift();
+}
+function occupiesCell(t,x,y){
+ if(!ensureTrain(t))return false;
+ const rear=t.travel-(carPoses(t).length-1)*.62;
+ return (t.x===x&&t.y===y)||t.trail.some(p=>p.distance>=rear-.04&&p.distance<=t.travel&&p.cellX===x&&p.cellY===y);
+}
+function reverseTrain(t){
+ const cars=carPoses(t),rearOffset=(cars.length-1)*.62,back=historyPose(t,t.travel-rearOffset)||{...trainPose(t),distance:t.travel};
+ const rearDistance=t.travel-rearOffset;
+ const points=t.trail.filter(p=>p.distance>=rearDistance).reverse().map(p=>({...p,entry:p.exit,exit:p.entry,p:1-p.p,angle:p.angle+Math.PI,distance:rearDistance-p.distance}));
+ points.push({...back,entry:back.exit,exit:back.entry,p:1-back.p,angle:back.angle+Math.PI,distance:0});
+ t.x=back.cellX;t.y=back.cellY;t.entry=back.exit;t.exit=back.entry;t.p=1-back.p;t.travel=0;t.trail=points;t.velocity=0;t.pause=.65;t.status='折り返し';t.lastStop='';
+}
+function upcomingStation(t){
+ const current=at(t.x,t.y),length=trackLength(t.entry,t.exit),key=`${t.x},${t.y}`;
+ if(current?.t==='station'&&t.lastStop!==key&&t.p<=.500001)return {distance:Math.max(0,(.5-t.p)*length),x:t.x,y:t.y};
+ const dir=V[t.exit],nx=t.x+dir[0],ny=t.y+dir[1],next=at(nx,ny);
+ if(next?.t==='station'&&exitDir(next,OPP[t.exit]))return {distance:(1-t.p)*length+.5,x:nx,y:ny};
+ return null;
+}
+function updateTrain(t,dt){
+ if(!ensureTrain(t))return;
+ if(t.pause>0){t.pause=Math.max(0,t.pause-dt);t.velocity=0;t.doorOpen=t.status!=='折り返し'&&t.pause>.3;t.status=t.status==='折り返し'?'折り返し':t.pause>.3?'停車・乗降中':'ドアを閉めています';return;}
+ t.doorOpen=false;
+ const stop=upcomingStation(t),base=.76*speed;
+ const desired=stop?Math.min(base,Math.sqrt(2*1.25*stop.distance)):base;
+ t.velocity=Number(t.velocity)||0;t.velocity+=Math.max(-1.25*dt,Math.min(1.1*dt,desired-t.velocity));
+ let distance=t.velocity*dt;
+ if(stop&&distance>=stop.distance-1e-5){
+  distance=stop.distance;
+  moveTrain(t,distance);t.pause=1.7;t.velocity=0;t.lastStop=`${stop.x},${stop.y}`;t.stops=(t.stops||0)+1;t.doorOpen=true;t.status='停車・乗降中';tone(680,.07);if(mode==='run')toast(`${stationName(stop.x,stop.y)}に停車`);return;
+ }
+ t.status=stop&&stop.distance<.75?'駅へ減速中':'走行中';moveTrain(t,distance);
+}
+function moveTrain(t,distance){
+ for(let guard=0;distance>1e-8&&guard<6;guard++){
+  const length=trackLength(t.entry,t.exit),available=(1-t.p)*length,move=Math.min(distance,available);
+  t.p=Math.min(1,t.p+move/length);distance-=move;appendTrail(t,move);
+  if(t.p<1-1e-8)break;
+  const dir=V[t.exit],nx=t.x+dir[0],ny=t.y+dir[1],piece=at(nx,ny),entry=OPP[t.exit],exit=exitDir(piece,entry);
+  if(!piece||!exit){reverseTrain(t);break;}
+  t.x=nx;t.y=ny;t.entry=entry;t.exit=exit;t.p=0;
+  if(t.lastStop!==`${nx},${ny}`)t.lastStop='';
+ }
+}
+function drawTrain(t){
+ const cars=carPoses(t),c=view.c;if(!cars.length)return;
+ ctx.save();ctx.lineWidth=Math.max(1,c*.045);ctx.strokeStyle='#496058';
+ for(let i=1;i<cars.length;i++){ctx.beginPath();ctx.moveTo(view.ox+cars[i-1].x*c,view.oy+cars[i-1].y*c);ctx.lineTo(view.ox+cars[i].x*c,view.oy+cars[i].y*c);ctx.stroke();}
+ for(let i=cars.length-1;i>=0;i--){
+  const point=cars[i];ctx.save();ctx.translate(view.ox+point.x*c,view.oy+point.y*c);ctx.rotate(point.angle);
+  ctx.fillStyle='#294c3c26';roundRect(-c*.28+c*.035,-c*.145+c*.045,c*.56,c*.29,c*.07);ctx.fill();
+  const metal=ctx.createLinearGradient(0,-c*.16,0,c*.16);metal.addColorStop(0,'#fffaf0');metal.addColorStop(.4,'#e5e8d8');metal.addColorStop(1,'#aabeb0');
+  ctx.fillStyle=metal;ctx.strokeStyle='#527367';ctx.lineWidth=Math.max(.7,c*.025);roundRect(-c*.27,-c*.145,c*.54,c*.29,c*.065);ctx.fill();ctx.stroke();
+  ctx.fillStyle=t.color;ctx.fillRect(-c*.22,-c*.14,c*.43,c*.035);ctx.fillRect(-c*.22,c*.1,c*.43,c*.035);
+  ctx.fillStyle='#748d89';for(const side of[-1,1])for(const wx of[-.15,-.03,.1])ctx.fillRect(c*wx,c*side*.1-c*.018,c*.065,c*.036);
+  ctx.fillStyle='#c6d3c3';roundRect(-c*.12,-c*.065,c*.2,c*.13,c*.025);ctx.fill();ctx.strokeStyle='#95aba0';ctx.lineWidth=Math.max(.4,c*.015);ctx.stroke();
+  if(i===0){ctx.fillStyle='#587f83';roundRect(c*.13,-c*.085,c*.1,c*.17,c*.025);ctx.fill();for(const sign of[-1,1]){ctx.fillStyle='#fff0bb';ctx.beginPath();ctx.arc(c*.235,sign*c*.09,c*.02,0,Math.PI*2);ctx.fill();}}
+  if(i===cars.length-1){ctx.fillStyle='#b97760';ctx.fillRect(-c*.255,-c*.1,c*.02,c*.035);ctx.fillRect(-c*.255,c*.065,c*.02,c*.035);}
+  if(t.doorOpen){ctx.fillStyle='#425f59';for(const side of[-1,1])ctx.fillRect(-c*.005,side*c*.15-c*.015,c*.08,c*.03);}
+  ctx.restore();
+ }
+ ctx.restore();
+}
 function roundRect(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r)}
-function draw(){ctx.clearRect(0,0,view.w,view.h);ctx.fillStyle='#dceccb';ctx.fillRect(0,0,view.w,view.h);ctx.strokeStyle='#b8cfa5';ctx.lineWidth=1;for(let x=0;x<=COLS;x++){ctx.beginPath();ctx.moveTo(view.ox+x*view.c,view.oy);ctx.lineTo(view.ox+x*view.c,view.oy+ROWS*view.c);ctx.stroke()}for(let y=0;y<=ROWS;y++){ctx.beginPath();ctx.moveTo(view.ox,view.oy+y*view.c);ctx.lineTo(view.ox+COLS*view.c,view.oy+y*view.c);ctx.stroke()}for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)drawPiece(x,y,grid[y][x]);trains.forEach(drawTrain)}
-function updateTrain(t,dt){if(t.pause>0){t.pause-=dt;return}const p=at(t.x,t.y);if(!p)return;const key=`${t.x},${t.y}`;if(p.t==='station'&&t.p>.46&&t.p<.56&&t.lastStop!==key){t.pause=1.2;t.lastStop=key;tone(700,.08);return}t.p+=dt*.76*speed;if(t.p<1)return;const d=V[t.exit],nx=t.x+d[0],ny=t.y+d[1],np=at(nx,ny),entry=OPP[t.exit],nextExit=exitDir(np,entry);if(np&&nextExit){t.x=nx;t.y=ny;t.entry=entry;t.exit=nextExit;t.p=0;if(t.lastStop!==`${nx},${ny}`)t.lastStop=''}else{const tmp=t.entry;t.entry=t.exit;t.exit=tmp;t.p=0;t.pause=.25}}
-function frame(now){const dt=Math.min(.04,(now-lastTime)/1000);lastTime=now;if(running)trains.forEach(t=>updateTrain(t,dt));updateCrossings(dt,now);draw();requestAnimationFrame(frame)}
+function draw(){
+ ctx.clearRect(0,0,view.w,view.h);
+ const land=ctx.createLinearGradient(0,0,view.w,view.h);land.addColorStop(0,'#d8e3c7');land.addColorStop(1,'#b6cba3');ctx.fillStyle=land;ctx.fillRect(0,0,view.w,view.h);
+ // Quiet decoration only in empty cells, so the construction grid stays readable.
+ for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(!grid[y][x]){
+  const e=endpoints(x,y),seed=(Math.sin(x*23.1+y*117.3)*43758.5)%1;
+  if(Math.abs(seed)>.76){ctx.fillStyle='#50745616';ctx.beginPath();ctx.ellipse(e.mx+e.c*.07,e.my+e.c*.12,e.c*.23,e.c*.13,0,0,Math.PI*2);ctx.fill();const shade=ctx.createRadialGradient(e.mx-e.c*.06,e.my-e.c*.07,1,e.mx,e.my,e.c*.21);shade.addColorStop(0,'#a7c18f');shade.addColorStop(1,'#6d9978');ctx.fillStyle=shade;ctx.beginPath();ctx.arc(e.mx,e.my,e.c*.2,0,Math.PI*2);ctx.fill();}
+  else if(Math.abs(seed)>.42){ctx.fillStyle='#f1e8c799';for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(e.mx+(i-1)*e.c*.08,e.my+(i%2)*e.c*.06,Math.max(.7,e.c*.022),0,Math.PI*2);ctx.fill();}}
+ }
+ ctx.strokeStyle=mode==='edit'?'#88a47755':'#88a47718';ctx.lineWidth=1;
+ for(let x=0;x<=COLS;x++){ctx.beginPath();ctx.moveTo(view.ox+x*view.c,view.oy);ctx.lineTo(view.ox+x*view.c,view.oy+ROWS*view.c);ctx.stroke();}
+ for(let y=0;y<=ROWS;y++){ctx.beginPath();ctx.moveTo(view.ox,view.oy+y*view.c);ctx.lineTo(view.ox+COLS*view.c,view.oy+y*view.c);ctx.stroke();}
+ for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)drawPiece(x,y,grid[y][x]);trains.forEach(drawTrain);
+}
+function frame(now){const dt=Math.min(.04,(now-lastTime)/1000);lastTime=now;if(running)trains.forEach(t=>updateTrain(t,dt));updateCrossings(dt,now);updateRunDetails();draw();requestAnimationFrame(frame)}
 function placeOrRotate(c,drag=false){if(!c||mode!=='edit')return;const key=`${c.x},${c.y}`;if(drag&&pointer.lastCell===key)return;pointer.lastCell=key;const p=at(c.x,c.y);if(tool==='train'){if(!p){toast('線路の上に置いてね');return}if(drag)return;const i=trains.findIndex(t=>t.x===c.x&&t.y===c.y);remember();if(i>=0){trains.splice(i,1);tone(220,.05);toast('列車を消しました')}else addTrain(c.x,c.y,p);return}if(p){if(drag)return;remember();if(p.t===tool){p.r=(p.r+1)%4;tone(460,.04);toast('向きを変えました')}else{grid[c.y][c.x]={t:tool,r:0,a:false};tone(360,.035);toast('上書きしました')}return}remember();grid[c.y][c.x]={t:tool,r:0,a:false};tone(360,.035)}
 function removeAt(c){if(!c||mode!=='edit')return;const p=at(c.x,c.y),hasTrain=trains.some(t=>t.x===c.x&&t.y===c.y);if(!p&&!hasTrain)return;remember();grid[c.y][c.x]=null;trains=trains.filter(t=>!(t.x===c.x&&t.y===c.y));tone(220,.05);toast('消しました')}
 function addTrain(x,y,p){if(trains.length>=3){toast('列車は3本まで');return}const c=connections(p);if(c.length<2){toast('ここには置けません');return}trains.push({x,y,entry:c[0],exit:c[1],p:.5,pause:0,lastStop:'',color:['#e94f3d','#2e82c5','#f0a62a'][trains.length]});tone(620,.07);toast('列車を置きました')}
-function setMode(next){mode=next;document.querySelectorAll('.mode').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));document.querySelector('#editUI').classList.toggle('hidden',mode!=='edit');document.querySelector('#runUI').classList.toggle('show',mode==='run');if(mode==='edit'){running=false;document.querySelector('#start').textContent='▶ 出発';setBadge()}else{document.querySelector('#badge').textContent=trains.length?`列車 ${trains.length}本`:'列車を置いてね';toast(trains.length?'出発を押してください':'「つくる」で列車を置いてね')}}
+function setMode(next){mode=next;document.querySelectorAll('.mode').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));document.querySelector('#editUI').classList.toggle('hidden',mode!=='edit');document.querySelector('#runUI').classList.toggle('show',mode==='run');document.querySelector('#runDetails').hidden=mode!=='run';if(mode==='edit'){running=false;document.querySelector('#start').textContent='▶ 出発';setBadge()}else{document.querySelector('#badge').textContent=trains.length?`列車 ${trains.length}本`:'列車を置いてね';toast(trains.length?'出発を押してください':'「つくる」で列車を置いてね')}}
+function updateRunDetails(){if(mode!=='run')return;const first=trains[0],stops=trains.reduce((sum,t)=>sum+(t.stops||0),0);const text=`${trains.length}編成 · 3両連結 · 速度 ${speed.toFixed(1)}倍 · 停車 ${stops}回${first?' / '+(running?first.status||'走行中':'一時停止'):''}`;const el=document.querySelector('#runDetails');if(el.textContent!==text)el.textContent=text;}
 function setBadge(){const names={straight:'直線を置く',curve:'カーブを置く',station:'駅を置く',crossing:'踏切を置く',switch:'ポイントを置く',train:'線路をタップして列車を置く'};document.querySelector('#badge').textContent=names[tool]}
 function toast(s){const el=document.querySelector('#toast');el.textContent=s;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),1400)}
 function tone(freq,dur){if(!soundOn)return;try{audio ||= new (window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.frequency.value=freq;o.type='sine';g.gain.setValueAtTime(.045,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+dur);o.connect(g).connect(audio.destination);o.start();o.stop(audio.currentTime+dur)}catch{}}
-function demo(){remember();grid=makeGrid();trains=[];const put=(x,y,t,r=0)=>grid[y][x]={t,r,a:false};for(let x=2;x<=9;x++){put(x,1,'straight');put(x,6,'straight')}for(let y=2;y<=5;y++){put(1,y,'straight',1);put(10,y,'straight',1)}put(1,1,'curve',1);put(10,1,'curve',2);put(10,6,'curve',3);put(1,6,'curve',0);put(5,1,'station');put(8,6,'crossing');put(2,1,'switch');trains.push({x:5,y:1,entry:'W',exit:'E',p:.5,pause:0,lastStop:'',color:'#e94f3d'});toast('お手本を読み込みました')}
-cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);const c=cellFromEvent(e);pointer={down:true,startX:e.clientX,startY:e.clientY,startTime:performance.now(),lastCell:'',longTimer:null,longDone:false,moved:false};if(mode==='run'){if(c&&at(c.x,c.y)?.t==='switch'){const point=at(c.x,c.y);point.a=!point.a;tone(500,.05);toast(`ポイント：${switchDirectionText(point)}`)}return}pointer.longTimer=setTimeout(()=>{pointer.longDone=true;removeAt(c)},520)});
-cv.addEventListener('pointermove',e=>{if(!pointer.down||mode!=='edit')return;const dist=Math.hypot(e.clientX-pointer.startX,e.clientY-pointer.startY);if(dist>8){pointer.moved=true;clearTimeout(pointer.longTimer);placeOrRotate(cellFromEvent(e),true)}});
-function endPointer(e){if(!pointer.down)return;clearTimeout(pointer.longTimer);const c=cellFromEvent(e);if(mode==='edit'&&!pointer.longDone&&!pointer.moved)placeOrRotate(c,false);pointer.down=false}
-cv.addEventListener('pointerup',endPointer);cv.addEventListener('pointercancel',endPointer);
+function demo(){remember();grid=makeGrid();trains=[];const put=(x,y,t,r=0)=>grid[y][x]={t,r,a:false};for(let x=2;x<=9;x++){put(x,1,'straight');put(x,6,'straight')}for(let y=2;y<=5;y++){put(1,y,'straight',1);put(10,y,'straight',1)}put(1,1,'curve',1);put(10,1,'curve',2);put(10,6,'curve',3);put(1,6,'curve',0);put(5,1,'station');grid[1][5].name='中央駅';put(2,0,'station',1);grid[0][2].name='丘の上駅';put(8,6,'crossing');put(2,1,'switch');trains.push({x:5,y:1,entry:'W',exit:'E',p:.5,pause:0,lastStop:'',color:'#e94f3d'});toast('お手本を読み込みました')}
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);if(panMode){panStart={id:e.pointerId,x:e.clientX,y:e.clientY,panX,panY};return;}const c=cellFromEvent(e);pointer={down:true,startX:e.clientX,startY:e.clientY,startTime:performance.now(),lastCell:'',longTimer:null,longDone:false,moved:false};if(mode==='run'){if(c&&at(c.x,c.y)?.t==='switch'){if(trains.some(t=>occupiesCell(t,c.x,c.y))){toast('列車が通過中です。通り切るまで待ってね');return}const point=at(c.x,c.y);point.a=!point.a;tone(500,.05);toast(`ポイント：${switchDirectionText(point)}`)}return}pointer.longTimer=setTimeout(()=>{pointer.longDone=true;removeAt(c)},520)});
+cv.addEventListener('pointermove',e=>{if(panStart?.id===e.pointerId){panX=panStart.panX+e.clientX-panStart.x;panY=panStart.panY+e.clientY-panStart.y;resize();return;}if(!pointer.down||mode!=='edit')return;const dist=Math.hypot(e.clientX-pointer.startX,e.clientY-pointer.startY);if(dist>8){pointer.moved=true;clearTimeout(pointer.longTimer);placeOrRotate(cellFromEvent(e),true)}});
+function endPointer(e){if(panStart){panStart=null;return;}if(!pointer.down)return;clearTimeout(pointer.longTimer);const c=cellFromEvent(e);if(mode==='edit'&&!pointer.longDone&&!pointer.moved)placeOrRotate(c,false);pointer.down=false}
+cv.addEventListener('pointerup',endPointer);cv.addEventListener('pointercancel',()=>{panStart=null;clearTimeout(pointer.longTimer);pointer.down=false;});
+function setZoom(value){zoom=Math.max(1,Math.min(2.5,value));if(zoom===1)panX=panY=0;document.querySelector('#zoomLabel').textContent='表示 '+Math.round(zoom*100)+'%';resize();}
+document.querySelector('#zoomIn').onclick=()=>setZoom(zoom+.25);document.querySelector('#zoomOut').onclick=()=>setZoom(zoom-.25);document.querySelector('#zoomFit').onclick=()=>setZoom(1);document.querySelector('#panView').onclick=e=>{panMode=!panMode;e.currentTarget.setAttribute('aria-pressed',String(panMode));cv.style.cursor=panMode?'grab':'';toast(panMode?'画面をなぞって表示を移動':'パーツ配置に戻りました');};
 document.querySelectorAll('.part').forEach(b=>b.addEventListener('click',()=>{tool=b.dataset.tool;document.querySelectorAll('.part').forEach(x=>x.classList.toggle('active',x===b));setBadge();tone(420,.025)}));
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
 document.querySelector('#start').addEventListener('click',()=>{if(!trains.length){toast('列車を置いてね');return}running=!running;document.querySelector('#start').textContent=running?'■ 一時停止':'▶ 出発';document.querySelector('#start').classList.toggle('stop',running);tone(running?700:280,.08)});
 document.querySelector('#slower').addEventListener('click',()=>{speed=Math.max(.5,+(speed-.2).toFixed(1));toast(`速度 ${speed.toFixed(1)}倍`)});document.querySelector('#faster').addEventListener('click',()=>{speed=Math.min(2,+(speed+.2).toFixed(1));toast(`速度 ${speed.toFixed(1)}倍`)});
-document.querySelector('#undo').addEventListener('click',()=>{const s=history.pop();if(!s){toast('戻せません');return}grid=s.grid;trains=s.trains;toast('1つ戻しました')});
+document.querySelector('#undo').addEventListener('click',()=>{const s=history.pop();if(!s){toast('戻せません');return}grid=s.grid;trains=s.trains;revision++;toast('1つ戻しました')});
 document.querySelector('#demo').addEventListener('click',demo);document.querySelector('#clear').addEventListener('click',()=>{if(!confirm('全部消しますか？'))return;remember();grid=makeGrid();trains=[];toast('全部消しました')});
-document.querySelector('#save').addEventListener('click',()=>{localStorage.setItem('railTownV2',JSON.stringify({grid,trains}));toast('保存しました')});document.querySelector('#load').addEventListener('click',()=>{try{const s=JSON.parse(localStorage.getItem('railTownV2'));if(!s)throw 0;remember();grid=s.grid;trains=s.trains||[];toast('読み込みました')}catch{toast('保存データがありません')}});
+document.querySelector('#save').addEventListener('click',()=>{try{localStorage.setItem('railTownV2',JSON.stringify({grid,trains}));toast('保存しました')}catch{toast('保存できませんでした。容量やブラウザ設定をご確認ください')}});
+document.querySelector('#load').addEventListener('click',()=>{try{const s=JSON.parse(localStorage.getItem('railTownV2'));if(!s)throw Error('保存データがありません');if(!Array.isArray(s.grid)||s.grid.length!==ROWS||s.grid.some(row=>!Array.isArray(row)||row.length!==COLS||row.some(p=>p!==null&&(!p||!['straight','curve','station','crossing','switch'].includes(p.t)||!Number.isInteger(p.r)||p.r<0||p.r>3))))throw Error('保存データを読み込めません');const restored=(s.trains||[]).filter(t=>Number.isInteger(t.x)&&Number.isInteger(t.y)&&inside(t.x,t.y)&&s.grid[t.y][t.x]).slice(0,3).map(t=>({x:t.x,y:t.y,entry:t.entry,exit:t.exit,p:Number.isFinite(t.p)?Math.max(0,Math.min(1,t.p)):.5,pause:0,lastStop:'',color:typeof t.color==='string'&&/^#[0-9a-f]{6}$/i.test(t.color)?t.color:'#c06c55'}));remember();grid=s.grid;trains=restored;crossingGates.clear();toast('読み込みました')}catch(e){toast(e.message||'保存データを読み込めません')}});
 document.querySelector('#sound').addEventListener('click',e=>{soundOn=!soundOn;e.currentTarget.textContent=soundOn?'🔊':'🔇';if(soundOn)tone(520,.05)});
 const modal=document.querySelector('#modal');document.querySelector('#help').addEventListener('click',()=>modal.classList.add('open'));document.querySelector('#close').addEventListener('click',()=>modal.classList.remove('open'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});
 document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});document.addEventListener('selectstart',e=>e.preventDefault());document.addEventListener('contextmenu',e=>e.preventDefault());window.addEventListener('resize',resize);resize();demo();history=[];setBadge();requestAnimationFrame(frame);
