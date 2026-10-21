@@ -29,7 +29,7 @@
   ].map(([id, category, title, description, meta, action, created, updated]) =>
     ({ id, category, title, description, meta, action, created, updated, href: `./tools/${id}/` }));
   const changeNotes = {
-    'gyro-rush': '2026-10-21：機体・隕石・惑星をリアル寄りに描画。画面下部全体でブースト、上部の移動と分離し2本指にも対応。',
+    'gyro-rush': '2026-10-21：ジャイロの中央デッドゾーンを除去し、微小な傾きにも連続して反応。リアルな機体描画と下部全体のブースト操作に対応。',
     'sakamoto-kiss-fishing': '2026-10-21：海中・魚・釣果の描写を改善。巻く速さと誘いの間、藻場の根掛かり、ジャストアワセ・取り込み加点を追加。',
     'train-crossing': '2026-10-21：車両・沿線・駅・踏切・トンネルの描写を強化。イラストで車両選択、ルート進行とスピード表示、スマホ配置を改善。',
     'sakamoto-railway': '2026-10-21：雨粒・窓の水滴・間欠ワイパー・雨天の霞みと路面を改善。大きな速度グラフも常時表示。',

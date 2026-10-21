@@ -52,6 +52,13 @@ const base=process.env.TEST_BASE_URL||'http://127.0.0.1:8000';
   // A mocked gamma stream verifies the tilt path without claiming device testing.
   await page.evaluate(()=>window.__gyroTest.tick(120));await page.locator('#menu').tap();
   await page.locator('#startTilt').tap();await page.evaluate(()=>{window.__gyroTest.quiet();const e=new Event('deviceorientation');Object.defineProperty(e,'gamma',{value:0});window.dispatchEvent(e);const r=new Event('deviceorientation');Object.defineProperty(r,'gamma',{value:20});window.dispatchEvent(r);});await page.waitForTimeout(200);assert.ok((await state()).target>250,'sensor steers right');await page.locator('#pause').tap();await page.locator('#calibrate').tap();assert.equal((await state()).neutral,20);
+  // Small tilts must move continuously through the calibrated centre (no dead zone).
+  for(const delta of [-2,-1,-.25,0,.25,1,2]){
+   await page.evaluate(delta=>{const e=new Event('deviceorientation');Object.defineProperty(e,'gamma',{value:20+delta});window.dispatchEvent(e);},delta);
+   await page.waitForTimeout(500);const s=await state(),expected=s.w/2+delta/25*(s.w/2-22);
+   assert.ok(Math.abs(s.target-expected)<.2,`small tilt ${delta}°: expected ${expected}, got ${s.target}`);
+  }
+
   await page.reload();assert.ok((await state()).best>0,'score persists');await page.locator('#sense').evaluate(el=>{el.value='1.2';el.dispatchEvent(new Event('input',{bubbles:true}));});await page.locator('#sound').uncheck();await page.reload();assert.equal(await page.locator('#sense').inputValue(),'1.2');assert.equal(await page.locator('#sound').isChecked(),false);
   const quiet=await browser.newContext({viewport:{width:375,height:667},reducedMotion:'reduce'}),p=await quiet.newPage();p.on('pageerror',e=>errors.push(e.message));await p.addInitScript(()=>{Storage.prototype.getItem=()=>{throw Error('no storage');};Storage.prototype.setItem=()=>{throw Error('no storage');};window.AudioContext=class{constructor(){throw Error('no audio');}};});await p.goto(url);await p.locator('#startTouch').click();await p.locator('#pause').click();await p.locator('#resume').click();await quiet.close();
   const prefix=await browser.newPage();await prefix.route('**/my-html-tools/**',async route=>{const response=await route.fetch({url:route.request().url().replace('/my-html-tools/','/')});await route.fulfill({response});});await prefix.goto(`${base}/my-html-tools/tools/gyro-rush/`);await prefix.locator('#startTouch').click();assert.ok(await prefix.locator('#hud').isVisible());await prefix.close();
