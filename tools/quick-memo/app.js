@@ -34,7 +34,7 @@ function undoStroke(){end();const p=current();if(!p.strokes.length)return;const 
 function redoStroke(){end();const s=redo.get(current().id)?.pop();if(s){current().strokes.push(s);changed();draw();save()}}
 $('undo').addEventListener('click',undoStroke);$('redo').addEventListener('click',redoStroke);
 function open(id){end();$(id).showModal()}
-$('pen').addEventListener('click',()=>{if(tool==='pen'){open('penDialog')}else{tool='pen';update()}});$('eraser').addEventListener('click',()=>{tool='erase';update()});
+$('pen').addEventListener('click',()=>{if(tool==='pen'){open('penDialog')}else{tool='pen';update()}});$('eraser').addEventListener('click',()=>{if(tool==='erase'){deleteId=current().id;open('deleteDialog')}else{tool='erase';update()}});
 COLORS.forEach((color,i)=>{const b=document.createElement('button');b.setAttribute('aria-label',['墨色','朱色','青色','黄土色'][i]);b.dataset.color=color;b.innerHTML='<i></i>';b.firstElementChild.style.background=color;b.addEventListener('click',()=>{data.pen.color=color;tool='pen';changed();selectPen()});$('colors').append(b)});
 SIZES.forEach((size,i)=>{const b=document.createElement('button');b.dataset.size=size;b.innerHTML='<i></i><span>'+['細い','ふつう','太い'][i]+'</span>';b.firstElementChild.style.height=Math.max(1,size/2)+'px';b.addEventListener('click',()=>{data.pen.size=size;changed();selectPen()});$('sizes').append(b)});
 function selectPen(){document.querySelectorAll('[data-color]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.color===data.pen.color)));document.querySelectorAll('[data-size]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.size)===data.pen.size)))}
