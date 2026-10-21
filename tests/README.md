@@ -63,3 +63,9 @@ Playwrightが通常のrequireで見つからない場合は `TEST_PLAYWRIGHT_MOD
 `node tests/kiss-fishing.cjs` で、独立した加点計算3ケースとアワセの狙い目・海底・誘いの間・根掛かりを照合します。Playwright/Chromiumを用意し、`TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/kiss-fishing.cjs --browser`。`TEST_PLAYWRIGHT_MODULE` と `TEST_SCREENSHOT_DIR` に対応します。
 
 タッチによる実際のキャスト→アワセ→取り込み・加点、320pxからPC・横向きでの操作、図鑑での一時停止、終了と再プレイ、旧保存キー、日替わりの再現性を確認します。根掛かり・遅合わせ・糸切れ・タイマー終了は明示的なテスト状態で境界を確認します。テスト用の観測口は配信レスポンスにテスト側だけで追加し、本番ファイルには含めません。実機の確認とは区別します。
+
+## GYRO RUSH ジャイロ宇宙船
+
+`TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/gyro-rush.cjs`。Playwright/Chromiumを使い、`TEST_PLAYWRIGHT_MODULE` と `TEST_SCREENSHOT_DIR` に対応します。
+
+320pxからPCの画面、下部の左・中央・右・フッターへのブーストタッチ、移動との分離、2本指、49/50/100のエネルギー境界、重複発動・キャンセル・キーボード、一時停止・回転・再プレイ・記録を検証します。許可拒否・未対応・タイムアウト・模擬gamma・中央設定も確認します。終了と被弾は明示的な状態設定を使い、観測口は本番に含めません。実機のジャイロ性能確認とは区別します。保存・音が使えない場合、モーション低減設定、公開サブパスも確認します。
