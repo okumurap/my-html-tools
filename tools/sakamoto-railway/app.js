@@ -3,20 +3,76 @@
   const width=Math.max(1,Math.round(rect.width*dpr)),height=Math.max(1,Math.round(rect.height*dpr));
   if(c.width!==width||c.height!==height){c.width=width;c.height=height;}
 }
+// Rain stays on the windscreen; the wiper clears beads, not the distant rainfall.
+const reducedWeatherMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
+function drawRain(w,h,seed){
+  const dpr=Math.min(devicePixelRatio||1,2),time=reducedWeatherMotion.matches?0:performance.now()/1000;
+  const airflow=clamp(s.speed/80,0,1),phase=time%3.8;
+  const pivot={x:w*.5,y:h*1.055},radius=Math.min(w*.61,h*1.08),left=-3.05,right=-.09;
+  const ease=t=>(1-Math.cos(Math.PI*t))/2;
+  const sweep=phase<.9?ease(phase/.9):phase<1.8?ease((1.8-phase)/.9):0;
+  const angle=left+(right-left)*sweep;
+  // Thin, irregular streaks at several depths, with a little more slant in motion.
+  const count=clamp(Math.round(w*h/(dpr*dpr*1700)),60,180);
+  x.save();x.lineCap='round';
+  for(let i=0;i<count;i++){
+    const depth=seed(i+401),rate=.42+depth*.65+airflow*.18;
+    const py=((seed(i+502)+time*rate)%1.2-.1)*h;
+    const px=((seed(i+603)-time*(.018+airflow*.028))%1+1)%1*w;
+    const length=(2+depth*8)*dpr,slope=.12+airflow*.4;
+    x.strokeStyle=`rgba(214,229,232,${.1+depth*.21})`;x.lineWidth=(.35+depth*.45)*dpr;
+    x.beginPath();x.moveTo(px,py);x.lineTo(px-length*slope,py+length);x.stroke();
+  }
+  const beads=clamp(Math.round(w*h/(dpr*dpr*2100)),38,120);
+  for(let i=0;i<beads;i++){
+    const size=seed(i+710),px=(seed(i+811)+Math.sin(time*.45+i)*.001)*w;
+    const py=((seed(i+912)+time*(.008+size*.012))%1.14-.07)*h;
+    const dx=px-pivot.x,dy=py-pivot.y,a=Math.atan2(dy,dx),distance=Math.hypot(dx,dy);
+    let buildup=1;
+    if(distance<radius&&a>=left&&a<=right){
+      const u=clamp((a-left)/(right-left),0,1),forward=.9*Math.acos(1-2*u)/Math.PI,back=1.8-forward;
+      const age=phase>=back?phase-back:phase>=forward?phase-forward:phase+3.8-back;
+      buildup=clamp(age/2.5,0,1);
+    }
+    const opacity=(.25+size*.45)*buildup;if(opacity<.035)continue;
+    const r=(.75+size*1.8)*dpr,ry=r*(1.15+size*.55);
+    if(size>.7){
+      x.strokeStyle=`rgba(209,226,231,${opacity*.22})`;x.lineWidth=r*.5;
+      x.beginPath();x.moveTo(px,py-ry);x.quadraticCurveTo(px+r*.6,py-ry*3,px,py-ry*6);x.stroke();
+    }
+    x.save();x.translate(px,py);x.scale(1,ry/r);
+    const bead=x.createRadialGradient(-r*.28,-r*.3,r*.12,0,0,r);
+    bead.addColorStop(0,`rgba(232,243,241,${opacity*.16})`);
+    bead.addColorStop(.65,`rgba(37,65,71,${opacity*.26})`);
+    bead.addColorStop(.86,`rgba(214,233,232,${opacity*.65})`);
+    bead.addColorStop(1,`rgba(24,48,55,${opacity*.5})`);
+    x.fillStyle=bead;x.beginPath();x.arc(0,0,r,0,Math.PI*2);x.fill();
+    x.strokeStyle=`rgba(244,250,247,${opacity*.7})`;x.lineWidth=.5*dpr;
+    x.beginPath();x.arc(-r*.12,-r*.1,r*.62,Math.PI*1.07,Math.PI*1.55);x.stroke();x.restore();
+  }
+  // Rubber blade and arm park at the lower edge between intermittent sweeps.
+  const tip={x:pivot.x+Math.cos(angle)*radius,y:pivot.y+Math.sin(angle)*radius};
+  const inner={x:pivot.x+Math.cos(angle)*radius*.26,y:pivot.y+Math.sin(angle)*radius*.26};
+  x.strokeStyle='#14262c';x.lineWidth=2.2*dpr;x.beginPath();x.moveTo(pivot.x,pivot.y);x.lineTo(tip.x,tip.y);x.stroke();
+  x.strokeStyle='#0a171c';x.lineWidth=3.5*dpr;x.beginPath();x.moveTo(inner.x,inner.y);x.lineTo(tip.x,tip.y);x.stroke();
+  x.strokeStyle='#81908f99';x.lineWidth=.65*dpr;x.beginPath();x.moveTo(inner.x+dpr,inner.y);x.lineTo(tip.x+dpr,tip.y);x.stroke();
+  x.restore();
+}
 // Metre-based perspective keeps sleepers, rails and wayside objects moving together.
 function draw(){
   if(!c.dataset.scenery){c.dataset.scenery='perspective';c.parentElement.classList.add('perspective-scenery');}
   const w=c.width,h=c.height,hor=h*.39,f=Math.min(w*.92,h*1.55),eye=2.8;
+  const rainy=document.body.dataset.weather==='rain';
   const seed=n=>{const a=Math.sin(n*127.1+311.7)*43758.5453;return a-Math.floor(a);};
   const project=(lateral,height,depth)=>({x:w*.5+lateral*f/depth,y:hor+(eye-height)*f/depth});
   const polygon=(points,color)=>{x.fillStyle=color;x.beginPath();points.forEach((p,i)=>i?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.closePath();x.fill();};
   const strip=(left,right,near,far,color,height=0)=>polygon([project(left,height,near),project(right,height,near),project(right,height,far),project(left,height,far)],color);
   const line=(a,b,color,width=1)=>{x.strokeStyle=color;x.lineWidth=width;x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.stroke();};
-  const sky=x.createLinearGradient(0,0,0,hor);sky.addColorStop(0,'#6f9fb5');sky.addColorStop(.65,'#bed4dc');sky.addColorStop(1,'#e5e9e2');x.fillStyle=sky;x.fillRect(0,0,w,h);
+  const sky=x.createLinearGradient(0,0,0,hor);sky.addColorStop(0,rainy?'#657b86':'#6f9fb5');sky.addColorStop(.65,rainy?'#9aabb0':'#bed4dc');sky.addColorStop(1,rainy?'#c1cac8':'#e5e9e2');x.fillStyle=sky;x.fillRect(0,0,w,h);
   // Soft, distant cloud banks rather than foreground cartoon circles.
   for(let i=0;i<9;i++){
     const cx=(seed(i+7)*1.3-.15)*w-s.pos*.001,cy=h*(.07+seed(i+12)*.13);
-    const cloud=x.createRadialGradient(cx,cy,0,cx,cy,w*.19);cloud.addColorStop(0,'#ffffff65');cloud.addColorStop(1,'#ffffff00');
+    const cloud=x.createRadialGradient(cx,cy,0,cx,cy,w*.19);cloud.addColorStop(0,rainy?'#dce5e41c':'#ffffff65');cloud.addColorStop(1,'#ffffff00');
     x.save();x.translate(0,cy*.7);x.scale(1,.3);x.fillStyle=cloud;x.fillRect(0,-h,w,h*4);x.restore();
   }
   for(let layer=0;layer<3;layer++){
@@ -34,7 +90,7 @@ function draw(){
     line({x:xx,y:yy},{x:xx+w*(.02+.07*seed(i)),y:yy},i%3?'#d5e2db45':'#f4eee080',Math.max(.5,h*.001));
   }
   x.restore();
-  strip(14,17,1,450,'#b6ac91');strip(8,11.5,1,450,'#727c79');strip(9.6,9.7,1,450,'#d5d1b9');
+  strip(14,17,1,450,'#b6ac91');strip(8,11.5,1,450,rainy?'#52656b':'#727c79');strip(9.6,9.7,1,450,'#d5d1b9');
   // Small patches give grass and the embankment depth without image downloads.
   for(let i=0;i<180;i++){
     const world=Math.floor(s.pos/4)*4+i*4,z=world-s.pos;if(z<2)continue;
@@ -43,7 +99,7 @@ function draw(){
       x.fillStyle=['#88916b','#7e8960','#646f4d','#a2a17b'][i%4];x.beginPath();x.ellipse(p.x,p.y,radius,Math.max(.3,radius*.16),0,0,Math.PI*2);x.fill();
     }
   }
-  strip(-2.1,2.1,1,450,'#555955');strip(-1.8,1.8,1,450,'#7c7c70');
+  strip(-2.1,2.1,1,450,rainy?'#414e4e':'#555955');strip(-1.8,1.8,1,450,rainy?'#626d69':'#7c7c70');
   // Sparse deterministic ballast flecks, anchored to the route rather than time.
   for(let i=0;i<700;i++){
     const world=Math.floor(s.pos/.35)*.35+i*.35,z=world-s.pos;if(z<1.5)continue;
@@ -132,6 +188,15 @@ function draw(){
   }
   line(project(0,5.35,1),project(0,5.35,450),'#465653',Math.max(.7,w*.001));
   line(project(0,6.2,1),project(0,6.2,450),'#72817a',Math.max(.5,w*.0007));
+  if(rainy){
+    // Wet tarmac reflects the overcast sky; haze is strongest at the horizon.
+    strip(8.2,8.8,1,450,'#aebfbe28');strip(10.3,11,1,450,'#bac6c130');
+    const mist=x.createLinearGradient(0,hor-h*.25,0,h);
+    mist.addColorStop(0,'#b1c2c400');mist.addColorStop(.2,'#b1c2c49c');mist.addColorStop(.42,'#a4b7ba38');mist.addColorStop(1,'#80989d00');
+    x.fillStyle=mist;x.fillRect(0,hor-h*.25,w,h);
+    x.fillStyle='#344e5c1a';x.fillRect(0,0,w,h);
+    drawRain(w,h,seed);
+  }
   // Thin window seals and subtle glazing keep most of the view unobstructed.
   const tint=x.createLinearGradient(0,0,w,h);tint.addColorStop(0,'#ffffff0a');tint.addColorStop(.5,'#ffffff00');tint.addColorStop(1,'#153d3b13');x.fillStyle=tint;x.fillRect(0,0,w,h);
   x.fillStyle='#243c42';x.fillRect(0,0,w*.018,h);x.fillRect(w*.982,0,w*.018,h);x.fillRect(0,h*.98,w,h*.02);

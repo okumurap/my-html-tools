@@ -115,7 +115,31 @@ const base=process.env.TEST_BASE_URL||'http://127.0.0.1:8000';
     const door=await page.locator('#doorBtn').boundingBox();assert.ok(door.y+door.height<=600);await inset.evaluate(el=>el.remove());
     await page.setViewportSize({width:375,height:812});
     await page.locator('.duty-change-btn').tap();assert.equal(await page.locator('#dutySelection').isVisible(),true);await page.locator('[data-duty-group="weather"][data-duty-value="rain"]').tap();await page.locator('#dutyStartBtn').tap();assert.equal(await page.locator('body').getAttribute('data-weather'),'rain');
+    const rainView=await page.locator('#scene').evaluate(el=>el.toDataURL());
+    await page.waitForTimeout(220);
+    assert.notEqual(await page.locator('#scene').evaluate(el=>el.toDataURL()),rainView,'rain and wipers should move while the train is stopped');
+    assert.equal(await page.locator('.scene-weather-layer').evaluate(el=>getComputedStyle(el,'::before').content),'none','remove the repeating stripe overlay');
+    for(const [width,height] of [[320,568],[375,812],[768,1024],[1280,900],[812,375]]){
+      await page.setViewportSize({width,height});await page.waitForTimeout(160);
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+      if(await page.locator('html').evaluate(el=>el.classList.contains('rail-fit'))){
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollHeight>innerHeight),false);
+        for(const selector of ['.live-telemetry canvas','#doorBtn']){
+          assert.equal(await page.locator(selector).evaluate(el=>{const r=el.getBoundingClientRect();return r.bottom<=innerHeight&&el.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),true,'rain must stay out of the controls and chart');
+        }
+      }
+      await screenshot(`rain-${width}x${height}`);
+    }
+    await page.setViewportSize({width:375,height:812});await page.emulateMedia({reducedMotion:'reduce'});await page.waitForTimeout(120);
+    const quietRain=await page.locator('#scene').evaluate(el=>el.toDataURL());await page.waitForTimeout(220);
+    assert.equal(await page.locator('#scene').evaluate(el=>el.toDataURL()),quietRain,'reduced motion should freeze the rain and park the wiper');
+    await screenshot('rain-reduced-motion');
+    await page.emulateMedia({reducedMotion:'no-preference'});await page.waitForTimeout(120);
+    assert.notEqual(await page.locator('#scene').evaluate(el=>el.toDataURL()),quietRain,'rain motion should resume');
+    await page.locator('.chart-open-btn').tap();assert.ok(await page.locator('#telemetryDialog .speed-chart-viewport').isVisible());await page.locator('.telemetry-close').tap();
+    await page.locator('.duty-change-btn').tap();await page.locator('[data-duty-group="weather"][data-duty-value="clear"]').tap();await page.locator('#dutyStartBtn').tap();await page.waitForTimeout(120);
+    assert.equal(await page.locator('#scene').evaluate(el=>el.toDataURL()),stoppedView,'clear weather should remove all rain effects');
     assert.deepEqual(errors,[]);await context.close();
-    console.log('OK: portrait/landscape sizes; no page scroll; always-visible live graph; reachable controls; graph modal; rotation; safe-area padding; readouts; driving/door/emergency/reset; 1x/2x/4x; touch scroll; follow/manual control; 0/50/100% cursor; collapse; duty change.');
+    console.log('OK: portrait/landscape sizes; no page scroll; always-visible live graph; reachable controls; graph modal; rotation; safe-area padding; readouts; driving/door/emergency/reset; 1x/2x/4x; touch scroll; follow/manual control; 0/50/100% cursor; collapse; duty change; rain at multiple sizes; reduced motion; weather restoration.');
   }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

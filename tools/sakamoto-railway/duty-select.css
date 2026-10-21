@@ -35,9 +35,6 @@
 .duty-running-info strong{font-size:10px;color:#ffd38e;overflow:hidden;text-overflow:ellipsis}.duty-running-info span{font-size:8px;color:#c6dbe5}.duty-change-btn{flex:none;border:1px solid #ffffff38;border-radius:7px;background:#ffffff12;color:#fff;min-height:30px;padding:0 8px;font-size:8px;font-weight:900}
 .scene-weather-layer{position:absolute;z-index:4;inset:0;pointer-events:none;overflow:hidden}
 body[data-weather="evening"] .scene-weather-layer{background:linear-gradient(180deg,#ff9b5435 0,#a53d6130 45%,#071a2b19 100%);mix-blend-mode:multiply}
-body[data-weather="rain"] .scene-weather-layer{background:linear-gradient(180deg,#284c6644,#071a2b22)}
-body[data-weather="rain"] .scene-weather-layer::before{content:"";position:absolute;inset:-35% 0;background:repeating-linear-gradient(108deg,transparent 0 14px,#d7efff88 15px 17px,transparent 18px 31px);animation:duty-rain .6s linear infinite;opacity:.65}
-body[data-weather="rain"] #scene{filter:saturate(.72) brightness(.86)}
+/* Rain, glass beads and wipers are rendered in the scene canvas. */
 body[data-weather="evening"] #scene{filter:saturate(.9) sepia(.18) brightness(.9)}
-@keyframes duty-rain{to{transform:translate(-38px,120px)}}
 @media(max-width:620px){.duty-selection{padding-left:0;padding-right:0}.duty-card{border-radius:0;min-height:100dvh}.duty-hero{padding:17px 14px 15px}.duty-form{padding:14px 11px 18px}.duty-title-row{align-items:center}.duty-line-badge{padding:6px 8px}.duty-options{gap:5px}.duty-option{min-height:64px;padding:7px 6px}.duty-option strong{font-size:11px}.duty-option small{font-size:7px}.duty-summary{grid-template-columns:1fr}.duty-start{width:100%}.duty-running-info{max-width:48vw;margin-right:4px;padding:3px 5px}.duty-running-info span{display:none}.duty-running-info strong{font-size:9px}.duty-change-btn{padding:0 6px}}

@@ -29,7 +29,7 @@
   ].map(([id, category, title, description, meta, action, created, updated]) =>
     ({ id, category, title, description, meta, action, created, updated, href: `./tools/${id}/` }));
   const changeNotes = {
-    'sakamoto-railway': '2026-10-21：常時表示の速度グラフを拡大。線路・架線・海岸・沿線住宅・駅ホームを遠近法と陰影で描写。',
+    'sakamoto-railway': '2026-10-21：雨粒・窓の水滴・間欠ワイパー・雨天の霞みと路面を改善。大きな速度グラフも常時表示。',
     'flag-learner': '2026-10-20：国旗を同梱SVGに変更。地図は選択中の国旗だけを表示し、点と線で位置を確認。',
     'table-editor': '2026-10-03：形式指定・プレビュー、再読込Undo、タップ操作、作業の保存・復元を追加。',
     'csv-inspector': '2026-10-03：列ルール・複合キー・検査条件保存・Shift_JIS読込を追加。',

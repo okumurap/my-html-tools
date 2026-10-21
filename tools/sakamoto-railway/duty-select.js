@@ -10,7 +10,7 @@
     ],
     weather: [
       { value: 'clear', title: '晴れ', note: '通常の視界' },
-      { value: 'rain', title: '雨', note: '暗めの雨天ビュー' },
+      { value: 'rain', title: '雨', note: '雨粒・水滴・自動ワイパー' },
       { value: 'evening', title: '夕方', note: '夕焼けの色調' }
     ],
     difficulty: [
