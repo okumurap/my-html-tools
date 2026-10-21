@@ -4,6 +4,7 @@ on:
     paths:
       - 'tools/sakamoto-kiss-fishing/**'
       - '.github/workflows/fishing-v3-check.yml'
+      - 'tests/kiss-fishing.cjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -16,7 +17,11 @@ jobs:
         with:
           node-version: '22'
       - name: Check JavaScript syntax
-        run: node --check tools/sakamoto-kiss-fishing/game-v3.js
+        run: |
+          node --check tools/sakamoto-kiss-fishing/game-v3.js
+          node --check tools/sakamoto-kiss-fishing/rules.js
+      - name: Check gameplay rules
+        run: node tests/kiss-fishing.cjs
       - name: Check entrypoint and supporting assets
         run: |
           python3 - <<'PY'
@@ -26,6 +31,9 @@ jobs:
           js = (root / 'game-v3.js').read_text()
           assert 'src="./game-v3.js"' in html
           assert (root / 'style-v3.css').is_file()
+          assert 'src="./rules.js"' in html
+          assert (root / 'rules.js').is_file()
+          assert (root / 'style-v4.css').is_file()
           for name in ('quick', 'challenge', 'daily', 'free', 'triggerFever', 'tutori' ,'rivalScore', 'combo', 'giant', 'pointercancel'):
               assert name in js, name
           print('Entrypoint, assets and key feature identifiers: OK')

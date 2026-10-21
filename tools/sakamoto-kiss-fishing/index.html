@@ -4,16 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#073d55">
-<meta name="description" content="回遊する魚群を探して爆釣！120秒勝負・S対決・図鑑を楽しめるキス釣りゲーム。">
-<title>Sのキス釣り 2 - 群れを探せ！</title>
+<meta name="description" content="海底と誘いの間を読み、ジャストアワセで大ギスを狙う釣りゲーム。120秒・3分・のんびり・日替わりに対応。">
+<title>Sのキス釣り — 波とアタリを読む</title>
 <link rel="stylesheet" href="./style-v2.css">
+<link rel="stylesheet" href="./style-v3.css">
+<link rel="stylesheet" href="./style-v4.css">
 <link rel="stylesheet" href="../../assets/css/mobile-touch.css">
+<script src="./rules.js" defer></script>
 <script src="./game-v3.js" defer></script>
 </head>
 <body class="mobile-touch-game">
 <div class="app">
 <header class="top">
- <div class="brand"><div class="brand-icon">🎣</div><div><div class="brand-title">Sのキス釣り <span style="font-size:11px;color:#ee6e4c">2</span></div><div class="brand-sub">狙え、探れ、群れを釣れ。</div></div></div>
+ <div class="brand"><div class="brand-icon">🎣</div><div><div class="brand-title">Sのキス釣り <span style="font-size:11px;color:#ee6e4c">3</span></div><div class="brand-sub">狙え、探れ、群れを釣れ。</div></div></div>
  <div class="stat"><small>のこり</small><strong id="clock">3:00</strong></div><div class="stat"><small>スコア</small><strong id="score">0</strong></div>
  <button class="tiny" id="catalogBtn" aria-label="魚図鑑を開く">📖</button><button class="tiny" id="soundBtn" aria-label="効果音切り替え">🔊</button>
 </header>
@@ -25,7 +28,7 @@
 <div class="controls"><button class="action" id="actionBtn" aria-label="釣りの操作">長押しで投げる<small>離すとキャスト</small><i class="meter" id="powerMeter"></i></button><button class="side ready" id="sonarBtn"><span>📡</span><span id="sonarLabel">魚探</span></button><button class="side" id="menuBtn"><span>☰</span>メニュー</button></div>
 </div>
 <div class="overlay" id="startOverlay"><div class="card">
- <div class="intro"><div><div class="eyebrow">S'S FISHING · V2</div><h1>Sの<br>キス釣り 2</h1><p>魚が本当に泳ぐ海で、群れを探して釣り上げよう。</p></div><div class="intro-art" aria-hidden="true">🎣🐟</div></div>
+ <div class="intro"><div><div class="eyebrow">S'S FISHING · COASTLINE</div><h1>Sの<br>キス釣り</h1><p>砂地を探り、巻いて止める。アタリを読んで、今日の大ギスを。</p></div><div class="intro-art" aria-hidden="true"><svg viewBox="0 0 220 120"><path d="m45 63-27-22 5 22-5 20 28-17" fill="#c4cfb7"/><ellipse cx="120" cy="64" rx="83" ry="18" fill="#d1d6b9"/><path d="M41 60Q120 28 200 59" fill="#88aca8"/><path d="m101 50 20-24 28 25" fill="#9db8a8"/><path d="M60 66h119" stroke="#f9efcc" stroke-width="3"/><path d="M170 50q-15 12 0 26" stroke="#8ba69b" fill="none"/><circle cx="187" cy="59" r="4" fill="#1f4a56"/></svg></div></div>
  <div class="label-row"><b>① 遊ぶモード</b><small id="bestText">自己ベスト 0点</small></div>
  <div class="mode-options" id="modes"><button class="choice selected" data-mode="challenge"><span>⏱️</span>3分勝負</button><button class="choice" data-mode="free"><span>🌊</span>のんびり</button><button class="choice" data-mode="daily"><span>🏆</span>日替わり</button></div>
  <div class="label-row"><b>② 釣る時間帯</b><small>キスの動きや魚種が変化</small></div>

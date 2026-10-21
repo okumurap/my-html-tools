@@ -57,3 +57,9 @@ Playwrightが通常のrequireで見つからない場合は `TEST_PLAYWRIGHT_MOD
 `TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/train-crossing.cjs`。既存のPlaywrightを使い、`TEST_PLAYWRIGHT_MODULE` と `TEST_SCREENSHOT_DIR` に対応します。
 
 320×568・375px・768px・PC・横向きで、縦横のはみ出しと44px以上のタップ領域を確認します。3車種の出発→踏切・トンネル→星3つ→到着→再出発、実際のタッチ長押しブレーキ・解除、キーボード、車種・音・到着回数の保存を検証します。保存・音・全画面APIが使えない場合、モーション低減設定、GitHub Pages相当のサブパスも確認します。エミュレーションであり実機確認ではありません。
+
+## Sのキス釣り
+
+`node tests/kiss-fishing.cjs` で、独立した加点計算3ケースとアワセの狙い目・海底・誘いの間・根掛かりを照合します。Playwright/Chromiumを用意し、`TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/kiss-fishing.cjs --browser`。`TEST_PLAYWRIGHT_MODULE` と `TEST_SCREENSHOT_DIR` に対応します。
+
+タッチによる実際のキャスト→アワセ→取り込み・加点、320pxからPC・横向きでの操作、図鑑での一時停止、終了と再プレイ、旧保存キー、日替わりの再現性を確認します。根掛かり・遅合わせ・糸切れ・タイマー終了は明示的なテスト状態で境界を確認します。テスト用の観測口は配信レスポンスにテスト側だけで追加し、本番ファイルには含めません。実機の確認とは区別します。
