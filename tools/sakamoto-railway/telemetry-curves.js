@@ -78,7 +78,7 @@
     const rect = graph.getBoundingClientRect();
     const dpr = Math.min(devicePixelRatio || 1, 2);
     const w = Math.max(80, Math.round(rect.width * dpr));
-    const h = Math.max(120, Math.round(rect.height * dpr));
+    const h = Math.max(60, Math.round(rect.height * dpr));
     if (graph.width !== w || graph.height !== h) {
       graph.width = w;
       graph.height = h;
@@ -89,13 +89,14 @@
   function draw() {
     if(!graph.getClientRects().length)return;
     const { w, h, dpr } = resize();
-    const pad = { l: 8 * dpr, r: 8 * dpr, t: 30 * dpr, b: 24 * dpr };
+    const compact=Boolean(graph.closest('.live-telemetry'));
+    const pad = { l: 8 * dpr, r: 8 * dpr, t: (compact?6:30) * dpr, b: (compact?18:24) * dpr };
     const pw = w - pad.l - pad.r;
     const ph = h - pad.t - pad.b;
     const x = p => pad.l + p / routeLength * pw;
     const y = v => pad.t + (1 - clamp(v, 0, 80) / 80) * ph;
 
-    axisLabels.forEach(label=>{label.style.top=`${y(Number(label.dataset.speed))/dpr}px`;});
+    axisLabels.forEach(label=>{label.hidden=compact&&[20,60].includes(Number(label.dataset.speed));label.style.top=`${y(Number(label.dataset.speed))/dpr}px`;});
     ctx.clearRect(0, 0, w, h);
     ctx.strokeStyle = 'rgba(255,255,255,.16)';
     ctx.lineWidth = dpr;
@@ -124,7 +125,7 @@
       ctx.lineTo(sx, pad.t + ph);
       ctx.stroke();
       ctx.textAlign = index === 0 ? 'left' : index === stations.length - 1 ? 'right' : 'center';
-      ctx.fillText(station.name, sx, 4 * dpr + (index % 2) * 9 * dpr);
+      if(!compact)ctx.fillText(station.name, sx, 4 * dpr + (index % 2) * 9 * dpr);
     });
     ctx.restore();
 

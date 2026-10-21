@@ -69,7 +69,7 @@ html.rail-fit,html.rail-fit body{height:100%;overflow:hidden;overscroll-behavior
 .rail-fit .duty-change-btn{min-height:44px;padding:0 7px;font-size:10px;white-space:nowrap}
 .rail-fit .top-actions .icon-btn{min-height:44px!important;min-width:44px;padding:0 7px!important}
 .rail-fit .install-btn{min-height:44px!important;width:52px;max-width:52px;font-size:9px;padding:2px!important}
-.rail-fit .game-shell{height:100%!important;min-height:0;display:grid!important;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 70px 252px;overflow:hidden}
+.rail-fit .game-shell{height:100%!important;min-height:0;display:grid!important;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 60px 96px 252px;overflow:hidden}
 .rail-fit .scene-wrap{height:100%!important;min-height:0!important;max-height:none!important;aspect-ratio:auto!important}
 .rail-fit .drive-readout{min-height:0;padding:5px 8px;grid-template-columns:70px minmax(0,1fr) auto;gap:7px}
 .rail-fit .readout-label{font-size:8px;margin-bottom:2px}
@@ -92,9 +92,10 @@ html.rail-fit,html.rail-fit body{height:100%;overflow:hidden;overscroll-behavior
 .rail-fit .controls .sub-controls button{min-height:44px!important;height:44px;font-size:11px!important}
 .rail-fit .message-panel{bottom:8px!important;padding:6px 8px!important}.rail-fit .message-panel div{font-size:11px}.rail-fit .message-panel p{font-size:10px!important}
 @media(orientation:landscape) and (max-height:520px){
-  .rail-fit .game-shell{grid-template-columns:minmax(0,1fr) minmax(250px,38vw);grid-template-rows:minmax(0,1fr) 70px}
+  .rail-fit .game-shell{grid-template-columns:minmax(0,1fr) minmax(250px,38vw);grid-template-rows:minmax(0,1fr) 56px 96px}
   .rail-fit .scene-wrap{grid-column:1;grid-row:1}.rail-fit .drive-readout{grid-column:1;grid-row:2}
-  .rail-fit .cab-panel{grid-column:2;grid-row:1/3}
+  .rail-fit .live-telemetry{grid-column:1;grid-row:3}
+  .rail-fit .cab-panel{grid-column:2;grid-row:1/4}
   .telemetry-dialog-head{padding:4px 10px}.telemetry-dialog-head small{display:none}
   .telemetry-dialog-body{padding:5px}.telemetry-dialog .cab-summary div{padding:3px!important}
   .telemetry-dialog .speed-chart-viewport .speed-chart-canvas{height:96px!important}
@@ -134,3 +135,17 @@ html.rail-fit,html.rail-fit body{height:100%;overflow:hidden;overscroll-behavior
 }
 
 .telemetry-dialog .speed-chart-axis{overflow:hidden}
+
+/* The compact plot stays between the readouts and controls throughout driving. */
+.live-telemetry[hidden]{display:none}
+.live-telemetry{min-width:0;min-height:0;overflow:hidden;background:#101f29}
+.live-telemetry .speed-history{margin:0;border:0;border-radius:0;background:#101f29}
+.live-telemetry .speed-history>summary,.live-telemetry .route-head,.live-telemetry .speed-chart-tools,.live-telemetry .speed-chart-footer{display:none}
+.live-telemetry .route-monitor{min-height:0!important;padding:0!important}
+.live-telemetry .speed-limit-map{margin:0!important;padding:0!important}
+.live-telemetry .speed-chart-wrap{margin:0!important;padding:2px 5px!important;border-radius:0;box-shadow:none}
+.live-telemetry .speed-chart-head{min-height:16px!important;margin:0!important;font-size:9px!important}
+.live-telemetry .speed-chart-now{font-size:10px}
+.live-telemetry .speed-chart-legend{gap:7px}
+.live-telemetry .speed-chart-viewport .speed-chart-canvas{height:70px!important}
+.live-telemetry .speed-chart-axis{overflow:hidden;font-size:9px}
