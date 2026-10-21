@@ -12,3 +12,8 @@ body,button,a{-webkit-user-select:none;user-select:none;-webkit-touch-callout:no
 .memo-preview svg{width:18px;height:18px}
 .bundle-notice{position:sticky;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:8px;background:#e6ecdf;border-top:1px solid #c3cfb9;padding:8px 16px calc(8px + env(safe-area-inset-bottom));font-size:11px}
 .bundle-notice button{min-height:44px;min-width:88px;border:1px solid #74916c;border-radius:8px;background:#f6f8f0;color:#365d49;font-size:12px}
+
+/* Browser chrome may change dvh while writing; keep the paper on the stable viewport. */
+.app{height:100vh;height:100svh;touch-action:none}
+body{touch-action:manipulation}
+#stage,#paper{touch-action:none}

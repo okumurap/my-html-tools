@@ -30,6 +30,10 @@ function end(e){if(pointer===null||e&&e.pointerId!==undefined&&e.pointerId!==poi
 canvas.addEventListener('pointerdown',e=>{if(e.button!==0||pointer!==null||document.querySelector('dialog[open]'))return;if(pointsCount()>=MAX_POINTS){toast('この紙がいっぱいです。「新しい紙」を使ってください。');return}e.preventDefault();pointer=e.pointerId;stroke={tool,color:data.pen.color,size:tool==='erase'?36:data.pen.size,points:[point(e)]};current().strokes.push(stroke);redo.set(current().id,[]);try{canvas.setPointerCapture(pointer)}catch(_){}changed();requestDraw()});
 canvas.addEventListener('pointermove',e=>{if(e.pointerId!==pointer||!stroke)return;e.preventDefault();let count=pointsCount();const events=e.getCoalescedEvents?.();for(const a of events?.length?events:[e]){const p=point(a),last=stroke.points[stroke.points.length-1];if(count>=MAX_POINTS)break;if(Math.hypot(p[0]-last[0],p[1]-last[1])>.7){stroke.points.push(p);count++}}requestDraw();clearTimeout(timer);timer=setTimeout(save,500)});
 for(const type of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(type,end);canvas.addEventListener('contextmenu',e=>e.preventDefault());
+// Older iOS Safari may start native magnification before cancelling pointer input.
+const writingSurface=document.querySelector('.app');
+for(const type of ['gesturestart','gesturechange'])writingSurface.addEventListener(type,e=>e.preventDefault(),{passive:false});
+writingSurface.addEventListener('touchstart',e=>{if(e.touches.length>1)e.preventDefault()},{passive:false});
 function undoStroke(){end();const p=current();if(!p.strokes.length)return;const stack=redo.get(p.id)||[];stack.push(p.strokes.pop());redo.set(p.id,stack);changed();draw();save()}
 function redoStroke(){end();const s=redo.get(current().id)?.pop();if(s){current().strokes.push(s);changed();draw();save()}}
 $('undo').addEventListener('click',undoStroke);$('redo').addEventListener('click',redoStroke);
