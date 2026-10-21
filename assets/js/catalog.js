@@ -30,7 +30,7 @@
   ].map(([id, category, title, description, meta, action, created, updated]) =>
     ({ id, category, title, description, meta, action, created, updated, href: `./tools/${id}/` }));
   const changeNotes = {
-    'quick-memo': '2026-10-22：開いたらすぐ書ける手書きメモを追加。自動保存・消しゴム・取り消し・過去メモ・PNG保存に対応。',
+    'quick-memo': '2026-10-22：手書きメモを追加。保存状態などのUI文字の誤選択を防止。自動保存・消しゴム・取り消し・メモ一覧・PNG保存に対応。',
     'plarail-layout': '2026-10-21：3両が曲線・分岐の走行経路を追従。駅の減速・ドア開閉、編成全体の踏切、折り返し、拡大と表示移動を追加。',
     'gyro-crane': '2026-10-21：港・クレーン・吊り荷を精細化。風を含む着地予測、荷物別の速度・傾き判定、実位置に積むタワー、小画面での8段積みに対応。',
     'gyro-rush': '2026-10-21：ジャイロの中央デッドゾーンを除去し、微小な傾きにも連続して反応。リアルな機体描画と下部全体のブースト操作に対応。',
