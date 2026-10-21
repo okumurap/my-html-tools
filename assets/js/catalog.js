@@ -4,6 +4,7 @@
   // ツールを追加するときはこの一覧だけ更新する。リンクはGitHub Pages用の相対パス。
   // 日付は日本時間の公開日・更新日。未確認の日付は省略する。
   const tools = [
+    ['quick-memo', 'utility', 'さっとメモ', '開いたら、すぐ手書き。指・ペンで書いて自動保存。取り消し・メモ一覧・PNG画像保存に対応。', 'スマートフォン・PC・ペン対応・端末内保存', '書く', '2026-10-22', '2026-10-22'],
     ['offset-capability-lab', 'work', 'Offset Capability Lab', '工程能力指数（Cp・Cpk）とヒストグラムを比較します。', 'PC・スマートフォン対応', '開く'],
     ['drawing-annotation', 'work', '図面注釈ツール', '画像や図面に注釈を書き込み、PNGで出力します。', 'PC・スマートフォン・ペン対応', '開く'],
     ['screw-diameter-comparator', 'work', 'スクリュ径A/B比較ツール', '射出成形機のスクリュ径による流量・充填体積・必要ストロークの違いを比較します。', 'PC・スマートフォン対応', '開く'],
@@ -29,6 +30,7 @@
   ].map(([id, category, title, description, meta, action, created, updated]) =>
     ({ id, category, title, description, meta, action, created, updated, href: `./tools/${id}/` }));
   const changeNotes = {
+    'quick-memo': '2026-10-22：開いたらすぐ書ける手書きメモを追加。自動保存・消しゴム・取り消し・過去メモ・PNG保存に対応。',
     'plarail-layout': '2026-10-21：3両が曲線・分岐の走行経路を追従。駅の減速・ドア開閉、編成全体の踏切、折り返し、拡大と表示移動を追加。',
     'gyro-crane': '2026-10-21：港・クレーン・吊り荷を精細化。風を含む着地予測、荷物別の速度・傾き判定、実位置に積むタワー、小画面での8段積みに対応。',
     'gyro-rush': '2026-10-21：ジャイロの中央デッドゾーンを除去し、微小な傾きにも連続して反応。リアルな機体描画と下部全体のブースト操作に対応。',

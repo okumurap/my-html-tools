@@ -82,3 +82,10 @@ Playwrightが通常のrequireで見つからない場合は `TEST_PLAYWRIGHT_MOD
 `node tests/gyro-crane.cjs` で短い画面の作業空間と、手計算した放物運動3ケースを確認します。Playwright/Chromiumを用意し `TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/gyro-crane.cjs --browser`。`TEST_PLAYWRIGHT_MODULE` と `TEST_SCREENSHOT_DIR` に対応します。
 
 320×568・375px・768px・PCの画面とタッチ操作、キーボード・キャンセル、実時間での落下・加点、風を含む予測と着地点、荷物の速度・傾き境界、精密着地5回・小画面での8段積み・位置ずれによる崩壊・タイマー終了、一時停止・横向き案内・再プレイ、記録と効果音設定、保存失敗・破損データの保持、音未対応・動きの低減・公開サブパスを検証します。完走や境界の確認は荷物の姿勢・タイマーを明示的に設定し、観測口はテスト側でレスポンスに追加します。本番に観測口は含めません。実機の操作・音は未確認です。小画面の作業空間テストは改修前のコードで失敗を確認しています。
+
+
+## さっとメモ
+
+PlaywrightとChromiumを用意し、HTTPサーバー起動後に `TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/quick-memo.cjs`。`TEST_PLAYWRIGHT_MODULE` と `TEST_SCREENSHOT_DIR` に対応します。
+
+初回からの実際のタッチ筆記・保存と再読み込み、部分消しゴム・Undo/Redo、色・太さ、新しい紙と一覧からの再編集、回転時の座標維持、実際のPNGダウンロードと白背景、削除確認と復元を確認します。320×568・375px・768px・PCで表示と操作、キャンセル・複数指、容量不足と再保存、別タブによる競合、破損・不正形式の保護、公開サブパスを検証します。タッチと画面サイズはChromiumのエミュレーションで、iPhone/Android実機や実際の共有シートは未確認です。既存アプリに変更はなく、新規ツールなので変更前の専用テストはありません。

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f6f4ed">
+<meta name="description" content="開いたらすぐ書ける、スマホ用手書きメモ。自動保存・取り消し・過去メモ・PNG画像保存。登録不要、端末内で動きます。">
+<title>さっとメモ | 開いたら、すぐ書ける。</title><link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<svg class="symbols" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+<symbol id="i-pen" viewBox="0 0 24 24"><path d="m4 20 1-5L16 4a2.1 2.1 0 0 1 3 3L8 18l-4 2Z M14 6l4 4 M5 15l3 3"/></symbol>
+<symbol id="i-eraser" viewBox="0 0 24 24"><path d="m4 13 9-9a2 2 0 0 1 3 0l5 5a2 2 0 0 1 0 3l-8 8H9l-5-4a2 2 0 0 1 0-3Z M9 8l9 9 M13 20h8"/></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="m8 5-5 5 5 5 M3 10h11a6 6 0 0 1 0 12" transform="translate(0 -2)"/></symbol>
+<symbol id="i-redo" viewBox="0 0 24 24"><path d="m16 5 5 5-5 5 M21 10H10a6 6 0 0 0 0 12" transform="translate(0 -2)"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 4v16 M4 12h16"/></symbol>
+<symbol id="i-pages" viewBox="0 0 24 24"><rect x="7" y="3" width="13" height="16" rx="2"/><path d="M16 22H5a2 2 0 0 1-2-2V8 M11 8h5 M11 12h5"/></symbol>
+<symbol id="i-export" viewBox="0 0 24 24"><path d="M12 15V3 M7 8l5-5 5 5 M4 14v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6"/></symbol>
+<symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12 M18 6 6 18"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 6h16 M9 6V3h6v3 M6 6l1 15h10l1-15 M10 10v7 M14 10v7"/></symbol>
+</defs></svg>
+<main class="app">
+<header><div class="brand"><span class="brand-mark" aria-hidden="true"><svg><use href="#i-pen"/></svg></span><h1>さっとメモ<span>OPEN. WRITE. DONE.</span></h1></div><div class="header-actions"><button id="export" class="icon-button" aria-label="画像を保存・共有" title="画像を保存・共有"><svg><use href="#i-export"/></svg></button><button id="history" class="icon-button" aria-label="メモ一覧" title="メモ一覧"><svg><use href="#i-pages"/></svg><span id="pageCount">1</span></button></div></header>
+<div class="meta"><span id="dateLabel"></span><button id="help" aria-label="使い方と保存について">?</button><span id="saveStatus" role="status">この端末に自動保存</span></div>
+<div id="storageWarning" role="alert" hidden></div>
+<section id="stage" aria-label="手書きメモ用紙"><div id="paper"><canvas id="ink" aria-label="指・ペン・マウスで書くメモ用紙"></canvas><div id="hint" aria-hidden="true"><span class="hint-line"></span><p>思いついたら、<br>そのまま書こう。</p><small>指でも、ペンでも。</small></div></div></section>
+<div id="toast" role="status" hidden><span></span><button id="restore" hidden>元に戻す</button></div>
+<footer><nav class="toolbar" aria-label="筆記用具"><button id="pen" aria-pressed="true"><svg><use href="#i-pen"/></svg><span>ペン<i id="penDot"></i></span></button><button id="eraser" aria-pressed="false"><svg><use href="#i-eraser"/></svg><span>消しゴム</span></button><button id="undo" disabled><svg><use href="#i-undo"/></svg><span>戻す</span></button><button id="redo" disabled><svg><use href="#i-redo"/></svg><span>やり直す</span></button><button id="newPage" class="new-page"><svg><use href="#i-plus"/></svg><span>新しい紙</span></button></nav><div class="footer-note"><a href="../../index.html">ツール一覧</a><span>書いたメモは、この端末だけに。</span></div></footer>
+</main>
+<dialog id="penDialog"><div class="dialog-head"><h2>ペンの設定</h2><button class="icon-button" data-close aria-label="閉じる"><svg><use href="#i-close"/></svg></button></div><div class="dialog-body"><p class="label">インクの色</p><div id="colors" class="choices"></div><p class="label">線の太さ</p><div id="sizes" class="choices sizes"></div><button class="primary" data-close>書く</button></div></dialog>
+<dialog id="historyDialog" class="large"><div class="dialog-head"><div><h2>メモの束</h2><p>前の紙を、ひらく。</p></div><button class="icon-button" data-close aria-label="閉じる"><svg><use href="#i-close"/></svg></button></div><div id="pageList" class="page-list"></div></dialog>
+<dialog id="deleteDialog"><div class="dialog-head"><h2>このメモを削除しますか？</h2></div><div class="dialog-body"><p>他のメモは残ります。削除直後は「元に戻す」で復元できます。</p><button id="confirmDelete" class="primary danger">このメモを削除</button><button class="secondary" data-close>残して戻る</button></div></dialog>
+<dialog id="exportDialog"><div class="dialog-head"><h2>画像として保存</h2><button class="icon-button" data-close aria-label="閉じる"><svg><use href="#i-close"/></svg></button></div><div class="dialog-body"><img id="preview" alt="書き出すメモのプレビュー"><p id="exportInfo">準備中…</p><button id="download" class="primary" disabled>PNG画像を保存</button><button id="share" class="secondary" hidden>画像を共有</button><p class="small">保存できないときは画像を長押しして保存できます。画像は白い背景で出力します。</p></div></dialog>
+<dialog id="helpDialog"><div class="dialog-head"><h2>開いたら、すぐ書ける。</h2><button class="icon-button" data-close aria-label="閉じる"><svg><use href="#i-close"/></svg></button></div><div class="dialog-body help-body"><p>指・タッチペン・マウスで紙に直接書けます。ペンをもう一度押すと、色と太さを選べます。</p><p>消しゴムでなぞると、その部分を消せます。「戻す」「やり直す」は消しゴムにも使えます。</p><p>「新しい紙」で今のメモを残して白紙へ。右上の一覧から以前の紙に戻れます。画面を回転しても文字の形は変わりません。</p><p>メモはこのブラウザに自動保存します。端末間の同期はありません。ブラウザのデータ削除で消えるため、大切なメモは画像として保存してください。</p><p class="small">複数の指で同時に書く操作・手のひらの完全な誤入力防止・文字認識には対応していません。</p><button class="primary" data-close>書きはじめる</button></div></dialog>
+<script src="./app.js"></script>
+</body></html>
