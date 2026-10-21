@@ -9,14 +9,32 @@ const base=process.env.TEST_BASE_URL||'http://127.0.0.1:8000';
     page.on('pageerror',error=>errors.push(error.message));
     await page.goto(`${base}/tools/sakamoto-railway/`);await page.locator('#dutyStartBtn').tap();
     const screenshot=async name=>{if(process.env.TEST_SCREENSHOT_DIR)await page.screenshot({path:`${process.env.TEST_SCREENSHOT_DIR}/rail-${name}.png`,fullPage:true});};
-    for(const [width,height] of [[320,740],[375,812],[768,1024],[1280,900],[812,375]]){
+    for(const [width,height] of [[320,568],[320,740],[375,667],[375,812],[390,844],[768,1024],[1280,900],[812,375],[568,320]]){
       await page.setViewportSize({width,height});await page.waitForTimeout(150);
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${width} overflow`);
-      for(const selector of ['.scene-wrap','.drive-readout','.controls','.speed-history','.speed-chart-viewport']){
+      for(const selector of ['.scene-wrap','.drive-readout','.controls']){
         const rect=await page.locator(selector).boundingBox();assert.ok(rect.x>=-1&&rect.x+rect.width<=width+1,selector+' outside screen');
       }
       const scenery=await page.locator('.scene-wrap').boundingBox();
-      assert.ok(scenery.height>=(width<=760?260:height<520?180:250));
+      const fit=await page.locator('html').evaluate(el=>el.classList.contains('rail-fit'));
+      assert.ok(scenery.height>=100);
+      if(fit){
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollHeight>innerHeight),false,`${width}x${height} vertical overflow`);
+        for(const selector of ['#doorBtn','#announceBtn','#resetBtn','.chart-open-btn','[data-kind="power"] .drag-notch[data-index="0"]','[data-kind="power"] .drag-notch[data-index="5"]','[data-kind="brake"] .drag-notch[data-index="5"]']){
+          const rect=await page.locator(selector).boundingBox();assert.ok(rect.y>=0&&rect.y+rect.height<=height+1,selector+' clipped');
+          assert.equal(await page.locator(selector).evaluate(el=>{const r=el.getBoundingClientRect();return el.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),true,selector+' covered');
+        }
+        await page.locator('.chart-open-btn').tap();await page.waitForTimeout(80);
+        const dialog=await page.locator('#telemetryDialog').evaluate(el=>({top:el.getBoundingClientRect().top,bottom:el.getBoundingClientRect().bottom,scroll:el.scrollHeight,height:el.clientHeight}));
+        assert.ok(dialog.top>=0&&dialog.bottom<=height+1&&dialog.scroll<=dialog.height+1,`graph panel needs vertical scrolling: ${width}x${height} ${JSON.stringify(dialog)}`);
+        await page.locator('.telemetry-close').tap();
+        // Layout fixtures verify that score screens also keep their exit action in view.
+        for(const [overlay,button] of [['#stationEvaluation','#stationEvalContinue'],['#resultModal','#retryBtn']]){
+          await page.locator(overlay).evaluate(el=>{el.hidden=false;});
+          const action=await page.locator(button).boundingBox();assert.ok(action.y>=0&&action.y+action.height<=height+1,button+' clipped');
+          await page.locator(overlay).evaluate(el=>{el.hidden=true;});
+        }
+      }
       assert.equal(await page.locator('.scene-wrap #speed').count(),0);
       assert.equal(await page.locator('.drive-readout #speed').count(),1);
       assert.equal(await page.locator('.drive-readout #speedLimit').count(),1);
@@ -25,10 +43,17 @@ const base=process.env.TEST_BASE_URL||'http://127.0.0.1:8000';
     }
     await page.setViewportSize({width:375,height:812});
     // Preserve the actual driving controls after moving their readouts.
-    await page.locator('#doorBtn').tap();await page.locator('[data-kind="brake"] .drag-notch[data-index="0"]').tap();await page.locator('[data-kind="power"] .drag-notch[data-index="0"]').tap();
+    await page.locator('#doorBtn').tap();await page.locator('[data-kind="brake"] .drag-notch[data-index="0"]').tap();{
+      const guide=await page.locator('[data-kind="power"] .drag-guide').boundingBox(),touch=await context.newCDPSession(page);
+      await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:guide.x+guide.width/2,y:guide.y+guide.height-1}]});
+      for(let i=1;i<=5;i++)await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:guide.x+guide.width/2,y:guide.y+guide.height*(1-i/5)}]});
+      await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    }
     await page.waitForFunction(()=>Number(document.querySelector('#speed').textContent)>1);
+    await page.waitForTimeout(400); // Let the emulated drag gesture settle before a separate tap.
     await page.locator('[data-kind="brake"] .drag-notch[data-index="5"]').tap();await page.waitForFunction(()=>document.querySelector('#brakeValue').textContent==='非常');
     await page.locator('#announceBtn').tap();await page.locator('#resetBtn').tap();await page.waitForFunction(()=>document.querySelector('#speed').textContent==='0'&&document.querySelector('#doorValue').textContent==='開');
+    await page.locator('.chart-open-btn').tap();
     await page.locator('.speed-chart-zoom').selectOption('4');
     const ratio=await page.locator('.speed-chart-viewport').evaluate(el=>el.scrollWidth/el.clientWidth);assert.ok(ratio>3.9&&ratio<4.1);
     // Feed fixed route positions into the DOM contract used by the telemetry layer.
@@ -56,12 +81,23 @@ const base=process.env.TEST_BASE_URL||'http://127.0.0.1:8000';
       if(pos===0)assert.equal(left,0);else assert.ok(left>minimum);
     }
     await page.evaluate(()=>{delete document.querySelector('#routeProgress').style.width;});
-    await page.locator('#resetBtn').tap();await page.waitForTimeout(150);assert.equal(await page.locator('.speed-chart-viewport').evaluate(el=>el.scrollLeft),0);
+    await page.locator('.telemetry-close').tap();await page.locator('#resetBtn').tap();await page.locator('.chart-open-btn').tap();await page.waitForTimeout(150);assert.equal(await page.locator('.speed-chart-viewport').evaluate(el=>el.scrollLeft),0);
     await page.locator('.speed-chart-zoom').selectOption('2');assert.ok(await page.locator('.speed-chart-viewport').evaluate(el=>el.scrollWidth/el.clientWidth)>1.9);
     await page.locator('.speed-chart-zoom').selectOption('1');assert.equal(await page.locator('.speed-chart-viewport').evaluate(el=>el.scrollWidth-el.clientWidth),0);
-    await page.locator('.speed-history>summary').tap();assert.equal(await page.locator('.speed-chart-viewport').isVisible(),false);await page.locator('.speed-history>summary').tap();assert.equal(await page.locator('.speed-chart-viewport').isVisible(),true);
+    await page.keyboard.press('Escape');assert.equal(await page.locator('#telemetryDialog').getAttribute('open'),null);
+    assert.equal(await page.locator('.chart-open-btn').getAttribute('aria-expanded'),'false');
+    await page.locator('.chart-open-btn').tap();await page.setViewportSize({width:1280,height:900});await page.waitForTimeout(120);
+    assert.equal(await page.locator('#telemetryDialog').getAttribute('open'),null);assert.equal(await page.locator('.speed-history').isVisible(),true);
+    await page.locator('.speed-history>summary').click();assert.equal(await page.locator('.speed-chart-viewport').isVisible(),false);await page.locator('.speed-history>summary').click();
+    await page.setViewportSize({width:375,height:812});await page.waitForTimeout(120);
+    assert.equal(await page.locator('#telemetryDialog').getAttribute('open'),null);
+    // Reduced browser height and simulated safe-area padding must not hide controls.
+    await page.setViewportSize({width:375,height:620});
+    const inset=await page.addStyleTag({content:'.rail-fit #app{padding:24px 18px 20px!important}'});
+    const door=await page.locator('#doorBtn').boundingBox();assert.ok(door.y+door.height<=600);await inset.evaluate(el=>el.remove());
+    await page.setViewportSize({width:375,height:812});
     await page.locator('.duty-change-btn').tap();assert.equal(await page.locator('#dutySelection').isVisible(),true);await page.locator('[data-duty-group="weather"][data-duty-value="rain"]').tap();await page.locator('#dutyStartBtn').tap();assert.equal(await page.locator('body').getAttribute('data-weather'),'rain');
     assert.deepEqual(errors,[]);await context.close();
-    console.log('OK: 4 widths + landscape; wider scenery; readouts; driving/door/emergency/reset; 1x/2x/4x; touch scroll; follow/manual control; 0/50/100% cursor; collapse; duty change.');
+    console.log('OK: portrait/landscape sizes; no page scroll; reachable controls; graph modal; rotation; safe-area padding; readouts; driving/door/emergency/reset; 1x/2x/4x; touch scroll; follow/manual control; 0/50/100% cursor; collapse; duty change.');
   }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

@@ -25,4 +25,30 @@
     history.innerHTML='<summary><span>速度推移・運行記録<small>区間を拡大・左右にスクロール</small></span></summary>';
     controls.insertAdjacentElement('afterend',history);history.append(cluster);
   }
+  // Reuse the same graph and instruments in a modal on small screens.
+  const history=$('.speed-history');
+  if(history&&cab&&mini){
+    const query=window.matchMedia('(max-width:760px), (max-width:1000px) and (max-height:520px) and (orientation:landscape)');
+    const openButton=document.createElement('button');openButton.type='button';openButton.className='chart-open-btn';openButton.textContent='速度推移';openButton.hidden=true;
+    openButton.setAttribute('aria-haspopup','dialog');openButton.setAttribute('aria-controls','telemetryDialog');openButton.setAttribute('aria-expanded','false');
+    $('.top-actions')?.prepend(openButton);
+    const dialog=document.createElement('dialog');dialog.id='telemetryDialog';dialog.className='telemetry-dialog';dialog.setAttribute('aria-labelledby','telemetryTitle');
+    dialog.innerHTML='<div class="telemetry-dialog-head"><div><h2 id="telemetryTitle">速度推移・運行記録</h2><small>表示中も運転は継続します</small></div><button type="button" class="telemetry-close" aria-label="速度推移を閉じる">閉じる ×</button></div><div class="telemetry-dialog-body"></div>';
+    document.body.append(dialog);
+    const content=dialog.querySelector('.telemetry-dialog-body');
+    let desktopOpen=history.open;
+    function closeGraph(){if(dialog.open)dialog.close();}
+    function adapt(){
+      const fit=query.matches;document.documentElement.classList.toggle('rail-fit',fit);openButton.hidden=!fit;
+      if(fit&&history.parentElement!==content){
+        desktopOpen=history.open;content.append(mini,history);history.open=true;window.scrollTo(0,0);
+      }else if(!fit&&history.parentElement===content){
+        closeGraph();cab.prepend(mini);cab.append(history);history.open=desktopOpen;
+      }
+    }
+    openButton.addEventListener('click',()=>{if(!dialog.open){history.open=true;dialog.showModal();openButton.setAttribute('aria-expanded','true');}});
+    dialog.querySelector('.telemetry-close').addEventListener('click',closeGraph);
+    dialog.addEventListener('close',()=>openButton.setAttribute('aria-expanded','false'));
+    query.addEventListener('change',adapt);adapt();
+  }
 })();

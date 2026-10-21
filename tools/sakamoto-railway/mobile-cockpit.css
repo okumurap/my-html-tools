@@ -1,4 +1,4 @@
-/* Room for the view; instruments and history remain reachable by page scrolling. */
+/* Large view and readable instruments, with a viewport-sized mobile cockpit. */
 .drive-readout{display:grid;grid-template-columns:105px minmax(0,1fr) auto;align-items:center;gap:16px;padding:12px 18px;background:#09283d;color:#fff;border-top:1px solid #ffffff24;border-bottom:1px solid #ffffff24}
 .readout-label{display:block;color:#b9d4e4;font-size:10px;letter-spacing:.06em;margin-bottom:5px}
 .drive-speed .speed-center{position:static;transform:none;display:flex;align-items:baseline;gap:4px;text-align:left}
@@ -42,3 +42,95 @@ button:focus-visible,summary:focus-visible,select:focus-visible,.speed-chart-vie
 }
 @media(orientation:landscape) and (max-height:520px){.scene-wrap{height:60svh!important;min-height:180px!important;max-height:340px!important}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+
+.chart-open-btn{min-height:44px;border:1px solid #87a4b5;border-radius:8px;padding:0 10px;background:#184c69;color:#fff;font-size:11px;font-weight:800;white-space:nowrap}
+.chart-open-btn[hidden]{display:none}
+.telemetry-dialog{width:min(760px,calc(100vw - 20px));max-width:none;max-height:calc(100dvh - 24px);padding:0;border:1px solid #9bb3c0;border-radius:14px;background:#dbe6ec;color:#15354b;overflow:auto}
+.telemetry-dialog::backdrop{background:#031420ba;backdrop-filter:blur(3px)}
+.telemetry-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border-bottom:1px solid #a2b3be}
+.telemetry-dialog-head h2{margin:0;font-size:15px}.telemetry-dialog-head small{display:block;margin-top:3px;font-size:10px;color:#526c7a}
+.telemetry-close{min-height:44px;flex:none;border:0;border-radius:8px;background:#123a59;color:#fff;font-size:12px;font-weight:800;padding:0 12px}
+.telemetry-dialog-body{padding:8px;min-width:0}
+.telemetry-dialog .speed-history{margin:0;border:0;overflow:visible}
+.telemetry-dialog .speed-history>summary,.telemetry-dialog .route-head{display:none}
+.telemetry-dialog .route-monitor{padding:0!important}
+.telemetry-dialog .speed-limit-map{margin:0!important;padding:4px!important}
+.telemetry-dialog .speed-chart-wrap{padding:6px!important}
+.telemetry-dialog .cab-summary{margin-bottom:6px!important}
+
+/* Do not hide overflow until every driving control has an allocated grid cell. */
+html.rail-fit,html.rail-fit body{height:100%;overflow:hidden;overscroll-behavior:none}
+.rail-fit #app{height:100vh!important;height:100dvh!important;min-height:0!important;display:grid;grid-template-rows:48px minmax(0,1fr);padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)!important;overflow:hidden!important}
+.rail-fit .topbar{height:48px!important;min-height:0;padding:2px 6px!important;gap:6px;min-width:0}
+.rail-fit .company{display:none}.rail-fit .topbar h1{font-size:17px!important;white-space:nowrap;margin:0}.rail-fit .topbar h1 span{display:none}
+.rail-fit .top-actions{gap:4px;align-items:center;min-width:0}
+.rail-fit .duty-running-info{margin:0;padding:0;border:0;background:none;max-width:none;flex-shrink:0}
+.rail-fit .duty-running-info>div{display:none}
+.rail-fit .duty-change-btn{min-height:44px;padding:0 7px;font-size:10px;white-space:nowrap}
+.rail-fit .top-actions .icon-btn{min-height:44px!important;min-width:44px;padding:0 7px!important}
+.rail-fit .install-btn{min-height:44px!important;width:52px;max-width:52px;font-size:9px;padding:2px!important}
+.rail-fit .game-shell{height:100%!important;min-height:0;display:grid!important;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 70px 252px;overflow:hidden}
+.rail-fit .scene-wrap{height:100%!important;min-height:0!important;max-height:none!important;aspect-ratio:auto!important}
+.rail-fit .drive-readout{min-height:0;padding:5px 8px;grid-template-columns:70px minmax(0,1fr) auto;gap:7px}
+.rail-fit .readout-label{font-size:8px;margin-bottom:2px}
+.rail-fit .drive-speed .speed-center span{font-size:26px!important}.rail-fit .drive-speed .speed-center small{font-size:8px}
+.rail-fit .drive-speed .limit-row{margin-top:2px;font-size:9px}.rail-fit .drive-speed .limit-row strong{font-size:11px}
+.rail-fit .drive-next .next-station{font-size:14px}.rail-fit .drive-next .distance-row{font-size:13px;margin-top:2px}
+.rail-fit .drive-clock .clock{font-size:12px}.rail-fit .drive-clock .status-badge{font-size:9px!important;padding:3px 7px!important;margin-top:3px!important}
+.rail-fit .cab-panel{height:100%;min-height:0;overflow:hidden;padding:5px!important}
+.rail-fit .controls{height:100%;min-height:0;margin:0!important;grid-template-columns:1fr 1fr!important;grid-template-rows:minmax(0,1fr) 48px;gap:5px!important}
+.rail-fit .lever-card{padding:5px!important;min-height:0}
+.rail-fit .control-title{font-size:11px;margin-bottom:3px}
+.rail-fit .drag-control-panel{min-height:0}
+.rail-fit .drag-lever-head{margin-bottom:3px!important;min-height:18px}.rail-fit .drag-lever-head span{font-size:8px!important}.rail-fit .drag-lever-readout{font-size:11px!important;padding:2px 6px!important}
+.rail-fit .drag-lever-body{flex:1;min-height:0;height:auto!important;grid-template-columns:44px minmax(0,1fr)!important;gap:6px!important}
+.rail-fit .drag-notch-list{min-height:0;gap:2px}.rail-fit .drag-notch{height:auto!important;min-height:0;flex:1;font-size:10px!important;padding:0 2px}
+.rail-fit .drag-slot{min-width:0!important}.rail-fit .drag-guide{top:24px!important;bottom:24px!important}
+.rail-fit .drag-handle{width:clamp(54px,17vw,78px)!important;height:44px!important}
+.rail-fit .drag-lever-foot{display:none}
+.rail-fit .controls .sub-controls{padding:0!important;border:0;background:none;gap:5px!important;grid-template-columns:1.25fr 1fr .85fr!important}
+.rail-fit .controls .sub-controls button{min-height:44px!important;height:44px;font-size:11px!important}
+.rail-fit .message-panel{bottom:8px!important;padding:6px 8px!important}.rail-fit .message-panel div{font-size:11px}.rail-fit .message-panel p{font-size:10px!important}
+@media(orientation:landscape) and (max-height:520px){
+  .rail-fit .game-shell{grid-template-columns:minmax(0,1fr) minmax(250px,38vw);grid-template-rows:minmax(0,1fr) 70px}
+  .rail-fit .scene-wrap{grid-column:1;grid-row:1}.rail-fit .drive-readout{grid-column:1;grid-row:2}
+  .rail-fit .cab-panel{grid-column:2;grid-row:1/3}
+  .telemetry-dialog-head{padding:4px 10px}.telemetry-dialog-head small{display:none}
+  .telemetry-dialog-body{padding:5px}.telemetry-dialog .cab-summary div{padding:3px!important}
+  .telemetry-dialog .speed-chart-viewport .speed-chart-canvas{height:96px!important}
+  .telemetry-dialog .speed-chart-tools{margin:4px 0}.telemetry-dialog .speed-chart-footer{padding:4px 2px;font-size:9px}
+}
+
+@media(orientation:landscape) and (max-height:360px){
+  .telemetry-dialog-body{padding:4px}
+  .telemetry-dialog .cab-summary{margin-bottom:3px!important}
+  .telemetry-dialog .cab-summary div{padding:1px 3px!important}
+  .telemetry-dialog .cab-summary span{font-size:8px!important;line-height:10px}
+  .telemetry-dialog .cab-summary strong{font-size:10px!important;line-height:12px}
+  .telemetry-dialog .speed-chart-head{min-height:18px!important;font-size:10px!important}
+  .telemetry-dialog .speed-chart-wrap{padding:4px!important}
+}
+
+.telemetry-dialog{width:min(760px,calc(100vw - max(20px,env(safe-area-inset-left,0px)) - max(20px,env(safe-area-inset-right,0px))))}
+.rail-fit .station-evaluation{padding:6px}
+.rail-fit .station-eval-head{padding:10px 12px}
+.rail-fit .station-eval-title{font-size:22px}.rail-fit .station-eval-rank{width:48px;height:48px;font-size:27px}
+.rail-fit .station-eval-body{padding:9px}
+.rail-fit .station-eval-summary{padding:7px 9px}.rail-fit .station-eval-summary strong{font-size:12px}
+.rail-fit .station-eval-grid{gap:5px;margin-top:6px}
+.rail-fit .station-eval-metric{padding:5px}.rail-fit .station-eval-metric strong{font-size:12px;margin-top:2px}.rail-fit .station-eval-metric small{margin-top:1px}
+.rail-fit .station-eval-comment{padding:7px;font-size:10px;margin-top:7px;line-height:1.4}
+.rail-fit .station-eval-actions{grid-template-columns:1fr auto;gap:8px;margin-top:7px}
+.rail-fit .station-eval-continue{min-width:120px;min-height:44px;font-size:12px}
+.rail-fit .modal{padding:6px;z-index:1950}.rail-fit .modal-card{padding:12px}.rail-fit .modal-card h2{font-size:18px;margin:5px 0}
+.rail-fit .modal-card .rank{width:48px;height:48px;font-size:27px;margin:7px auto}
+.rail-fit .modal-card p{font-size:11px;margin:7px 0}.rail-fit .result-grid div{padding:5px}
+.rail-fit .modal-card button{min-height:44px}
+@media(orientation:landscape) and (max-height:520px){
+ .rail-fit .station-eval-head{padding:6px 10px}.rail-fit .station-eval-body{padding:6px 8px}
+ .rail-fit .station-eval-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .rail-fit .station-eval-metric{padding:3px}.rail-fit .station-eval-comment{padding:5px;margin-top:5px}
+ .rail-fit .station-eval-summary{padding:5px 7px}.rail-fit .station-eval-actions{margin-top:5px}
+}
+
+.telemetry-dialog .speed-chart-axis{overflow:hidden}
