@@ -75,3 +75,10 @@ Playwrightが通常のrequireで見つからない場合は `TEST_PLAYWRIGHT_MOD
 `node tests/plarail-layout.cjs` で曲線中点・直線・弧長を独立した期待値と照合します。Playwright/Chromiumを用意し、`TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/plarail-layout.cjs --browser`。`TEST_PLAYWRIGHT_MODULE` と `TEST_SCREENSHOT_DIR` に対応します。
 
 320pxからPC・横向きの操作、3両の曲線・分岐走行、駅の停車と発車、ポイントの占有ロック、最後尾と踏切、位置を保つ折り返し、複数周回を確認します。タッチ配置・回転・長押し削除・キャンセル・Undo、拡大と移動、保存と旧形式、不正データと保存失敗、公開サブパスを検証します。経路や折り返し等の境界は明示的なテスト状態で確認し、観測口は本番に含めません。実機の確認とは区別します。
+
+
+## ぐらぐらクレーン！
+
+`node tests/gyro-crane.cjs` で短い画面の作業空間と、手計算した放物運動3ケースを確認します。Playwright/Chromiumを用意し `TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/gyro-crane.cjs --browser`。`TEST_PLAYWRIGHT_MODULE` と `TEST_SCREENSHOT_DIR` に対応します。
+
+320×568・375px・768px・PCの画面とタッチ操作、キーボード・キャンセル、実時間での落下・加点、風を含む予測と着地点、荷物の速度・傾き境界、精密着地5回・小画面での8段積み・位置ずれによる崩壊・タイマー終了、一時停止・横向き案内・再プレイ、記録と効果音設定、保存失敗・破損データの保持、音未対応・動きの低減・公開サブパスを検証します。完走や境界の確認は荷物の姿勢・タイマーを明示的に設定し、観測口はテスト側でレスポンスに追加します。本番に観測口は含めません。実機の操作・音は未確認です。小画面の作業空間テストは改修前のコードで失敗を確認しています。
