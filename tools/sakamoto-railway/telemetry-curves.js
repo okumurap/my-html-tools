@@ -96,7 +96,7 @@
     const x = p => pad.l + p / routeLength * pw;
     const y = v => pad.t + (1 - clamp(v, 0, 80) / 80) * ph;
 
-    axisLabels.forEach(label=>{label.hidden=compact&&[20,60].includes(Number(label.dataset.speed));label.style.top=`${y(Number(label.dataset.speed))/dpr}px`;});
+    axisLabels.forEach(label=>{label.hidden=compact&&h/dpr<90&&[20,60].includes(Number(label.dataset.speed));label.style.top=`${y(Number(label.dataset.speed))/dpr}px`;});
     ctx.clearRect(0, 0, w, h);
     ctx.strokeStyle = 'rgba(255,255,255,.16)';
     ctx.lineWidth = dpr;

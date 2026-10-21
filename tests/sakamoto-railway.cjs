@@ -17,8 +17,11 @@ const base=process.env.TEST_BASE_URL||'http://127.0.0.1:8000';
       }
       const scenery=await page.locator('.scene-wrap').boundingBox();
       const fit=await page.locator('html').evaluate(el=>el.classList.contains('rail-fit'));
-      assert.ok(scenery.height>=100);
+      assert.ok(scenery.height>=80);
       if(fit){
+        const plot=await page.locator('.live-telemetry .speed-chart-canvas').boundingBox();
+        assert.ok(plot.height>=86,'live graph should have a larger readable plot');
+        if(width===375&&height===812)assert.ok(plot.height>=120&&scenery.height<340,'give more height to the graph');
         assert.equal(await page.evaluate(()=>document.documentElement.scrollHeight>innerHeight),false,`${width}x${height} vertical overflow`);
         for(const selector of ['.live-telemetry .speed-chart-canvas','#doorBtn','#announceBtn','#resetBtn','.chart-open-btn','[data-kind="power"] .drag-notch[data-index="0"]','[data-kind="power"] .drag-notch[data-index="5"]','[data-kind="brake"] .drag-notch[data-index="5"]']){
           const rect=await page.locator(selector).boundingBox();assert.ok(rect.y>=0&&rect.y+rect.height<=height+1,selector+' clipped');
@@ -44,6 +47,10 @@ const base=process.env.TEST_BASE_URL||'http://127.0.0.1:8000';
       await screenshot(`layout-${width}x${height}`);
     }
     await page.setViewportSize({width:375,height:812});
+    await page.waitForTimeout(120);
+    const stoppedView=await page.locator('#scene').evaluate(el=>el.toDataURL());
+    await page.waitForTimeout(150);
+    assert.equal(await page.locator('#scene').evaluate(el=>el.toDataURL()),stoppedView,'scenery should stay still at a stop');
     // Preserve the actual driving controls after moving their readouts.
     await page.locator('#doorBtn').tap();await page.locator('[data-kind="brake"] .drag-notch[data-index="0"]').tap();{
       const guide=await page.locator('[data-kind="power"] .drag-guide').boundingBox(),touch=await context.newCDPSession(page);
@@ -52,6 +59,7 @@ const base=process.env.TEST_BASE_URL||'http://127.0.0.1:8000';
       await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
     }
     await page.waitForFunction(()=>Number(document.querySelector('#speed').textContent)>1);
+    assert.notEqual(await page.locator('#scene').evaluate(el=>el.toDataURL()),stoppedView,'scenery should advance with the train');
     assert.ok(await page.locator('.live-telemetry .speed-chart-now').isVisible());
     await page.waitForFunction(()=>parseInt(document.querySelector('.live-telemetry .speed-chart-now').textContent)>0);
     await screenshot('live-driving');
