@@ -2,7 +2,7 @@
 'use strict';
 const $=id=>document.getElementById(id),canvas=$('ink'),ctx=canvas.getContext('2d'),stage=$('stage'),paper=$('paper');
 const KEY='quick-memo:v1',COLORS=['#283d32','#b85342','#345f94','#967b36'],SIZES=[3,6,12],MAX_POINTS=30000;
-let knownSaved=null,data,blocked=false,dirty=false,timer=0,pointer=null,stroke=null,tool='pen',redo=new Map(),redraw=0,toastTimer=0,deleted=null,deleteId=null,exportURL=null,exportFile=null,exportSerial=0;
+let knownSaved=null,data,blocked=false,dirty=false,timer=0,statusTimer=0,pointer=null,stroke=null,tool='pen',redo=new Map(),redraw=0,toastTimer=0,deleted=null,deleteId=null,exportURL=null,exportFile=null,exportSerial=0;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),uid=()=>globalThis.crypto?.randomUUID?.()||Date.now().toString(36)+Math.random().toString(36).slice(2);
 const current=()=>data.pages.find(p=>p.id===data.active);
 function makePage(){const r=stage.getBoundingClientRect(),now=Date.now();return{id:uid(),created:now,updated:now,w:1000,h:Math.round(clamp(1000*r.height/Math.max(1,r.width-20),500,2400)),strokes:[]}}
@@ -13,8 +13,8 @@ function validate(value){
   for(const s of p.strokes){if(!s||!['pen','erase'].includes(s.tool)||!COLORS.includes(s.color)||![...SIZES,36].includes(s.size)||!Array.isArray(s.points)||!s.points.length)throw Error('stroke');for(const a of s.points){if(!Array.isArray(a)||a.length!==2||!a.every(Number.isFinite)||a[0]<0||a[0]>p.w||a[1]<0||a[1]>p.h)throw Error('point')}count+=s.points.length}if(count>MAX_POINTS)throw Error('size');total+=count;
  }if(!ids.has(value.active))throw Error('active');return value;
 }
-function warning(text){$('storageWarning').textContent=text;$('storageWarning').hidden=false;$('saveStatus').textContent='未保存の変更があります';$('saveStatus').dataset.state='error'}
-function status(text,state){$('saveStatus').textContent=text;$('saveStatus').dataset.state=state}
+function warning(text){clearTimeout(statusTimer);$('storageWarning').textContent=text;$('storageWarning').hidden=false;$('saveStatus').textContent='未保存の変更があります';$('saveStatus').dataset.state='error'}
+function status(text,state){clearTimeout(statusTimer);statusTimer=setTimeout(()=>{$('saveStatus').textContent=text;$('saveStatus').dataset.state=state},500)}
 function load(){try{const raw=localStorage.getItem(KEY);knownSaved=raw;if(raw!==null)data=validate(JSON.parse(raw))}catch(_){blocked=true;warning('保存済みメモを読み込めません。元のデータを保護するため上書きしません。今書くメモは画像で保存してください。')}if(!data){const page=makePage();data={version:1,active:page.id,pages:[page],pen:{color:COLORS[0],size:6}}}}
 function save(){clearTimeout(timer);if(!dirty)return;if(blocked)return;try{if(localStorage.getItem(KEY)!==knownSaved){blocked=true;warning('別のタブで保存内容が変更されました。このタブの保存を停止しました。画像保存してから再読み込みしてください。');return}const serialized=JSON.stringify(data);localStorage.setItem(KEY,serialized);knownSaved=serialized;dirty=false;$('storageWarning').hidden=true;status('端末に保存済み','saved')}catch(_){warning('端末に保存できません。メモはこの画面に残っています。画像保存を使うか、空き容量などを確認して「再保存」を押してください。');if(!$('retrySave')){const b=document.createElement('button');b.id='retrySave';b.textContent='再保存';b.addEventListener('click',save);$('storageWarning').append(b)}}}
 function changed(){dirty=true;current().updated=Date.now();if(!blocked)status('保存中…','pending');clearTimeout(timer);timer=setTimeout(save,250);update()}
