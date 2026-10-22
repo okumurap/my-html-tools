@@ -17,3 +17,13 @@ body,button,a{-webkit-user-select:none;user-select:none;-webkit-touch-callout:no
 .app{height:100vh;height:100svh;touch-action:none}
 body{touch-action:manipulation}
 #stage,#paper{touch-action:none}
+
+/* Transform the paper, leaving controls and the overview at their original size. */
+#stage{display:block}
+#paper{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+.overview-button{position:absolute;left:14px;bottom:10px;z-index:2;display:flex;flex-direction:column;align-items:center;gap:3px;width:68px;min-height:94px;padding:5px 5px 6px;border:1px solid #c6cebd;border-radius:9px;background:#f7f8efeF;box-shadow:0 2px 10px #263e281a;color:#416047;font-size:9px;touch-action:manipulation}
+#overview{display:block;width:54px;height:65px;pointer-events:none}
+.view-controls{position:absolute;right:14px;top:9px;z-index:2;display:flex;align-items:center;border:1px solid #cbd4c2;background:#f7f8eff0;border-radius:12px;box-shadow:0 2px 8px #263e2810}
+.view-controls button{width:44px;height:44px;border:0;background:none;font-size:21px;color:#365d49;border-radius:12px}
+#viewScale{width:44px;text-align:center;font-size:10px;color:#5a6d57;font-variant-numeric:tabular-nums;pointer-events:none}
+@media(max-height:650px){.overview-button{width:58px;min-height:79px;left:12px;bottom:7px;padding:4px}#overview{width:45px;height:54px}.view-controls{top:6px;right:12px}}
