@@ -27,3 +27,20 @@ body{touch-action:manipulation}
 .view-controls button{width:44px;height:44px;border:0;background:none;font-size:21px;color:#365d49;border-radius:12px}
 #viewScale{width:44px;text-align:center;font-size:10px;color:#5a6d57;font-variant-numeric:tabular-nums;pointer-events:none}
 @media(max-height:650px){.overview-button{width:58px;min-height:79px;left:12px;bottom:7px;padding:4px}#overview{width:45px;height:54px}.view-controls{top:6px;right:12px}}
+
+/* Keep the paper picker within reach without a separate title area. */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.app{touch-action:manipulation}
+.memo-header{padding:calc(4px + env(safe-area-inset-top)) 10px 0;gap:8px;min-height:74px;align-items:center}
+.memo-strip{display:flex;flex:1;min-width:0;gap:7px;overflow-x:auto;overflow-y:hidden;touch-action:pan-x;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:#bac6b1 transparent;padding:3px 1px 4px;position:relative;-webkit-overflow-scrolling:touch}
+.strip-note{flex:0 0 58px;width:58px;height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:1px solid #d7ddce;border-radius:7px;background:#efeee5;padding:3px;color:#7a8572;touch-action:pan-x;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.strip-note canvas{display:block;width:50px;height:45px;pointer-events:none}
+.strip-note span{font-size:9px;line-height:12px;white-space:nowrap;pointer-events:none}
+.strip-note[aria-pressed=true]{border-color:#5c7a54;box-shadow:inset 0 0 0 1px #5c7a54;background:#e9efdf;color:#365a40}
+.memo-header .header-actions{flex:none;gap:0}.memo-header .icon-button{width:44px;height:44px}
+.meta{min-height:20px;height:20px;padding:0 13px 3px;font-size:9px;gap:6px}
+footer{padding:6px 10px calc(7px + env(safe-area-inset-bottom))}
+.bundle-head-actions{display:flex;align-items:center;gap:2px;flex:none}
+#toast{top:104px}
+@media(max-height:650px){.memo-header{min-height:70px;padding-top:calc(2px + env(safe-area-inset-top))}.strip-note{height:60px}.strip-note canvas{height:41px}.meta{min-height:18px;height:18px;padding-bottom:2px}footer{padding-top:5px}}
+@media(min-width:700px){.memo-header{padding-left:25px;padding-right:25px}.meta{padding-left:25px;padding-right:25px}}
