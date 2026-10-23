@@ -33,6 +33,10 @@ aside{display:flex;flex-direction:column}.sidehead{padding:9px;border-bottom:1px
 .confirmation-disclaimer{margin:6px 0 0;color:#64748b;line-height:1.5}
 #confirmationCategory{border-left:5px solid #64748b}
 </style>
+<style id="navigation-quality-v1">
+.head{height:auto;min-height:0}.toolbar-row{min-height:44px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}.toolbar-row>*{flex:none}.toolbar-row .spacer{flex:1}.btn{min-height:44px;touch-action:manipulation}.layout{height:calc(100svh - var(--head-h))}aside{min-height:0}.sidehead,.status{flex:none}.list{min-height:0}.sidehead{max-height:62%;overflow:auto}.filter-label{display:grid;gap:3px;font-size:12px;font-weight:700;margin:7px 0}.filter-label select{width:100%;min-width:0;min-height:44px;border:1px solid #94a3b8;border-radius:6px;background:white}.confirmation-panel{font-size:12px;margin:7px 0}.confirmation-panel>summary{cursor:pointer;min-height:36px;display:flex;align-items:center;font-weight:700}.review-filters{display:grid;grid-template-columns:1fr 1fr;gap:5px}.review-filters .btn{font-size:12px;padding:5px}.review-filters .btn[aria-pressed=true]{background:#0f172a;color:white}.review-note{font-size:10px;line-height:1.5;color:#64748b;margin:6px 0}.dimension-navigation{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-top:7px}.dimension-navigation .btn{font-size:12px}.dimension-navigation span{font-size:11px}.selected-toolbar{position:sticky;top:0;left:0;z-index:15;width:fit-content;max-width:100%;padding:6px;margin-bottom:10px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;border-radius:9px;background:#fffffff5;box-shadow:0 2px 10px #0003;font-size:12px}.selected-toolbar strong{overflow-wrap:anywhere}.selected-toolbar .btn{font-size:12px}.row-top{flex-wrap:wrap}.rid{min-width:90px;overflow-wrap:anywhere}.row-actions .btn{min-width:44px}.missing-badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}.missing-badges span{font-size:10px;background:#fff3dc;color:#854d0e;border-radius:4px;padding:3px 5px}.row:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #0284c7;outline-offset:2px}.selection-hidden{background:#fff8eb;padding:8px;border-radius:7px;font-size:12px}.selection-hidden button{margin-top:5px}.list-empty{font-size:13px;line-height:1.8;color:#64748b;padding:10px}.inline-edit input,.inline-edit select{min-height:38px}
+@media(max-width:767px){.layout{display:block;position:relative;padding:4px}.layout>section{height:100%}.layout>aside{position:absolute;inset:4px;z-index:25;box-shadow:0 4px 20px #0004}.sidehead{max-height:58%;padding:8px}.list{padding:6px}.form-grid{grid-template-columns:1fr}.form-grid input,.form-grid select,.form-grid textarea{font-size:16px;min-height:44px}.inline-edit{grid-template-columns:1fr 1fr}.inline-edit input,.inline-edit select{font-size:16px;min-height:44px}.selected-toolbar strong{flex-basis:100%}.marker{touch-action:none}.dialog{max-height:calc(100svh - 20px);padding:12px}.viewer{padding:8px}}
+</style>
 </head>
 <body>
 <header class="head">
@@ -73,22 +77,25 @@ aside{display:flex;flex-direction:column}.sidehead{padding:9px;border-bottom:1px
 <main id="layout" class="layout">
   <section class="panel">
     <div id="viewer" class="viewer mode-add">
+      <div id="selectedToolbar" class="selected-toolbar hidden"><strong id="selectedLabel"></strong><button id="selectedList" type="button" class="btn">一覧へ</button><button id="selectedEdit" type="button" class="btn blue">詳細編集</button></div>
       <button id="drop" class="drop">図面PDFをここへドロップ</button>
       <div id="pages" class="pages"></div>
     </div>
   </section>
   <aside class="panel">
     <div class="sidehead">
-      <div class="hint">枠をダブルクリック、または一覧をダブルクリックして編集。手動順のときだけドラッグ並べ替えできます。</div>
-      <div class="confirmation-controls" aria-label="確認方法による色分け">
+      <div class="hint">「図面」で位置へ、「編集」で詳細を開けます。未設定の抽出は検索・確認方法と併用できます。</div>
+      <label class="filter-label">表示する確認方法<select id="confirmationFilter" aria-label="図面と一覧の確認方法フィルター"></select></label>
+      <details class="confirmation-panel"><summary>連続登録・色分けの設定</summary><div class="confirmation-controls" aria-label="確認方法による色分け">
         <label>連続登録の確認方法<select id="defaultConfirmation" aria-label="新規寸法に適用する確認方法"></select></label>
-        <label>表示する確認方法<select id="confirmationFilter" aria-label="図面と一覧の確認方法フィルター"></select></label>
         <details id="confirmationSettings"><summary>カテゴリの名前・色を編集</summary>
           <div id="confirmationEditor" class="confirmation-editor"></div>
           <button id="addConfirmationCategory" type="button" class="btn small">＋ カテゴリ追加</button>
           <p class="confirmation-disclaimer">金型精度による代替確認は、収縮・反り等を考慮した適用根拠が必要です。</p>
         </details>
-      </div>
+      </div></details>
+      <div class="review-filters" aria-label="未設定の抽出"><button id="reviewAll" class="btn" type="button">すべて</button><button id="reviewAny" class="btn" type="button">未設定あり</button><button id="reviewTolerance" class="btn" type="button">公差未設定</button><button id="reviewMethod" class="btn" type="button">確認方法未設定</button></div>
+      <p class="review-note">公差は上下いずれかが空欄なら抽出します（0は入力済み）。空欄の抽出であり、一般公差・測定不要等の適否は判定しません。</p>
       <div class="side-tools">
         <input id="search" class="search" placeholder="ID・寸法・備考を検索">
         <select id="sort" class="sort">
@@ -102,6 +109,8 @@ aside{display:flex;flex-direction:column}.sidehead{padding:9px;border-bottom:1px
       </div>
       <button id="tableEdit" class="btn small" aria-pressed="false" style="margin-top:7px">一覧を直接編集</button>
       <div id="summary" class="summary"></div>
+      <div class="dimension-navigation"><button id="previousDimension" class="btn" type="button">前のID</button><span id="dimensionPosition" role="status"></span><button id="nextDimension" class="btn" type="button">次のID</button></div>
+      <div id="selectedHidden" class="selection-hidden hidden"><span></span><button id="clearFilters" type="button" class="btn">絞込を解除して表示</button></div>
     </div>
     <div id="list" class="list"></div>
     <div class="status"><span id="status">PDF.jsを読み込んでいます</span><span id="saveState"></span></div>
@@ -245,7 +254,7 @@ function normalizeConfirmations(value){
   }
   return builtIn.concat(custom);
 }
-S.confirmationCategories=normalizeConfirmations();S.activeConfirmation='';S.confirmationFilter='all';
+S.confirmationCategories=normalizeConfirmations();S.activeConfirmation='';S.confirmationFilter='all';S.reviewFilter='all';
 function recordConfirmationChange(){if(S.data)recordHistory();else{resetHistory();setDirty(false)}}
 function confirmationParts(id){
   if(id==='cmm-front')return {method:'cmm',orientation:'front'};
@@ -340,7 +349,8 @@ function undo(){applyHistory(S.historyIndex-1)}
 function redo(){applyHistory(S.historyIndex+1)}
 function setDirty(v){S.dirty=!!v;$('saveState').textContent=S.dirty?'● 未保存':'保存済み';$('saveState').className=S.dirty?'dirty':''}
 function updateControls(){
-  const has=!!selected();$('del').disabled=!has;$('duplicate').disabled=!has;
+  const current=selected();$('selectedToolbar').classList.toggle('hidden',!current);$('selectedLabel').textContent=current?`${current.id} · P${current.page} · ${current.dimensionText||'図面表記未入力'}`:'';
+  const has=!!current;$('del').disabled=!has;$('duplicate').disabled=!has;
   $('undo').disabled=S.historyIndex<=0;$('redo').disabled=S.historyIndex<0||S.historyIndex>=S.history.length-1;
 }
 
@@ -370,7 +380,7 @@ async function applyProject(p,clean){
     if(nextMarkers.some(m=>m.page>nextPdf.numPages))throw new Error('Marker page is out of range');
     const nextIds=new Set();for(const m of nextMarkers){const id=m.id.trim().toLowerCase();if(!id||nextIds.has(id))throw new Error('Marker ID is empty or duplicated');nextIds.add(id)}
     S.data=nextData;S.name=String(p.name||'drawing.pdf');S.zoom=clamp(+p.zoom||1,.25,4);S.continuousAdd=!!p.continuousAdd;
-    S.markers=nextMarkers;S.selectedKey=null;S.pdf=nextPdf;S.confirmationCategories=normalizeConfirmations(p.confirmationCategories);S.activeConfirmation='';S.confirmationFilter='all';renderConfirmationControls();
+    S.markers=nextMarkers;S.selectedKey=null;S.pdf=nextPdf;S.confirmationCategories=normalizeConfirmations(p.confirmationCategories);S.activeConfirmation='';S.confirmationFilter='all';S.reviewFilter='all';$('search').value='';$('sort').value='manual';renderConfirmationControls();
     $('z').textContent=Math.round(S.zoom*100)+'%';await drawPdf();$('drop').classList.add('hidden');renderList();resetHistory();setDirty(!clean);
     updateContinuousButton();msg(S.pdf.numPages+'ページを表示しました');setMode('add');return true;
   }catch(e){
@@ -432,11 +442,11 @@ function updateMarkerElement(b,m){
   const selected=m.key===S.selectedKey,wasSelected=b.classList.contains('sel');b.className='marker'+(selected?' sel':'');
   Object.assign(b.style,{left:m.x*100+'%',top:m.y*100+'%',width:m.width*100+'%',height:m.height*100+'%'});
   if(selected!==wasSelected||!b.querySelector('.tag'))b.innerHTML='<span class="tag"></span><span class="marker-info"></span>'+(selected?'<i class="handle nw" data-h="nw"></i><i class="handle ne" data-h="ne"></i><i class="handle sw" data-h="sw"></i><i class="handle se" data-h="se"></i>':'');
-  b.querySelector('.tag').textContent=m.id;const info=markerInfo(m);b.querySelector('.marker-info').textContent=info;b.querySelector('.marker-info').title=info;const color=confirmationColor(m);b.style.borderColor=color;b.style.background=color+'1c';b.querySelector('.tag').style.background=color;b.style.opacity=matchesConfirmation(m)?'1':'.12';b.style.pointerEvents=matchesConfirmation(m)?'auto':'none';
+  b.querySelector('.tag').textContent=m.id;const info=markerInfo(m);b.querySelector('.marker-info').textContent=info;b.querySelector('.marker-info').title=info;const color=confirmationColor(m);b.style.borderColor=color;b.style.background=color+'1c';b.querySelector('.tag').style.background=color;b.style.opacity=matchesConfirmation(m)&&reviewMatches(m)?'1':'.12';b.style.pointerEvents=matchesConfirmation(m)&&reviewMatches(m)?'auto':'none';b.setAttribute('aria-label',`${m.id} · P${m.page} · ${m.dimensionText||'図面表記未入力'}`);
 }
 function createMarkerElement(m){
   const b=document.createElement('button');b.type='button';b.dataset.key=m.key;
-  b.addEventListener('click',e=>{e.stopPropagation();S.selectedKey=b.dataset.key;renderMarkers();renderList()});
+  b.addEventListener('click',e=>{e.stopPropagation();S.selectedKey=b.dataset.key;renderMarkers();renderList();revealSelectedRow()});
   b.addEventListener('dblclick',e=>{e.preventDefault();e.stopPropagation();S.move=null;const current=S.markers.find(x=>x.key===b.dataset.key);if(current)openForm(current)});
   b.addEventListener('pointerdown',e=>{const current=S.markers.find(x=>x.key===b.dataset.key);if(current)startMove(e,current)});return b;
 }
@@ -474,10 +484,11 @@ function commitDraft(){
   S.markers.push(m);S.selectedKey=m.key;S.draft=null;recordHistory();renderMarkers();renderList();msg(id+' を登録しました。続けて枠を追加できます');
 }
 function focusMarker(m){
+  if(isMobileLayout())setListVisible(false);
   S.selectedKey=m.key;renderMarkers();renderList();const viewer=$('viewer'),page=document.querySelector(`.page[data-page="${m.page}"]`);if(!page)return;
   const targetX=page.offsetLeft+(m.x+m.width/2)*page.offsetWidth,targetY=page.offsetTop+(m.y+m.height/2)*page.offsetHeight;
-  viewer.scrollTo({left:Math.max(0,targetX-viewer.clientWidth/2),top:Math.max(0,targetY-viewer.clientHeight/2),behavior:'smooth'});
-  const marker=document.querySelector(`.marker[data-key="${m.key}"]`);if(marker)marker.animate([{boxShadow:'0 0 0 3px #f59e0b44'},{boxShadow:'0 0 0 12px #f59e0baa'},{boxShadow:'0 0 0 3px #f59e0b44'}],{duration:700,easing:'ease-out'});msg(m.id+' を中央に表示しました');
+  viewer.scrollTo({left:Math.max(0,targetX-viewer.clientWidth/2),top:Math.max(0,targetY-viewer.clientHeight/2),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+  const marker=S.markerEls.get(m.key);if(marker&&!matchMedia('(prefers-reduced-motion: reduce)').matches)marker.animate([{boxShadow:'0 0 0 3px #f59e0b44'},{boxShadow:'0 0 0 12px #f59e0baa'},{boxShadow:'0 0 0 3px #f59e0b44'}],{duration:700,easing:'ease-out'});msg(m.id+' を中央に表示しました');
 }
 
 function openForm(m){
@@ -502,39 +513,63 @@ $('form').addEventListener('submit',e=>{
   S.editingKey=null;$('modal').classList.add('hidden');recordHistory();renderMarkers();renderList();
 });
 
+function needsTolerance(m){return m.upperTolerance==null||m.lowerTolerance==null||![m.upperTolerance,m.lowerTolerance].every(Number.isFinite)}
+function needsMethod(m){return !confirmationById(confirmationId(m))}
+function reviewMatches(m){return S.reviewFilter==='all'||S.reviewFilter==='tolerance'&&needsTolerance(m)||S.reviewFilter==='method'&&needsMethod(m)||S.reviewFilter==='any'&&(needsTolerance(m)||needsMethod(m))}
+function visibleMarkers(){const q=$('search').value.trim().toLowerCase();return sortedMarkers().filter(matchesConfirmation).filter(reviewMatches).filter(m=>[m.id,m.dimensionText,m.note,m.category,confirmationName(m),m.measurementMethod,m.importance].join(' ').toLowerCase().includes(q))}
+function isMobileLayout(){return matchMedia('(max-width:767px)').matches}
+function setListVisible(visible){$('layout').classList.toggle('hide',!visible);$('side').textContent=isMobileLayout()?(visible?'図面を見る':'一覧を見る'):(visible?'一覧を隠す':'一覧を表示')}
+function revealSelectedRow(){const row=[...$('list').children].find(el=>el.dataset.key===S.selectedKey);if(!row)return;const host=$('list'),r=row.getBoundingClientRect(),h=host.getBoundingClientRect();if(r.top<h.top)host.scrollTop-=h.top-r.top;else if(r.bottom>h.bottom)host.scrollTop+=r.bottom-h.bottom}
+function showSelectedInList(){setListVisible(true);renderList();revealSelectedRow();if(!$('selectedHidden').classList.contains('hidden'))$('clearFilters').focus()}
+function resetViewFilters(){S.reviewFilter='all';S.confirmationFilter='all';$('search').value='';$('sort').value='manual';renderMarkers();renderList();revealSelectedRow()}
+function navigateDimension(delta){const items=visibleMarkers(),index=items.findIndex(m=>m.key===S.selectedKey),next=index<0?0:index+delta;if(items[next])focusMarker(items[next])}
+for(const[id,value]of [['reviewAll','all'],['reviewAny','any'],['reviewTolerance','tolerance'],['reviewMethod','method']])$(id).addEventListener('click',()=>{S.reviewFilter=value;renderMarkers();renderList()});
+$('selectedList').addEventListener('click',showSelectedInList);$('selectedEdit').addEventListener('click',()=>{if(selected())openForm(selected())});
+$('previousDimension').addEventListener('click',()=>navigateDimension(-1));$('nextDimension').addEventListener('click',()=>navigateDimension(1));$('clearFilters').addEventListener('click',resetViewFilters);
+
 function sortedMarkers(){
   const mode=$('sort').value;let a=[...S.markers];
   if(mode==='manual')a.sort((x,y)=>x.order-y.order);
   if(mode==='id')a.sort((x,y)=>x.id.localeCompare(y.id,'ja',{numeric:true}));
   if(mode==='page')a.sort((x,y)=>x.page-y.page||x.order-y.order);
   if(mode==='position')a.sort((x,y)=>x.page-y.page||x.y-y.y||x.x-y.x);
-  if(mode==='missing')a=a.filter(x=>x.upperTolerance==null&&x.lowerTolerance==null).sort((x,y)=>x.order-y.order);
+  if(mode==='missing')a=a.filter(needsTolerance).sort((x,y)=>x.order-y.order);
   if(mode==='important')a=a.filter(x=>x.importance==='重要').sort((x,y)=>x.order-y.order);
   return a;
 }
 function renderList(){
-  const q=$('search').value.trim().toLowerCase(),mode=$('sort').value,L=$('list');L.innerHTML='';
-  const items=sortedMarkers().filter(matchesConfirmation).filter(m=>[m.id,m.dimensionText,m.note,m.category,confirmationName(m),m.measurementMethod,m.importance].join(' ').toLowerCase().includes(q));
+  const mode=$('sort').value,L=$('list'),scroll=L.scrollTop;L.innerHTML='';
+  const items=visibleMarkers();
   items.forEach(m=>{
     const b=document.createElement('div');b.className='row'+(m.key===S.selectedKey?' sel':'')+(mode==='manual'?' manual':'');b.draggable=mode==='manual';b.dataset.key=m.key;b.style.borderLeft='5px solid '+confirmationColor(m);
     const imp=m.importance==='重要'?'<span class="badge important">重要</span>':m.importance!=='通常'?'<span class="badge">'+escapeHtml(m.importance)+'</span>':'';
-    b.innerHTML='<div class="row-top"><div class="rid">'+(mode==='manual'?'☰ ':'')+escapeHtml(m.id)+'　P'+m.page+imp+'</div><div class="row-actions"><button type="button" class="btn small up" title="上へ">↑</button><button type="button" class="btn small down" title="下へ">↓</button></div></div><div class="row-sub"></div><small></small>';
+    b.innerHTML='<div class="row-top"><div class="rid">'+(mode==='manual'?'☰ ':'')+escapeHtml(m.id)+'　P'+m.page+imp+'</div><div class="row-actions"><button type="button" class="btn small locate">図面</button><button type="button" class="btn small edit">編集</button><button type="button" class="btn small up" title="上へ">↑</button><button type="button" class="btn small down" title="下へ">↓</button></div></div><div class="row-sub"></div><small></small>';
+    b.tabIndex=0;b.setAttribute('role','group');b.setAttribute('aria-label',m.id+' P'+m.page);
     if(S.tableEdit){
       const editor=document.createElement('div');editor.className='inline-edit';
       const fields=[['dimensionText','図面表記','text'],['nominal','基準値','number'],['upperTolerance','上公差','number'],['lowerTolerance','下公差','number'],['category','寸法種別','text'],['confirmationCategory','確認方法','select'],['measurementMethod','測定器・詳細','text'],['importance','重要度','select'],['note','備考','text']];
-      fields.forEach(([key,placeholder,type])=>{let el;if(type==='select'){el=document.createElement('select');(key==='confirmationCategory'?[['','未設定'],...S.confirmationCategories.map(c=>[c.id,c.name])]:[['通常','通常'],['重要','重要'],['参考','参考']]).forEach(([v,label])=>{const o=document.createElement('option');o.value=v;o.textContent=label;el.appendChild(o)})}else{el=document.createElement('input');el.type=type;el.step=type==='number'?'any':''}el.dataset.key=key;el.placeholder=placeholder;el.value=numText(m[key]);if(key==='importance')el.value=m.importance;el.title=placeholder;el.className=key==='note'||key==='measurementMethod'?'wide':'';el.addEventListener('click',e=>e.stopPropagation());el.addEventListener('change',()=>commitInlineField(m,key,el));editor.appendChild(el)});
+      fields.forEach(([key,placeholder,type])=>{let el;if(type==='select'){el=document.createElement('select');(key==='confirmationCategory'?[['','未設定'],...S.confirmationCategories.map(c=>[c.id,c.name])]:[['通常','通常'],['重要','重要'],['参考','参考']]).forEach(([v,label])=>{const o=document.createElement('option');o.value=v;o.textContent=label;el.appendChild(o)})}else{el=document.createElement('input');el.type=type;el.step=type==='number'?'any':''}el.dataset.key=key;el.placeholder=placeholder;el.value=numText(m[key]);if(key==='importance')el.value=m.importance;el.title=placeholder;el.setAttribute('aria-label',placeholder+'（'+m.id+'）');el.className=key==='note'||key==='measurementMethod'?'wide':'';el.addEventListener('click',e=>e.stopPropagation());el.addEventListener('change',()=>commitInlineField(m,key,el));editor.appendChild(el)});
       b.querySelector('.row-sub').remove();b.querySelector('small').remove();b.appendChild(editor);const note=document.createElement('div');note.className='edit-note';note.textContent='セルを変更すると自動保存対象になります';b.appendChild(note);
     }else{
       b.querySelector('.row-sub').textContent=m.dimensionText||'図面表記未入力';b.querySelector('small').textContent=[tolText(m),m.category,confirmationName(m),m.measurementMethod,m.note].filter(Boolean).join(' ／ ');
     }
+    const badges=document.createElement('div');badges.className='missing-badges';for(const text of [needsTolerance(m)?'公差未設定':'',needsMethod(m)?'確認方法未設定':''].filter(Boolean)){const badge=document.createElement('span');badge.textContent=text;badges.append(badge)}b.append(badges);
+    b.querySelector('.locate').setAttribute('aria-label',m.id+'を図面で表示');b.querySelector('.locate').onclick=e=>{e.stopPropagation();focusMarker(m)};b.querySelector('.edit').setAttribute('aria-label',m.id+'の詳細を編集');b.querySelector('.edit').onclick=e=>{e.stopPropagation();S.selectedKey=m.key;renderMarkers();openForm(m)};
+    b.addEventListener('keydown',e=>{if(e.target===b&&e.key==='Enter'){e.preventDefault();focusMarker(m)}});
     b.onclick=e=>{if(e.target.closest('button,input,select'))return;focusMarker(m)};b.ondblclick=e=>{if(S.tableEdit||e.target.closest('button,input,select'))return;e.preventDefault();openForm(m)};
     b.querySelector('.up').onclick=e=>{e.stopPropagation();moveOrder(m.key,-1)};b.querySelector('.down').onclick=e=>{e.stopPropagation();moveOrder(m.key,1)};
+    b.querySelector('.up').disabled=mode!=='manual'||m.order<=1;b.querySelector('.down').disabled=mode!=='manual'||m.order>=S.markers.length;
     if(mode==='manual'){
       b.ondragstart=e=>{S.dragKey=m.key;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',m.key)};b.ondragover=e=>{e.preventDefault();b.classList.add('over')};b.ondragleave=()=>b.classList.remove('over');b.ondrop=e=>{e.preventDefault();b.classList.remove('over');reorderTo(S.dragKey,m.key)};
     }
     L.appendChild(b);
   });
-  const missing=S.markers.filter(m=>m.upperTolerance==null&&m.lowerTolerance==null).length,important=S.markers.filter(m=>m.importance==='重要').length;
+  L.scrollTop=scroll;if(!items.length){const empty=document.createElement('p');empty.className='list-empty';empty.textContent=S.markers.length?'絞込条件に一致するIDはありません。検索・確認方法・未設定の条件を確認してください。':'PDF上に枠を追加すると寸法IDを登録できます。';L.append(empty)}
+  const counts={all:S.markers.length,any:S.markers.filter(m=>needsTolerance(m)||needsMethod(m)).length,tolerance:S.markers.filter(needsTolerance).length,method:S.markers.filter(needsMethod).length};
+  for(const[id,value,label]of [['reviewAll','all','すべて'],['reviewAny','any','未設定あり'],['reviewTolerance','tolerance','公差未設定'],['reviewMethod','method','確認方法未設定']]){$(id).textContent=label+' '+counts[value];$(id).setAttribute('aria-pressed',String(S.reviewFilter===value))}
+  const index=items.findIndex(m=>m.key===S.selectedKey);$('dimensionPosition').textContent=(index>=0?index+1:'未選択')+' / '+items.length+'件';$('previousDimension').disabled=index<=0;$('nextDimension').disabled=!items.length||index===items.length-1;
+  const hiddenSelection=selected()&&!items.some(m=>m.key===S.selectedKey);$('selectedHidden').classList.toggle('hidden',!hiddenSelection);$('selectedHidden').querySelector('span').textContent=hiddenSelection?selected().id+'は絞込対象外です。':'';
+  const missing=S.markers.filter(needsTolerance).length,important=S.markers.filter(m=>m.importance==='重要').length;
   $('summary').innerHTML=`<span>全 <b>${S.markers.length}</b>件</span><span>表示 <b>${items.length}</b>件</span><span>3次元 表 <b>${S.markers.filter(m=>confirmationId(m)==='cmm-front').length}</b>件</span><span>裏 <b>${S.markers.filter(m=>confirmationId(m)==='cmm-back').length}</b>件</span><span>公差未入力 <b>${missing}</b>件</span><span>重要 <b>${important}</b>件</span>`;refreshConfirmationFilter();updateControls();
 }
 function commitInlineField(m,key,el){
@@ -643,10 +678,13 @@ $('exportCsv').onclick=exportCsv;$('importCsv').onclick=()=>$('csvFile').click()
 $('exportPdf').onclick=exportMarkedPdf;$('modeSelect').onclick=()=>setMode('select');$('modeAdd').onclick=()=>setMode('add');$('continuousAdd').onclick=toggleContinuousAdd;$('modePan').onclick=()=>setMode('pan');
 $('undo').onclick=undo;$('redo').onclick=redo;$('duplicate').onclick=duplicateSelected;$('del').onclick=deleteSelected;$('renumber').onclick=renumber;
 $('plus').onclick=()=>setZoom(S.zoom+.1);$('minus').onclick=()=>setZoom(S.zoom-.1);$('fit').onclick=fitWidth;
-$('side').onclick=()=>{const h=$('layout').classList.toggle('hide');$('side').textContent=h?'一覧を表示':'一覧を隠す';setTimeout(()=>{if(S.pdf)drawPdf()},50)};
+$('side').onclick=()=>{const visible=$('layout').classList.contains('hide');setListVisible(visible);if(visible)revealSelectedRow();if(!isMobileLayout())setTimeout(()=>{if(S.pdf)drawPdf()},50)};
 $('search').oninput=renderList;$('sort').onchange=renderList;$('cancel').onclick=cancelModal;$('modal').addEventListener('pointerdown',e=>{if(e.target===$('modal'))cancelModal()});
 ['nominal','upperTolerance','lowerTolerance','unit'].forEach(id=>$(id).addEventListener('input',updateTolerancePreview));
 
+const syncHeader=()=>document.documentElement.style.setProperty('--head-h',document.querySelector('.head').offsetHeight+'px');
+if('ResizeObserver'in window)new ResizeObserver(syncHeader).observe(document.querySelector('.head'));syncHeader();
+const mobileQuery=matchMedia('(max-width:767px)');mobileQuery.addEventListener('change',()=>{setListVisible(!isMobileLayout());syncHeader()});setListVisible(!isMobileLayout());
 async function boot(){
   if(!ready())return;msg('PDF.js準備完了');setDirty(false);updateContinuousButton();renderConfirmationControls();renderList();
   try{const embedded=JSON.parse($('embedded').textContent);if(embedded?.data&&await applyProject(embedded,true))return}catch(e){console.error(e)}
@@ -657,3 +695,4 @@ boot();
 </script>
 </body>
 </html>
+

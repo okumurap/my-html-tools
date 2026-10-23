@@ -115,3 +115,7 @@ CSVの該当箇所表示：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/csv-i
 工程能力の説明表示：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/offset-capability-quality.cjs`。独立した4ケースのCp/Cpk・図の幾何、同一標本での比較と再抽選、エラー時の無効化、4画面幅を確認します。実機未確認。
 
 型締力の図と根拠：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/clamp-force-quality.cjs`。独立した6形状の面積・3ケースの型締力、寸法図と穴径比、面積内訳・数値式、入力無効化・複合・直接入力、保存復元、印刷生成と4画面幅。印刷呼出はモック、実機未確認。
+
+
+
+図面PDFの一覧操作：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/drawing-pdf-dimension-quality.cjs`。Playwright/Chromiumを利用し、`TEST_BROWSER_PATH`、`TEST_PLAYWRIGHT_MODULE`、`TEST_SCREENSHOT_DIR`に対応します。内蔵PDFライブラリで生成した架空の2ページPDFを使い、片側空欄・0公差・確認方法の未設定抽出、検索との併用、図面／編集への移動、Undo/Redo、実JSON・PDFダウンロード、自動保存復旧と320/375/768/1280pxを確認します。旧版ではPDF読込・図面移動・0公差のJSON保存を確認済み。新しいUIの専用テストは旧版未実行、実機未確認です。

@@ -1,0 +1,28 @@
+const {chromium}=require(process.env.TEST_PLAYWRIGHT_MODULE||'playwright');
+const assert=require('node:assert/strict'),fs=require('node:fs');
+const base=process.env.TEST_BASE_URL||'http://127.0.0.1:8053';
+(async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.TEST_BROWSER_PATH||'/usr/bin/chromium'});try{
+const page=await browser.newPage({viewport:{width:1280,height:900},reducedMotion:'reduce'}),errors=[];
+page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());
+await page.goto(base+'/tools/drawing-pdf-dimension-manager/');await page.waitForFunction(()=>window.PDFLib&&window.pdfjsLib);
+const data=await page.evaluate(async()=>{const pdf=await PDFLib.PDFDocument.create();pdf.addPage([600,800]);pdf.addPage([600,800]);return 'data:application/pdf;base64,'+await pdf.saveAsBase64()});
+const markers=[['D001',1,0,0,'general'],['D002',2,.1,null,''],['D003',1,null,-.1,'cmm-front'],['D004',2,0,0,'']].map(([id,page,upperTolerance,lowerTolerance,confirmationCategory],i)=>({key:'key'+i,id,page,order:i+1,x:.2,y:.4,width:.1,height:.04,nominal:10,dimensionText:'10',upperTolerance,lowerTolerance,confirmationCategory,note:'架空テスト'}));
+const project={version:4,data,name:'fictional.pdf',markers};
+await page.locator('#jsonFile').setInputFiles({name:'fixture.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(project))});await page.waitForFunction(()=>document.querySelectorAll('.row').length===4);
+assert.match(await page.locator('#reviewTolerance').textContent(),/2$/);assert.match(await page.locator('#reviewMethod').textContent(),/2$/);assert.match(await page.locator('#reviewAny').textContent(),/3$/);
+await page.locator('#reviewTolerance').click();assert.equal(await page.locator('.row').count(),2);
+await page.locator('#search').fill('D003');assert.equal(await page.locator('.row').count(),1);await page.locator('#search').fill('');
+await page.locator('#confirmationFilter').selectOption('cmm-front');assert.equal(await page.locator('.row').count(),1);await page.locator('#confirmationFilter').selectOption('all');
+await page.getByRole('button',{name:'D002を図面で表示',exact:true}).click();assert.equal(await page.locator('.marker.sel .tag').textContent(),'D002');await page.waitForTimeout(200);
+const box=await page.locator('.marker.sel').boundingBox(),viewer=await page.locator('#viewer').boundingBox();assert(box.y>=viewer.y&&box.y+box.height<=viewer.y+viewer.height);
+await page.locator('#selectedList').click();await page.getByRole('button',{name:'D002の詳細を編集',exact:true}).click();await page.locator('#lowerTolerance').fill('0');await page.locator('#confirmationCategory').selectOption('general');await page.locator('#form button.blue').click();assert.equal(await page.locator('.row').count(),1);assert.match(await page.locator('#reviewTolerance').textContent(),/1$/);assert(await page.locator('#selectedHidden').isVisible());await page.locator('#undo').click();assert.equal(await page.locator('.row').count(),2);await page.locator('#redo').click();assert.equal(await page.locator('.row').count(),1);await page.locator('#clearFilters').click();assert.equal(await page.locator('.row').count(),4);
+await page.locator('#reviewMethod').click();await page.locator('#nextDimension').click();assert.equal(await page.locator('.marker.sel .tag').textContent(),'D004');await page.locator('#reviewAll').click();
+const download=page.waitForEvent('download');await page.locator('#saveJson').click();const out=JSON.parse(fs.readFileSync(await(await download).path(),'utf8'));assert.equal(out.version,4);assert.equal(out.markers[0].upperTolerance,0);assert.equal(out.markers[1].lowerTolerance,0);assert.equal(out.markers[1].page,2);assert.equal(out.markers[1].note,'架空テスト');
+const pdfDownload=page.waitForEvent('download');await page.locator('#exportPdf').click();const pdfBytes=fs.readFileSync(await(await pdfDownload).path());assert.equal(await page.evaluate(async bytes=>(await PDFLib.PDFDocument.load(new Uint8Array(bytes))).getPageCount(),Array.from(pdfBytes)),2);
+for(const width of [320,375,768,1280]){await page.setViewportSize({width,height:width<400?700:900});await page.waitForTimeout(150);if(width<768){assert(await page.locator('#viewer').isVisible());await page.locator('#side').click()}
+assert.equal(await page.locator('#confirmationFilter').count(),1);assert(await page.locator('#reviewTolerance').isVisible());assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+await page.screenshot({path:(process.env.TEST_SCREENSHOT_DIR||'/tmp')+'/dimension-'+width+'-list.png'});
+await page.getByRole('button',{name:'D002の詳細を編集',exact:true}).click();assert(await page.locator('#id').isVisible());await page.locator('#cancel').click();await page.getByRole('button',{name:'D002を図面で表示',exact:true}).click();if(width<768){assert.equal(await page.locator('#side').textContent(),'一覧を見る');assert(await page.locator('#selectedEdit').isVisible());await page.locator('#selectedList').click();assert(await page.locator('.row.sel').isVisible());await page.getByRole('button',{name:'D002を図面で表示',exact:true}).click()}
+await page.screenshot({path:(process.env.TEST_SCREENSHOT_DIR||'/tmp')+'/dimension-'+width+'-drawing.png'});}
+await page.waitForTimeout(1000);await page.reload();await page.waitForFunction(()=>document.querySelectorAll('.row').length===4);assert.equal(await page.locator('.page').count(),2);assert.deepEqual(errors,[]);console.log('PASS: real PDF, missing-field/zero filters, search/category, navigation/edit, Undo/Redo, JSON/PDF exports, autosave recovery, 320/375/768/1280 layouts');
+}finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1});
