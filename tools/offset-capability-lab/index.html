@@ -34,13 +34,13 @@
           <p class="panel-kicker">01 / Parameters</p>
           <h2 id="controls-title">シミュレーション設定</h2>
         </div>
-        <p class="panel-note">値を変更すると自動で再計算します</p>
+        <p class="panel-note">同じ標本で条件を比較します。乱数の変更は「再サンプリング」</p>
       </div>
 
       <div class="slider-grid">
         <div class="control-card control-card--cyan">
           <div class="control-card__heading">
-            <label for="offset">Offset Value</label>
+            <label for="offset">平均のずれ（±オフセット）</label>
             <output id="offsetValue" for="offset">5.0</output>
           </div>
           <input id="offset" type="range" min="0" max="20" step="0.5" value="5" aria-describedby="offsetHint">
@@ -50,7 +50,7 @@
 
         <div class="control-card control-card--amber">
           <div class="control-card__heading">
-            <label for="stddev">Standard Deviation</label>
+            <label for="stddev">ばらつき（標準偏差 σ）</label>
             <output id="stddevValue" for="stddev">2.3</output>
           </div>
           <input id="stddev" type="range" min="0.1" max="20" step="0.1" value="2.3" aria-describedby="stddevHint">
@@ -106,6 +106,7 @@
         </div>
       </div>
 
+      <p class="cap-reading">Cpは「規格幅に対するばらつき幅6σ」、Cpkは「平均から近い規格までの距離÷3σ」です。同じばらつきでも平均が規格中心からずれるとCpkが下がります。各カードの図は同じ計算に使った標本のμ±3σを示します。</p>
       <div class="metric-grid">
         <article class="metric-card metric-card--plus" id="plusCard">
           <div class="metric-card__heading">
@@ -157,7 +158,7 @@
         <div class="chart-legend" aria-label="グラフの凡例">
           <span class="chart-legend__plus"><i></i>Offset +</span>
           <span class="chart-legend__minus"><i></i>Offset −</span>
-          <span class="chart-legend__spec"><i></i>USL / LSL</span>
+          <span class="chart-legend__spec"><i></i>USL / LSL</span><span>点線 μ+ / μ−：各群の平均</span>
         </div>
       </div>
       <div class="canvas-frame">
@@ -170,7 +171,7 @@
 
     <aside class="formula-note" aria-label="計算式の説明">
       <span class="formula-note__index">NOTE</span>
-      <p><strong>Cp = (USL − LSL) / 6σ</strong><br>Cpkは平均から近い側の規格限界までの距離を3σで割って算出します。</p>
+      <p><strong>Cp = (USL − LSL) / 6σ</strong><br>Cpkは平均から近い側の規格限界までの距離を3σで割って算出します。Combinedは2つの分布を混ぜた記述値です。二峰性や非正規分布ではCp・Cpkだけで品質を判断できません。図と指数はシミュレーション標本に基づきます。</p>
     </aside>
   </main>
 
@@ -184,3 +185,4 @@
   <script src="./script.js"></script>
 </body>
 </html>
+

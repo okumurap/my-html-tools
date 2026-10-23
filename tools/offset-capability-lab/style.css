@@ -780,3 +780,6 @@ h3 {
     transition-duration: 0.01ms !important;
   }
 }
+
+
+.cap-reading{font-size:13px;line-height:1.8;color:var(--muted,#66707b);margin:0 0 18px}.cap-detail{margin-top:14px;border-top:1px solid #dbe2e8;padding-top:12px}.cap-detail svg{display:block;width:100%;height:auto;max-height:130px}.cap-detail p{font-size:12px;line-height:1.7;overflow-wrap:anywhere;margin:6px 0}.metric-card{min-width:0}
