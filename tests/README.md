@@ -131,3 +131,6 @@ CSVの該当箇所表示：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/csv-i
 
 
 スクリュ位置図と目盛りの整列：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/screw-position-alignment.cjs`。Playwright/Chromium、`TEST_BROWSER_PATH`、`TEST_PLAYWRIGHT_MODULE`、`TEST_SCREENSHOT_DIR`に対応します。SVG属性の値だけでなく画面上に変換された座標を検査し、目盛りとA/B図の両端・各位置が0.5px以内で一致することを確認します。320/375/768/1280/1920px、独立した3位置、径違い・0・上限を検証。旧版の1280px幅では原点が約137pxずれて失敗、修正版で合格。既存の換算・タッチ・公開サブパスの回帰も合格。実機未確認。
+
+
+スクリュ位置図の旧CSS再現は `SIMULATE_STALE_CSS=1 TEST_BASE_URL=http://127.0.0.1:8000 node tests/screw-position-alignment.cjs`。旧CSSの高さ上限を後から重ね、目盛りとマーカーが同一SVGにあること、5画面幅の表示座標、内容ハッシュ付きのCSS/JS読込を確認します。前回修正版では約137pxずれて失敗、新構造で合格。実機のキャッシュ状態は未確認です。

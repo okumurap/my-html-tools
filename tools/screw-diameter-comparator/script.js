@@ -128,11 +128,13 @@
     const values = [positions(areaA), positions(areaB)];
     const limit = Math.max(20, Math.ceil(Math.max(...values.map(v => v.metering)) / 10) * 10);
     const x = value => 24 + value / limit * 472;
-    const axis = `<svg class="position-axis" viewBox="0 0 520 28" aria-hidden="true"><path d="M24 8H496" stroke="currentColor"/>${[0, limit / 2, limit].map(v => `<path d="M${x(v)} 4v8" stroke="currentColor"/><text x="${x(v)}" y="26" text-anchor="middle">${v} mm</text>`).join('')}</svg>`;
-    getElement('positionDiagram').innerHTML = axis + values.map((v, i) => {
+    const axis = `<g class="position-axis" aria-hidden="true"><path d="M24 8H496" stroke="currentColor"/>${[0, limit / 2, limit].map(v => `<path d="M${x(v)} 4v8" stroke="currentColor"/><text x="${x(v)}" y="26" text-anchor="middle">${v} mm</text>`).join('')}</g>`;
+    getElement('positionDiagram').innerHTML = values.map((v, i) => {
       const side = SIDES[i], diameter = state['d' + side];
       return `<div class="position-lane position-${side.toLowerCase()}"><h3>条件${side} · φ${diameter} mm</h3>
-        <svg viewBox="0 0 520 55" role="img" aria-label="条件${side}：計量完${formatTwoDecimals(v.metering)} mmからV-P切替${formatTwoDecimals(v.vp)} mm、クッション10 mmへ前進">
+        <svg viewBox="0 0 520 90" style="display:block;width:100%;height:auto;max-height:none" role="img" aria-label="条件${side}：計量完${formatTwoDecimals(v.metering)} mmからV-P切替${formatTwoDecimals(v.vp)} mm、クッション10 mmへ前進">
+          ${axis}
+          <g transform="translate(0 39)">
           <path d="M24 26H496" class="position-track"/>
           <path d="M${x(v.metering)} 26H${x(v.vp)}" class="position-travel"/>
           <path d="M${x(v.vp)} 26H${x(CUSHION_MM)}" class="position-remaining"/>
@@ -140,6 +142,7 @@
           <rect x="${x(v.metering)-6}" y="20" width="12" height="12" class="position-meter"/>
           <circle cx="${x(CUSHION_MM)}" cy="26" r="7" class="position-cushion"/>
           <path d="M${x(v.vp)} 16l10 10-10 10-10-10Z" class="position-vp"/>
+          </g>
         </svg>
         <dl class="position-values"><div><dt>■ 計量完</dt><dd>${formatTwoDecimals(v.metering)} mm</dd></div><div><dt>◆ V-P切替</dt><dd>${formatTwoDecimals(v.vp)} mm</dd></div><div><dt>● クッション</dt><dd>10.00 mm</dd></div></dl>
       </div>`;
