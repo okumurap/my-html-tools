@@ -144,6 +144,7 @@
       .controls{grid-template-columns:auto 1fr}
       .controls .mute{grid-column:1/-1}
     }
+    .practice-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.practice-actions[hidden]{display:none}.action-secondary,.quick-chords button,.segmented button{min-height:44px}.fingering-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.fingering-head label{display:flex;gap:8px;align-items:center}.fingering-head select{width:90px}.finger-notes{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.finger-note{background:var(--accent-soft);padding:8px 12px;border-radius:10px;font-size:14px}.finger-note b{display:inline-block;min-width:22px;font-size:18px}.keyboard-navigation{display:flex;gap:5px;justify-content:space-between;flex-wrap:wrap;margin:12px 0 0}.keyboard-navigation button{padding:0 8px;font-size:12px}.keyboard-viewport{overflow-x:auto;padding:16px 2px;touch-action:pan-x;background:var(--panel-2);border-radius:8px}.keyboard-wrap{min-width:600px}.key.white{font-size:12px!important;padding-bottom:8px}.key .note-label{pointer-events:none}.key .finger-badge{position:absolute;left:50%;bottom:44px;transform:translateX(-50%);width:26px;height:26px;display:grid;place-items:center;background:var(--chord);color:white;border:2px solid white;border-radius:50%;font-size:15px;font-weight:800;pointer-events:none}.key .finger-badge:empty{display:none}.key.is-root .finger-badge{background:#c92c35}.key.black .finger-badge{bottom:30px;width:23px;height:23px;font-size:13px}.key.black .note-label{position:absolute;bottom:7px;left:0;right:0;font-size:10px}.key.white.is-root,.key.white.is-chord{background:#e6e2ff}.key.white.is-root{background:#ffe2e3}.key.white.is-selected{background:#bff1dc}.key.is-root::after,.key.is-chord::after{display:none}.key.is-selected::after{bottom:28px}.keyboard-viewport:focus-visible{outline:3px solid var(--accent)}
     @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
   </style>
 </head>
@@ -185,6 +186,7 @@
         </div>
       </div>
       <div class="quick-chords" id="quickChords" aria-label="よく使うコード"></div>
+      <div class="practice-actions"><button id="weakToggle" class="action-secondary" type="button" aria-pressed="false">苦手に登録</button><button id="practiceWeak" class="action-secondary" type="button">苦手を練習</button></div>
     </section>
 
     <section class="panel quiz-panel" id="quizPanel" hidden>
@@ -198,6 +200,8 @@
         <button type="button" data-level="medium" aria-pressed="false">中級</button>
         <button type="button" data-level="hard" aria-pressed="false">上級</button>
       </div>
+      <div class="segmented" aria-label="出題範囲"><button id="poolAll" type="button" aria-pressed="true">通常</button><button id="poolWeak" type="button" aria-pressed="false">苦手だけ <span id="weakCount">0</span></button></div>
+      <p class="hint" id="practiceHint">間違えたコードを端末に記録。3回正解すると苦手から外れます。</p>
       <div class="score"><span>正解 <b id="correctCount">0</b></span><span>連続 <b id="streakCount">0</b></span></div>
       <p class="question" id="question">Cコードの構成音を押してください</p>
       <p class="hint" id="quizHint">鍵盤から3音選びます。同じ音名は1つとして判定します。</p>
@@ -208,13 +212,20 @@
         <button class="action-secondary next" id="nextButton" type="button">次の問題</button>
       </div>
       <p class="feedback" id="feedback" aria-live="polite"></p>
+      <button id="retryButton" class="action-secondary" type="button" hidden>同じコードをもう一度</button>
+      <div id="nameAssessment" class="practice-actions" hidden><button id="nameRemember" class="action-secondary" type="button">分かった</button><button id="nameReview" class="action-secondary" type="button">もう一度練習する</button></div>
     </section>
 
     <section class="panel keyboard-card" aria-label="ピアノ鍵盤">
       <div class="legend"><span><span class="dot root"></span>ルート音</span><span><span class="dot chord"></span>構成音</span></div>
-      <div class="keyboard-wrap" id="keyboard" aria-label="2オクターブのピアノ鍵盤">
+      <div class="fingering-head"><strong>押さえ方の目安</strong><label>手 <select id="handSelect"><option value="right">右手</option><option value="left">左手</option></select></label></div>
+      <p id="fingerHelp" class="hint">基本形の一例です。1＝親指、2＝人差し指、3＝中指、4＝薬指、5＝小指。手の大きさに合わせて調整してください。</p>
+      <div id="fingerNotes" class="finger-notes"></div>
+      <div class="keyboard-navigation"><button id="keyboardLower" class="action-secondary" type="button">← 低い音</button><button id="keyboardFocus" class="action-secondary" type="button">押さえる位置へ</button><button id="keyboardHigher" class="action-secondary" type="button">高い音 →</button></div>
+      <div id="keyboardViewport" class="keyboard-viewport" tabindex="0" aria-label="鍵盤を横にスクロールできます"><div class="keyboard-wrap" id="keyboard" aria-label="2オクターブのピアノ鍵盤">
         <div class="white-keys" id="whiteKeys"></div>
         <div id="blackKeys"></div>
+      </div>
       </div>
       <div class="controls">
         <button class="action-secondary" id="replayButton" type="button">もう一度鳴らす</button>
@@ -224,7 +235,9 @@
       </div>
     </section>
 
-    <p class="footer-note">鍵盤はタップ・クリック・横ドラッグで演奏できます。初回の操作で音声が有効になります。<br>スマートフォンではダブルタップによるページ拡大を無効化しています。</p>
+    <p id="practiceStatus" class="hint" role="status"></p><p id="audioStatus" class="hint" role="status"></p>
+    <button id="resetPractice" class="action-secondary" type="button">苦手の記録を消去</button>
+    <p class="footer-note">鍵盤はタップ・クリック・横ドラッグで演奏できます。初回の操作で音声が有効になります。<br>鍵盤の上下の余白を横スワイプするか、音域ボタンで表示位置を動かせます。</p>
     <a class="back" href="../../index.html">← ツール一覧へ戻る</a>
   </main>
 
@@ -256,6 +269,19 @@
     muted:false, volume:.68, audio:null, master:null, dragPointer:null, lastDragNote:null
   };
 
+  const PRACTICE_KEY="chord-piano:practice:v1";
+  let weak={},practiceBlocked=false;
+  function practiceKey(root,type){return root+":"+type}
+  function loadPractice(){
+    try{const raw=localStorage.getItem(PRACTICE_KEY);if(!raw)return;const data=JSON.parse(raw);if(data.version!==1||!data.weak||typeof data.weak!=="object"||Array.isArray(data.weak))throw Error();
+      for(const [key,v] of Object.entries(data.weak)){const [root,type]=key.split(":");if(!ROOT_VALUES.includes(root)||!Object.hasOwn(TYPES,type)||practiceKey(root,type)!==key||!v||!Number.isInteger(v.wins)||v.wins<0||v.wins>2||!Number.isInteger(v.misses)||v.misses<0)throw Error()}
+      weak=data.weak;
+    }catch{practiceBlocked=true;el("practiceStatus").textContent="苦手の保存データを読み込めません。元のデータは上書きしません。必要なら「苦手の記録を消去」で作り直せます。"}
+  }
+  function savePractice(){if(practiceBlocked)return;try{localStorage.setItem(PRACTICE_KEY,JSON.stringify({version:1,weak}));el("practiceStatus").textContent="苦手の記録をこの端末に保存しました。"}catch{el("practiceStatus").textContent="苦手の記録を保存できません。この画面では練習を続けられます。"}}
+  function renderPractice(){const key=practiceKey(state.root,state.type);el("weakToggle").textContent=weak[key]?"苦手から外す":"苦手に登録";el("weakToggle").setAttribute("aria-pressed",String(!!weak[key]));el("weakCount").textContent=Object.keys(weak).length;el("poolAll").setAttribute("aria-pressed",String(!state.weakOnly));el("poolWeak").setAttribute("aria-pressed",String(!!state.weakOnly));}
+  function recordAttempt(correct){const key=practiceKey(state.quiz.root,state.quiz.type);if(correct){if(weak[key]&&++weak[key].wins>=3)delete weak[key]}else{weak[key]={wins:0,misses:(weak[key]?.misses||0)+1}}savePractice();renderPractice()}
+  function centerKeyboard(){const d=state.mode==="quiz"&&state.quiz?chordData(state.quiz.root,state.quiz.type):chordData();const key=document.querySelector(`.key[data-midi="${d.midis[Math.floor(d.midis.length/2)]}"]`);if(key){const viewport=el("keyboardViewport");viewport.scrollLeft=key.offsetLeft-viewport.clientWidth/2+key.offsetWidth/2}}
   const rootIndex = (root) => ROOT_VALUES.indexOf(root);
   const chordData = (root=state.root, type=state.type) => {
     const r = rootIndex(root);
@@ -301,12 +327,12 @@
     document.querySelectorAll("#quickChords button").forEach(b=>{
       b.setAttribute("aria-pressed", String(b.dataset.root===state.root && b.dataset.type===state.type));
     });
-    renderKeyStates();
+    renderKeyStates();renderPractice();
   }
 
   function setChord(root,type,play=false){
     state.root=root; state.type=type;
-    renderChord();
+    renderChord();centerKeyboard();
     if(play) playCurrentChord();
   }
 
@@ -318,7 +344,7 @@
         const b=document.createElement("button");
         b.type="button"; b.className="key white"; b.dataset.midi=midi; b.dataset.pc=pc;
         b.setAttribute("aria-label",`${NOTE_NAMES[pc]}${octave}`);
-        b.textContent=(pc===0)?`C${octave}`:"";
+        b.innerHTML=`<span class="note-label">${NOTE_NAMES[pc]}${octave}</span><span class="finger-badge"></span>`;
         el("whiteKeys").append(b);
       });
     }
@@ -332,6 +358,7 @@
         const b=document.createElement("button");
         b.type="button"; b.className="key black"; b.dataset.midi=midi; b.dataset.pc=item.pc;
         b.setAttribute("aria-label",`${NOTE_NAMES[item.pc]}${octave}`);
+        b.innerHTML=`<span class="note-label">${NOTE_NAMES[item.pc]}${octave}</span><span class="finger-badge"></span>`;
         b.style.left=`calc(${((whiteOffset+item.afterWhite)/14)*100}% - 2.55%)`;
         el("blackKeys").append(b);
       }
@@ -339,28 +366,36 @@
   }
 
   function renderKeyStates(){
-    const showStudy=state.mode==="study";
-    const showNameQuiz=state.mode==="quiz" && state.quizMode==="name" && !!state.quiz;
-    const d=showNameQuiz ? chordData(state.quiz.root,state.quiz.type) : chordData();
+    const reveal=state.mode==="study"||state.mode==="quiz"&&(state.quizMode==="name"||state.answered);
+    const d=state.mode==="quiz"&&state.quiz?chordData(state.quiz.root,state.quiz.type):chordData();
+    const fingers=d.midis.length===3?(state.hand==="left"?[5,3,1]:[1,3,5]):(state.hand==="left"?[5,3,2,1]:[1,2,3,5]);
     document.querySelectorAll(".key").forEach(k=>{
-      const pc=Number(k.dataset.pc);
-      k.classList.toggle("is-selected", state.mode==="quiz" && state.quizMode==="notes" && state.selected.has(pc));
-      k.classList.toggle("is-root", (showStudy || showNameQuiz) && pc===d.rootIndex);
-      k.classList.toggle("is-chord", (showStudy || showNameQuiz) && pc!==d.rootIndex && d.pcs.includes(pc));
+      const pc=Number(k.dataset.pc),midi=Number(k.dataset.midi),index=d.midis.indexOf(midi);
+      k.classList.toggle("is-selected",state.mode==="quiz"&&state.quizMode==="notes"&&state.selected.has(pc));
+      k.classList.toggle("is-root",reveal&&midi===d.midis[0]);
+      k.classList.toggle("is-chord",reveal&&index>0);
+      k.querySelector('.finger-badge').textContent=reveal&&index>=0?fingers[index]:'';
+      k.setAttribute('aria-label',`${NOTE_NAMES[pc]}${Math.floor(midi/12)-1}${reveal&&index>=0?'・指'+fingers[index]:''}`);
+      k.setAttribute('aria-pressed',String(state.mode==='quiz'&&state.quizMode==='notes'&&state.selected.has(pc)));
     });
+    el('fingerNotes').textContent='';
+    if(reveal)d.midis.forEach((midi,i)=>{const item=document.createElement('span');item.className='finger-note';const finger=document.createElement('b');finger.textContent=fingers[i];item.append(finger,document.createTextNode(' '+NOTE_NAMES[midi%12]+(Math.floor(midi/12)-1)));el('fingerNotes').append(item)});
+    else el('fingerNotes').textContent='回答後に押さえる位置と指番号を表示します。';
   }
 
   function ensureAudio(){
+    try{
     if(!state.audio){
       const AC=window.AudioContext||window.webkitAudioContext;
-      if(!AC) return false;
+      if(!AC) throw Error();
       state.audio=new AC();
       state.master=state.audio.createGain();
       state.master.gain.value=state.muted?0:state.volume;
       state.master.connect(state.audio.destination);
     }
-    if(state.audio.state==="suspended") state.audio.resume();
+    if(state.audio.state==="suspended") state.audio.resume().catch(()=>{el("audioStatus").textContent="音声を有効にできません。表示と練習は利用できます。"});
     return true;
+    }catch{el("audioStatus").textContent="音声を利用できません。表示と練習は利用できます。";return false}
   }
 
   function midiFreq(midi){ return 440*Math.pow(2,(midi-69)/12); }
@@ -413,6 +448,7 @@
 
   function bindKeyboard(){
     const keyboard=el("keyboard");
+    keyboard.addEventListener("click",e=>{const key=e.target.closest(".key");if(key&&e.detail===0)handleKeyHit(key,false)});
     keyboard.addEventListener("pointerdown",e=>{
       const key=e.target.closest(".key");
       if(!key) return;
@@ -448,7 +484,7 @@
     el("studyPanel").hidden=!study;
     el("quizPanel").hidden=study;
     if(!study && !state.quiz) newQuestion();
-    renderKeyStates();
+    renderKeyStates();centerKeyboard();renderPractice();
   }
 
   function typePool(){
@@ -465,11 +501,14 @@
 
   function randomItem(a){ return a[Math.floor(Math.random()*a.length)]; }
 
-  function newQuestion(){
-    state.selected.clear(); state.answered=false;
-    const root=randomItem(rootPool());
-    const type=randomItem(typePool());
-    state.quiz={root,type};
+  function newQuestion(retry=false){
+    const previous=state.quiz;
+    state.selected.clear();state.answered=false;state.assessed=false;
+    el('retryButton').hidden=true;el('nameAssessment').hidden=true;el('nameRemember').disabled=false;el('nameReview').disabled=false;
+    let pool=state.weakOnly?Object.keys(weak).map(key=>{const [root,type]=key.split(':');return {root,type}}):rootPool().flatMap(root=>typePool().map(type=>({root,type})));
+    if(!pool.length){state.weakOnly=false;pool=rootPool().flatMap(root=>typePool().map(type=>({root,type})));el('practiceHint').textContent='苦手のコードはありません。通常の問題を出題します。'}else el('practiceHint').textContent='間違えたコードを端末に記録。3回正解すると苦手から外れます。';
+    if(pool.length>1)pool=pool.filter(q=>!previous||q.root!==previous.root||q.type!==previous.type);
+    state.quiz=retry&&previous?previous:randomItem(pool);const {root,type}=state.quiz;
     el("feedback").textContent="";
     el("feedback").className="feedback";
     el("answerName").hidden=true;
@@ -484,7 +523,7 @@
       el("answerName").textContent=d.pcs.map(i=>NOTE_NAMES[i]).join(" ・ ");
       el("answerName").hidden=false;
     }
-    renderKeyStates();
+    renderKeyStates();centerKeyboard();renderPractice();
   }
 
   function answerQuiz(){
@@ -493,7 +532,7 @@
     if(state.quizMode==="name"){
       state.answered=true;
       el("feedback").textContent=`答え：${d.name}`;
-      el("feedback").className="feedback good";
+      el("feedback").className="feedback good";el("nameAssessment").hidden=false;el("retryButton").hidden=false;renderKeyStates();
       return;
     }
     const expected=new Set(d.pcs);
@@ -509,11 +548,23 @@
       el("feedback").textContent=`もう一度確認：${d.pcs.map(i=>NOTE_NAMES[i]).join("・")}`;
       el("feedback").className="feedback bad";
     }
+    recordAttempt(correct);renderKeyStates();el("retryButton").hidden=false;
     el("correctCount").textContent=state.correct;
     el("streakCount").textContent=state.streak;
   }
 
   function bindUI(){
+    el('handSelect').addEventListener('change',e=>{state.hand=e.target.value;renderKeyStates()});
+    el('keyboardLower').addEventListener('click',()=>el('keyboardViewport').scrollLeft-=240);
+    el('keyboardHigher').addEventListener('click',()=>el('keyboardViewport').scrollLeft+=240);
+    el('keyboardFocus').addEventListener('click',centerKeyboard);
+    el('weakToggle').addEventListener('click',()=>{const key=practiceKey(state.root,state.type);if(weak[key])delete weak[key];else weak[key]={wins:0,misses:0};savePractice();renderPractice()});
+    el('practiceWeak').addEventListener('click',()=>{state.weakOnly=true;state.quiz=null;setMode('quiz')});
+    el('poolAll').addEventListener('click',()=>{state.weakOnly=false;newQuestion()});el('poolWeak').addEventListener('click',()=>{state.weakOnly=true;newQuestion()});
+    el('retryButton').addEventListener('click',()=>newQuestion(true));
+    for(const [id,correct] of [['nameRemember',true],['nameReview',false]])el(id).addEventListener('click',()=>{if(state.assessed||!state.answered)return;state.assessed=true;recordAttempt(correct);el('nameRemember').disabled=true;el('nameReview').disabled=true;el('feedback').textContent+=correct?' · 分かったとして記録しました':' · 苦手に記録しました'});
+    el('resetPractice').addEventListener('click',()=>{if(!confirm('この端末の苦手の記録だけを消去しますか？'))return;try{localStorage.removeItem(PRACTICE_KEY);weak={};practiceBlocked=false;el('practiceStatus').textContent='苦手の記録を消去しました';renderPractice()}catch{el('practiceStatus').textContent='消去できません。ブラウザの保存設定を確認してください。'}});
+
     el("studyTab").addEventListener("click",()=>setMode("study"));
     el("quizTab").addEventListener("click",()=>setMode("quiz"));
     el("rootSelect").addEventListener("change",e=>setChord(e.target.value,state.type,true));
@@ -535,9 +586,9 @@
       document.querySelectorAll("[data-level]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
       newQuestion();
     }));
-    el("clearButton").addEventListener("click",()=>{state.selected.clear();state.answered=false;el("feedback").textContent="";renderKeyStates();});
+    el("clearButton").addEventListener("click",()=>newQuestion(true));
     el("answerButton").addEventListener("click",answerQuiz);
-    el("nextButton").addEventListener("click",newQuestion);
+    el("nextButton").addEventListener("click",()=>newQuestion());
     el("volumeRange").addEventListener("input",e=>{
       state.volume=Number(e.target.value)/100;
       if(state.master && !state.muted) state.master.gain.value=state.volume;
@@ -577,6 +628,7 @@
   buildKeyboard();
   bindKeyboard();
   bindUI();
+  loadPractice();
   initTheme();
   renderChord();
 })();
