@@ -128,3 +128,6 @@ CSVの該当箇所表示：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/csv-i
 
 
 人生ダッシュボード：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/life-dashboard-quality.cjs`。旧保存データ、充実度・年週別メモ、自動保存と離脱時保存、予定・文字の安全な表示、うるう年・夏時間を含む独立した4日付、破損保護・容量不足・明示初期化、4画面幅・タッチ・公開サブパスを確認します。旧版で生年月日と週記録の復元を確認、新UIの専用テストは旧版未実行。実機未確認。
+
+
+スクリュ位置図と目盛りの整列：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/screw-position-alignment.cjs`。Playwright/Chromium、`TEST_BROWSER_PATH`、`TEST_PLAYWRIGHT_MODULE`、`TEST_SCREENSHOT_DIR`に対応します。SVG属性の値だけでなく画面上に変換された座標を検査し、目盛りとA/B図の両端・各位置が0.5px以内で一致することを確認します。320/375/768/1280/1920px、独立した3位置、径違い・0・上限を検証。旧版の1280px幅では原点が約137pxずれて失敗、修正版で合格。既存の換算・タッチ・公開サブパスの回帰も合格。実機未確認。
