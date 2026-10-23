@@ -105,3 +105,7 @@ PlaywrightとChromiumを用意し、HTTPサーバー起動後に `TEST_BASE_URL=
 ## スクリュ径A/B比較
 
 `TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/screw-diameter-comparator.cjs`。Playwright/Chromiumを用意し、`TEST_PLAYWRIGHT_MODULE` と `TEST_SCREENSHOT_DIR` に対応します。独立した3ケースの想定V-P位置・計量完位置・前進量、丸め前の移動量を使うこと、共通体積・両側の径と移動量の連動、既存の速度・回転数換算、0・空欄・負値・非数値・上限、4画面幅、タッチ、Pagesサブパスを確認します。実機確認は未実施です。
+
+
+
+表編集の操作改善：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/table-editor-quality.cjs`。実クリップボードからの読込・TSVコピー、番地と列名、タッチ改行編集、Undo/Redo・列移動・保存復元、クリップボード拒否と4画面幅を確認。共通回帰は `tests/tools-regression.cjs --browser`。実機未確認。

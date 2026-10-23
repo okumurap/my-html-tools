@@ -43,7 +43,7 @@ async function browserTests(){
   await go('table-editor');await loadTable('name,note|memo\nA,B\nC,D');assert.equal(await page.locator('#grid th').count(),2);assert.match(await page.locator('#inputPreview').innerText(),/note\|memo/);
   await page.locator('#grid tbody td').first().click();await click('editCellBtn');await page.locator('.cell-editor').fill('Edited');await page.locator('.cell-editor').press('Tab');await page.locator('.cell-editor').press('Escape');assert.match((await cells())[0],/Edited/);
   await loadTable('x,y\nNew,Value');await click('undoBtn');assert.match((await cells())[0],/Edited/);await click('redoBtn');assert.match((await cells())[0],/New/);await click('undoBtn');
-  await page.locator('#grid tbody td').first().click();await click('moveDownBtn');assert.match((await cells())[1],/Edited/);await click('moveRightBtn');assert.equal(await page.locator('#grid th').last().innerText(),'name');await click('undoBtn');await click('undoBtn');
+  await page.locator('#grid tbody td').first().click();await click('moveDownBtn');assert.match((await cells())[1],/Edited/);await click('moveRightBtn');assert.equal(await page.locator('#grid th .th-text').last().innerText(),'name');await click('undoBtn');await click('undoBtn');
   await click('colActionsBtn');await page.getByRole('button',{name:'列を右に追加',exact:true}).click();assert.equal(await page.locator('#grid th').count(),3);await click('undoBtn');
   await ctx.grantPermissions(['clipboard-read','clipboard-write']);await click('copyTsvBtn');assert.match(await page.evaluate(()=>navigator.clipboard.readText()),/Edited\tB/);
   await page.locator('#autosave').check();await click('saveDraftBtn');await page.reload();assert.equal(await page.locator('#draftBanner').isVisible(),true);await click('restoreDraftBtn');assert.match((await cells())[0],/Edited/);await click('clearBtn');assert.equal(await page.locator('#grid').isVisible(),false);await click('undoBtn');assert.match((await cells())[0],/Edited/);
@@ -82,3 +82,4 @@ async function browserTests(){
   assert.deepEqual(errors,[]);await browser.close();console.log('OK browser: editing, undo, import/export, persistence, rules, comparison, catalog; 16 viewport/page combinations; no runtime errors');
 }
 if(process.argv.includes('--browser'))browserTests().catch(e=>{console.error(e);process.exit(1)});
+

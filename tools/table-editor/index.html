@@ -11,7 +11,7 @@
     html,body{height:100%;margin:0}
     body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;display:flex;flex-direction:column}
     button,textarea,input,select{font:inherit}button{min-height:44px;touch-action:manipulation}a{color:var(--accent)}select{max-width:100%;min-height:44px;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px}header{flex-wrap:wrap}.card,main{min-width:0}.preview{max-height:220px;overflow:auto}.preview table{font-size:13px}.save-options{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.save-options label{display:flex;align-items:center;gap:6px}#draftStatus{overflow-wrap:anywhere}#draftBanner{padding:10px;background:var(--panel2)}[hidden]{display:none!important}
-    button{border:1px solid var(--border);border-radius:8px;padding:8px 12px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
+    button{border:1px solid var(--border);border-radius:8px;padding:8px 12px;background:var(--accent);color:var(--bg);font-weight:700;cursor:pointer}
     button.secondary{background:var(--panel2);color:var(--text)}
     button.danger{color:var(--danger)}
     button:disabled{opacity:.4;cursor:not-allowed}
@@ -40,6 +40,8 @@
     @media(max-width:900px){main{grid-template-columns:1fr;height:auto;overflow:auto}.card:first-child{min-height:300px}.card:last-child{min-height:70dvh}textarea{min-height:160px;resize:vertical}}
     .card:first-child .card-body{overflow:auto}
     @media(max-width:900px){main{display:block;flex:none;overflow:visible}.card{margin-bottom:14px}.card:first-child{min-height:0}.card:first-child .card-body{overflow:visible}.card-head{flex:none}textarea{flex:none}.card:last-child{min-height:70dvh}#tableWrap{min-height:360px}}
+    .col-index{font-size:10px;color:var(--accent);font-weight:800}.selection-editor{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;padding:10px;border-bottom:1px solid var(--border)}.selection-editor label,.selection-editor .hint{grid-column:1/-1;font-size:12px;overflow-wrap:anywhere}.selection-editor textarea{min-height:54px;max-height:120px;resize:vertical;flex:none;padding:7px}.selection-editor button{align-self:start}#selectionStatus{flex-basis:100%;font-weight:700;color:var(--accent)}
+    @media(max-width:900px){.toolbar[aria-label]{display:flex;flex-wrap:nowrap;overflow-x:auto;align-items:center}.toolbar[aria-label] button{flex:none}.toolbar[aria-label] #selectionStatus{flex:0 0 125px;white-space:normal}.selection-editor{position:relative}.selection-editor textarea{min-height:60px}}
   </style>
 </head>
 <body>
@@ -53,6 +55,8 @@
       <div class="card-body">
         <label for="inputFormat">入力形式</label><select id="inputFormat"><option value="auto">自動判定</option><option value="csv">CSV</option><option value="tsv">TSV</option><option value="md">Markdown</option></select>
         <label for="pasteArea">読み込む表</label><textarea id="pasteArea" spellcheck="false" placeholder="Markdown表、CSV、またはExcelのセル範囲を貼り付け"></textarea>
+        <div class="actions"><button id="pasteClipboardBtn" type="button">クリップボードから読み込む</button></div>
+        <p id="clipboardStatus" class="hint" role="status">Excelでコピーした範囲を、そのまま読み込めます。許可されない場合は下の入力欄へ貼り付けてください。</p>
         <div class="actions"><button id="parseBtn" type="button">表として読み込む</button><button id="clearBtn" class="secondary danger" type="button">クリア</button></div>
         <div class="hint">貼り付け後にプレビューを確認し、「表として読み込む」で反映します。再読み込み・クリアも「戻す」で取り消せます。</div>
         <p id="previewStatus" class="hint" role="status">入力すると先頭5行を表示します。</p>
@@ -65,7 +69,7 @@
     <section class="card">
       <div class="toolbar">
         <button id="undoBtn" class="secondary" type="button" disabled>戻す</button><button id="redoBtn" class="secondary" type="button" disabled>やり直す</button>
-        <button id="copyMdBtn" class="secondary" type="button" disabled>Markdownコピー</button><button id="copyTsvBtn" class="secondary" type="button" disabled>TSVコピー</button>
+        <button id="copyMdBtn" class="secondary" type="button" disabled>Markdownコピー</button><button id="copyTsvBtn" type="button" disabled title="列順・行順を反映したTSVをコピー">Excelへコピー（TSV）</button>
         <button id="addRowEndBtn" class="secondary" type="button" disabled>行追加</button><button id="addColEndBtn" class="secondary" type="button" disabled>列追加</button><button id="delSelectedColBtn" class="secondary danger" type="button" disabled>選択列を削除</button>
       </div>
       <div class="toolbar" aria-label="選択したセル・行・列を操作">
@@ -74,6 +78,12 @@
         <button id="rowActionsBtn" type="button" class="secondary" disabled>行操作</button><button id="colActionsBtn" type="button" class="secondary" disabled>列操作</button>
         <button id="moveUpBtn" type="button" class="secondary" disabled>行を↑</button><button id="moveDownBtn" type="button" class="secondary" disabled>行を↓</button>
         <button id="moveLeftBtn" type="button" class="secondary" disabled>列を←</button><button id="moveRightBtn" type="button" class="secondary" disabled>列を→</button>
+      </div>
+      <div class="selection-editor">
+        <label for="selectedValue" id="selectedValueLabel">選択セルの内容</label>
+        <textarea id="selectedValue" rows="2" disabled aria-describedby="selectedValueHint" placeholder="セルを選ぶと内容を表示します"></textarea>
+        <button id="applySelectedValue" type="button" disabled>変更を反映</button>
+        <span id="selectedValueHint" class="hint">改行も入力できます。Ctrl/⌘+Enterで反映。</span>
       </div>
       <div id="tableWrap" tabindex="0" aria-label="表エディター"><div class="empty">左側に表を貼り付けてください</div><table id="grid" hidden><thead></thead><tbody></tbody></table></div>
     </section>
@@ -91,6 +101,7 @@
 
   const toast=msg=>{const el=$('toast');clearTimeout(toastTimer);el.textContent=msg;el.classList.add('show');toastTimer=setTimeout(()=>el.classList.remove('show'),1600)};
   const clamp=(n,min,max)=>Math.min(max,Math.max(min,n));
+  const columnLetter=index=>{let result='';for(let n=index+1;n>0;n=Math.floor((n-1)/26))result=String.fromCharCode(65+(n-1)%26)+result;return result};
   const hasData=()=>state.data.length>0&&state.cols.length>0&&state.rows.length>0;
   const snapshot=()=>({data:state.data.map(r=>r.slice()),cols:state.cols.slice(),rows:state.rows.slice(),selectedCol:state.selectedCol,selectedCell:{...state.selectedCell}});
   const sameSnapshot=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
@@ -113,7 +124,12 @@
     for(const id of ['editCellBtn','rowActionsBtn'])$(id).disabled=!ok||r==null;
     $('moveUpBtn').disabled=!ok||r==null||r<=1;$('moveDownBtn').disabled=!ok||r==null||r>=state.rows.length-1;
     $('moveLeftBtn').disabled=!ok||c<=0;$('moveRightBtn').disabled=!ok||c>=state.cols.length-1;
-    $('selectionStatus').textContent=ok?`${r==null?'データ行なし':`データ${r}行目`} / ${c+1}列目`:'セルを選択';
+    const coordinate=ok?columnLetter(c)+(r==null?'1':r+1):'';
+    const header=ok?String(state.data[state.rows[0]]?.[state.cols[c]]||'列名なし'):'';
+    $('selectionStatus').textContent=ok?`${coordinate} · ${header} / ${r==null?'データ行なし':`データ${r}行目`} / ${c+1}列目`:'セルを選択';
+    $('selectedValueLabel').textContent=ok&&r!=null?`${coordinate} · ${header}`:'選択セルの内容';
+    $('selectedValue').disabled=!ok||r==null;$('applySelectedValue').disabled=!ok||r==null;
+    $('selectedValue').value=ok&&r!=null?state.data[state.rows[r]][state.cols[c]]:'';
     if($('autosave').checked)saveDraft(false);
 
   };
@@ -166,8 +182,8 @@
     grid.hidden=!hasData();tableWrap.querySelector('.empty')?.remove();
     if(!hasData()){const e=document.createElement('div');e.className='empty';e.textContent='左側に表を貼り付けてください';tableWrap.prepend(e);updateControls();return}
     const trh=document.createElement('tr');
-    state.cols.forEach((rawCol,vc)=>{const th=document.createElement('th');th.draggable=true;th.tabIndex=0;th.classList.toggle('col-selected',vc===state.selectedCol);const handle=document.createElement('div');handle.className='handle';const drag=document.createElement('span');drag.className='drag';const label=document.createElement('span');label.className='th-text';label.textContent=state.data[state.rows[0]]?.[rawCol]??'';handle.append(drag,label);th.append(handle);bindHeader(th,vc);trh.append(th)});thead.append(trh);
-    for(let vr=1;vr<state.rows.length;vr++){const tr=document.createElement('tr');tr.classList.toggle('row-selected',state.selectedCell.r===vr);for(let vc=0;vc<state.cols.length;vc++){const td=document.createElement('td');td.textContent=state.data[state.rows[vr]]?.[state.cols[vc]]??'';td.classList.toggle('col-selected',vc===state.selectedCol);td.classList.toggle('cell-selected',state.selectedCell.r===vr&&state.selectedCell.c===vc);td.addEventListener('click',()=>selectCell(vr,vc));td.addEventListener('dblclick',()=>beginEdit(vr,vc));td.addEventListener('contextmenu',e=>{e.preventDefault();selectCell(vr,vc,false);rowMenu(vr,e.clientX,e.clientY)});tr.append(td)}tbody.append(tr)}
+    state.cols.forEach((rawCol,vc)=>{const th=document.createElement('th');th.draggable=true;th.tabIndex=0;th.classList.toggle('col-selected',vc===state.selectedCol);const handle=document.createElement('div');handle.className='handle';const drag=document.createElement('span');drag.className='drag';const label=document.createElement('span');label.className='th-text';label.textContent=state.data[state.rows[0]]?.[rawCol]??'';const coordinate=document.createElement('span');coordinate.className='col-index';coordinate.textContent=columnLetter(vc);coordinate.setAttribute('aria-hidden','true');handle.append(coordinate,drag,label);th.append(handle);bindHeader(th,vc);trh.append(th)});thead.append(trh);
+    for(let vr=1;vr<state.rows.length;vr++){const tr=document.createElement('tr');tr.classList.toggle('row-selected',state.selectedCell.r===vr);for(let vc=0;vc<state.cols.length;vc++){const td=document.createElement('td');td.textContent=state.data[state.rows[vr]]?.[state.cols[vc]]??'';td.classList.toggle('col-selected',vc===state.selectedCol);td.classList.toggle('cell-selected',state.selectedCell.r===vr&&state.selectedCell.c===vc);td.setAttribute('aria-label',columnLetter(vc)+(vr+1)+' '+(state.data[state.rows[0]]?.[state.cols[vc]]||'列名なし'));td.setAttribute('aria-selected',String(state.selectedCell.r===vr&&state.selectedCell.c===vc));td.addEventListener('click',()=>selectCell(vr,vc));td.addEventListener('dblclick',()=>beginEdit(vr,vc));td.addEventListener('contextmenu',e=>{e.preventDefault();selectCell(vr,vc,false);rowMenu(vr,e.clientX,e.clientY)});tr.append(td)}tbody.append(tr)}
     updateControls();requestAnimationFrame(ensureSelectionVisible);
   };
   const selectCell=(r,c,doRender=true)=>{state.selectedCol=c;state.selectedCell={r,c};tableWrap.focus({preventScroll:true});if(doRender)render()};
@@ -196,9 +212,27 @@
 
   const pasteIntoGrid=text=>{if(state.selectedCell.r==null)return;let incoming;try{incoming=parseDelimited(text,text.includes('\t')?'\t':',')}catch(err){return toast(err.message)}if(!incoming.length)return;const startR=state.selectedCell.r,startC=state.selectedCell.c;pushUndo();const needVisualCols=startC+Math.max(...incoming.map(r=>r.length));while(state.cols.length<needVisualCols){const raw=state.data[0].length;state.data.forEach(r=>r.push(''));state.cols.push(raw)}const needVisualRows=startR+incoming.length;while(state.rows.length<needVisualRows){const raw=state.data.length;state.data.push(Array(state.data[0].length).fill(''));state.rows.push(raw)}incoming.forEach((row,dr)=>row.forEach((value,dc)=>{state.data[state.rows[startR+dr]][state.cols[startC+dc]]=value}));render();toast(`${incoming.length}行を貼り付けました`)};
   tableWrap.addEventListener('paste',e=>{if(state.editing||!hasData())return;const text=e.clipboardData?.getData('text/plain');if(!text)return;e.preventDefault();pasteIntoGrid(text)});
-  tableWrap.addEventListener('keydown',e=>{if(!hasData()||state.editing)return;const mod=e.ctrlKey||e.metaKey,key=e.key.toLowerCase();if(mod&&key==='c'){e.preventDefault();copyText(toMarkdown(currentViewRows()));return}if(mod&&key==='z'&&!e.shiftKey){e.preventDefault();undo();return}if((mod&&key==='y')||(mod&&e.shiftKey&&key==='z')){e.preventDefault();redo();return}let r=state.selectedCell.r,c=state.selectedCell.c;if(r==null||c==null)return;if(e.key==='F2'||e.key==='Enter'){e.preventDefault();beginEdit(r,c);return}if(mod&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();if(e.key==='ArrowLeft'||e.key==='ArrowRight')moveCol(c,e.key==='ArrowLeft'?Math.max(0,c-1):Math.min(state.cols.length-1,c+1));else moveRow(r,e.key==='ArrowUp'?Math.max(1,r-1):Math.min(state.rows.length-1,r+1));return}const delta={ArrowLeft:[0,-1],ArrowRight:[0,1],ArrowUp:[-1,0],ArrowDown:[1,0]}[e.key];if(delta){e.preventDefault();selectCell(clamp(r+delta[0],1,state.rows.length-1),clamp(c+delta[1],0,state.cols.length-1))}});
+  tableWrap.addEventListener('keydown',e=>{if(!hasData()||state.editing)return;const mod=e.ctrlKey||e.metaKey,key=e.key.toLowerCase();if(mod&&key==='c'){e.preventDefault();copyText(toTsv(currentViewRows()));return}if(mod&&key==='z'&&!e.shiftKey){e.preventDefault();undo();return}if((mod&&key==='y')||(mod&&e.shiftKey&&key==='z')){e.preventDefault();redo();return}let r=state.selectedCell.r,c=state.selectedCell.c;if(r==null||c==null)return;if(e.key==='F2'||e.key==='Enter'){e.preventDefault();beginEdit(r,c);return}if(mod&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();if(e.key==='ArrowLeft'||e.key==='ArrowRight')moveCol(c,e.key==='ArrowLeft'?Math.max(0,c-1):Math.min(state.cols.length-1,c+1));else moveRow(r,e.key==='ArrowUp'?Math.max(1,r-1):Math.min(state.rows.length-1,r+1));return}const delta={ArrowLeft:[0,-1],ArrowRight:[0,1],ArrowUp:[-1,0],ArrowDown:[1,0]}[e.key];if(delta){e.preventDefault();selectCell(clamp(r+delta[0],1,state.rows.length-1),clamp(c+delta[1],0,state.cols.length-1))}});
 
   const copyText=async text=>{try{await navigator.clipboard.writeText(text);toast('クリップボードにコピーしました')}catch{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.append(ta);ta.select();const ok=document.execCommand('copy');ta.remove();toast(ok?'コピーしました':'コピーできませんでした')}};
+  $('pasteClipboardBtn').addEventListener('click',async()=>{
+    const before=pasteArea.value;
+    try{
+      if(!navigator.clipboard?.readText)throw new Error('unavailable');
+      const text=await navigator.clipboard.readText();
+      if(pasteArea.value!==before){$('clipboardStatus').textContent='入力欄が更新されたため読み込みを取り消しました。';return}
+      parseInput(text);pasteArea.value=text;preview();parseAndRender(text);
+      $('clipboardStatus').textContent='クリップボードの表を読み込みました。Excelへコピー（TSV）で戻せます。';
+      $('selectionStatus').scrollIntoView({block:'nearest'});
+    }catch{$('clipboardStatus').textContent='クリップボードを読み込めませんでした。コピー内容・形式を確認するか、入力欄へ貼り付けてください。編集中の表は残っています。';pasteArea.focus()}
+  });
+  const applySelectedValue=()=>{
+    const {r,c}=state.selectedCell;if(!hasData()||r==null)return;
+    const value=$('selectedValue').value,rawR=state.rows[r],rawC=state.cols[c];
+    if(value!==state.data[rawR][rawC]){pushUndo();state.data[rawR][rawC]=value;render();toast('選択セルを更新しました')}
+  };
+  $('applySelectedValue').addEventListener('click',applySelectedValue);
+  $('selectedValue').addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();applySelectedValue()}});
   $('parseBtn').addEventListener('click',()=>parseAndRender());$('clearBtn').addEventListener('click',()=>{cancelEdit();pushUndo();pasteArea.value='';state.data=[];state.cols=[];state.rows=[];preview();render()});
   $('undoBtn').addEventListener('click',undo);$('redoBtn').addEventListener('click',redo);$('copyMdBtn').addEventListener('click',()=>copyText(toMarkdown(currentViewRows())));$('copyTsvBtn').addEventListener('click',()=>copyText(toTsv(currentViewRows())));$('addRowEndBtn').addEventListener('click',()=>addRowAt(state.rows.length));$('addColEndBtn').addEventListener('click',()=>addColumnAt(state.cols.length));$('delSelectedColBtn').addEventListener('click',()=>deleteColumnAt(state.selectedCol));
   pasteArea.addEventListener('paste',e=>{const text=e.clipboardData?.getData('text/plain');if(!text)return;e.preventDefault();pasteArea.value=text;preview()});
@@ -246,4 +280,5 @@
 </script>
 </body>
 </html>
+
 
