@@ -93,3 +93,9 @@ PlaywrightとChromiumを用意し、HTTPサーバー起動後に `TEST_BASE_URL=
 手書きメモの表示操作は `TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/quick-memo-navigation.cjs`。`TEST_PLAYWRIGHT_MODULE` と `TEST_SCREENSHOT_DIR` に対応します。実際の2本指イベントでピンチ・移動、指の中点を保つ2倍拡大、100〜500%の上下限、3本指・キャンセル、メモとRedo履歴の維持、拡大移動後の筆記座標、マップ上の表示枠、全体復帰、回転・再読み込み・紙の切り替え・PNG全体出力を検証します。320pxからPCまでの表示と各ボタンも確認します。Chromiumのタッチエミュレーションであり、実機の指やApple Pencilの操作感は未確認です。
 
 上部の紙の束は `TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/quick-memo-strip.cjs`。Playwright/Chromiumを使い、`TEST_PLAYWRIGHT_MODULE` と `TEST_SCREENSHOT_DIR` に対応します。上部一覧の常時表示・ネイティブの横スワイプ・誤選択防止・長押しで開かないこと・タップ編集と編集中の再タップでPNG保存と共有・画像保存画面から削除／キャンセル／復元（一覧から開いた別の紙も含む）・筆記後のサムネイル更新・新規作成と選択中の紙のスクロール追従・削除と復元・4画面幅を確認します。ネイティブ写真アプリへの保存は実機未確認、共有APIはモックで確認しています。
+
+
+
+## 図面注釈ツール
+
+`TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/drawing-annotation.cjs`。Playwright/Chromiumを使い、`TEST_PLAYWRIGHT_MODULE` と `TEST_SCREENSHOT_DIR` に対応します。元画像・各注釈・設定の再読み込み復元、移動・変形・消去・削除とUndo/Redo、実PNGダウンロードと復元・テーマ変更前後の一致、明暗各320・375・768・1280px、タッチ番号入力、画像読込失敗と非同期競合、保存失敗と再保存、別タブ競合、破損データ保護、保存禁止、Pagesのサブパスを確認します。旧版では画像を開いて再読み込みすると1280×720の白紙に戻ることを再現済みです。実機とネイティブペン入力は未確認です。

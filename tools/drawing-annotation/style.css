@@ -12,6 +12,11 @@
   --muted: #66707b;
   --accent: #2563a9;
   --accent-soft: #eef5fc;
+  --accent-text: #174f87;
+  --notice-bg: #f4f8fc;
+  --notice-border: #9ab7d2;
+  --error-bg: #fff3f4;
+  --error-border: #e2a5ac;
   --danger: #b4232f;
   --focus: #2563a9;
   --radius: 0.55rem;
@@ -212,7 +217,7 @@ input:focus-visible {
 .pill[aria-pressed="true"] {
   border-color: var(--accent);
   background: var(--accent-soft);
-  color: #174f87;
+  color: var(--accent-text);
 }
 
 .btn--primary {
@@ -280,6 +285,8 @@ input:focus-visible {
 }
 
 .pill {
+  flex: none;
+  min-width: 2.75rem;
   min-height: 2.75rem;
   padding: 0 0.65rem;
   border-radius: 999px;
@@ -344,8 +351,9 @@ canvas {
   border: 2px solid var(--accent);
   border-radius: 0.35rem;
   outline: none;
-  background: #ffffff;
-  color: #20252b;
+  background: var(--panel);
+  color: var(--text);
+  color-scheme: light dark;
   font: 1.1rem Meiryo, "Noto Sans JP", sans-serif;
 }
 
@@ -356,16 +364,16 @@ canvas {
   bottom: calc(var(--statusH) + 0.75rem);
   max-width: min(28rem, calc(100vw - 1.5rem));
   padding: 0.7rem 0.85rem;
-  border: 1px solid #9ab7d2;
+  border: 1px solid var(--notice-border);
   border-radius: 0.55rem;
-  background: #f4f8fc;
-  color: #174f87;
+  background: var(--notice-bg);
+  color: var(--accent-text);
   font-size: 0.78rem;
 }
 
 .message[data-level="error"] {
-  border-color: #e2a5ac;
-  background: #fff3f4;
+  border-color: var(--error-border);
+  background: var(--error-bg);
   color: var(--danger);
 }
 
@@ -437,4 +445,51 @@ canvas {
   * {
     scroll-behavior: auto !important;
   }
+}
+
+
+.draft-warning {
+  position: fixed;
+  z-index: 45;
+  left: 0.75rem;
+  bottom: calc(var(--statusH) + 0.75rem);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: min(36rem, calc(100vw - 1.5rem));
+  padding: 0.7rem;
+  border: 1px solid var(--error-border);
+  border-radius: var(--radius);
+  background: var(--error-bg);
+  color: var(--danger);
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+.draft-warning .btn { flex: none; }
+[hidden] { display: none !important; }
+#st-save { color: var(--accent-text); }
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --workspace: #171d24;
+    --panel: #222b35;
+    --panel-soft: #1c242e;
+    --border: #3a4655;
+    --border-strong: #66788b;
+    --text: #edf2f8;
+    --muted: #b5c1ce;
+    --accent: #7ab8ff;
+    --accent-soft: #233f5e;
+    --accent-text: #b8d9ff;
+    --danger: #ffb5bc;
+    --focus: #9ecbff;
+    --notice-bg: #24364a;
+    --notice-border: #729bc5;
+    --error-bg: #432a32;
+    --error-border: #be7b87;
+  }
+  .btn--primary { background: #285f99; border-color: #7ab8ff; }
+  .btn--primary:hover { background: #326fae; }
+  #scroll { background-image: linear-gradient(#b8cce50d 1px,transparent 1px),linear-gradient(90deg,#b8cce50d 1px,transparent 1px); }
+  #stage { border-color: #718096; }
 }

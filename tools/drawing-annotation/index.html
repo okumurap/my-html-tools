@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="画像や図面にペン、矢印、図形、連番ラベルを書き込み、PNGで保存できるブラウザツールです。">
+  <meta name="description" content="画像や図面にペン、矢印、図形、連番ラベルを書き込み、PNGで保存できるブラウザツールです。前回の作業を端末内に自動保存し、ダークモードにも対応。">
   <title>図面注釈ツール | My HTML Tools</title>
   <link rel="stylesheet" href="./style.css">
 </head>
@@ -26,6 +26,8 @@
           <ul>
             <li>選択ツールで注釈を移動・変形。Delete / Backspaceで削除</li>
             <li>画像の貼り付け、PCでのドラッグ＆ドロップにも対応</li>
+            <li>図面と注釈をこの端末に自動保存し、次回復元します。新しい画像を開くと保存内容も置き換わります。</li>
+            <li>端末のダークモードに連動します。図面とPNGの色は変わりません。</li>
             <li>0〜9、Q〜T、N・K・H、Esc、Ctrl/⌘+Zがショートカット</li>
           </ul>
         </div>
@@ -104,7 +106,10 @@
 
   <div id="message" class="message" role="status" aria-live="polite" hidden></div>
 
+  <div id="draftWarning" class="draft-warning" role="alert" hidden><span></span><button id="retryDraft" class="btn" type="button">再保存</button></div>
+
   <footer id="status" class="status" aria-label="現在の編集状態">
+    <span id="st-save" role="status">前回の内容を確認中…</span>
     <span id="st-tool">ツール: -</span>
     <span id="st-color">色: -</span>
     <span id="st-size">太さ: -</span>
@@ -117,3 +122,4 @@
   <script src="./script.js" defer></script>
 </body>
 </html>
+

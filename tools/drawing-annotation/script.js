@@ -68,6 +68,13 @@ let textInputSession = null;
 let messageTimer = 0;
 let scrollFrame = 0;
 let chromeObserver = null;
+let imageLoadSerial = 0;
+const DRAFT_DB = 'drawing-annotation:v1';
+const draftStatus = document.getElementById('st-save');
+const draftWarning = document.getElementById('draftWarning');
+const retryDraft = document.getElementById('retryDraft');
+let draftDB = null, restoring = true, draftBlocked = false, draftDirty = false;
+let draftRevision = 0, draftGeneration = 0, draftTimer = 0, draftWriting = false;
 
 // 安全ガード用ユーティリティ
 function isTyping(){ const ae=document.activeElement; if (!ae) return false; const tag=ae.tagName; return tag==='INPUT'||tag==='SELECT'||tag==='TEXTAREA'||(ae.getAttribute('contenteditable')==='true'); }
@@ -185,9 +192,9 @@ document.getElementById('btn-copy').addEventListener('click',copyPNG);
 document.getElementById('btn-reset').addEventListener('click',()=>resetView());
 undoButton.addEventListener('click',()=>{ undo(); showMessage('1つ前の操作に戻しました。'); });
 redoButton.addEventListener('click',()=>{ redo(); showMessage('操作をやり直しました。'); });
-hudAuto.addEventListener('click',()=>{ state.autoNumbering=!state.autoNumbering; updateStatus(); });
-hudLabel.addEventListener('click',()=>{ state.textLabelOpt.enabled=!state.textLabelOpt.enabled; updateStatus(); drawAll(); });
-hudPen.addEventListener('click',()=>{ state.penExt.enabled=!state.penExt.enabled; penMode=null; updateStatus(); });
+hudAuto.addEventListener('click',()=>{ state.autoNumbering=!state.autoNumbering; updateStatus(); draftChanged(true); });
+hudLabel.addEventListener('click',()=>{ state.textLabelOpt.enabled=!state.textLabelOpt.enabled; updateStatus(); drawAll(); draftChanged(true); });
+hudPen.addEventListener('click',()=>{ state.penExt.enabled=!state.penExt.enabled; penMode=null; updateStatus(); draftChanged(true); });
 document.getElementById('btn-zoom-in').addEventListener('click',()=>keyboardZoom(1.15));
 document.getElementById('btn-zoom-out').addEventListener('click',()=>keyboardZoom(0.85));
 fileInput.addEventListener('change',async()=>{
@@ -206,6 +213,7 @@ function setTool(t){
   }
   drawAll();
   updateStatus();
+  draftChanged();
 }
 function setColor(c){
   if (!COLOR_MAP[c]) return;
@@ -216,6 +224,7 @@ function setColor(c){
     sw.setAttribute('aria-pressed',String(active));
   }
   updateStatus();
+  draftChanged();
 }
 function setSizeId(id){
   if (!(id in SIZE_MAP)) return;
@@ -226,10 +235,12 @@ function setSizeId(id){
     bs.setAttribute('aria-pressed',String(active));
   }
   updateStatus();
+  draftChanged();
 }
 
 // キーボード（ESCキャンセル含む）
 window.addEventListener('keydown',(e)=>{
+  if (restoring) return;
   if (isTyping()) return; const k=e.key.toLowerCase();
   if (k==='0') setTool('select'); else if (k==='1') setTool('pen'); else if (k==='2') setTool('eraser'); else if (k==='3') setTool('line'); else if (k==='4') setTool('arrow'); else if (k==='5') setTool('rect'); else if (k==='6') setTool('ellipse'); else if (k==='7') setTool('text');
   else if (k==='q') setColor('red'); else if (k==='w') setColor('blue'); else if (k==='e') setColor('green'); else if (k==='r') setColor('yellow'); else if (k==='t') setColor('black');
@@ -241,9 +252,9 @@ window.addEventListener('keydown',(e)=>{
   else if (e.key===' ') { isSpacePan = true; }
   else if (e.key==='arrowup') { e.preventDefault(); keyboardZoom(1.1); }
   else if (e.key==='arrowdown') { e.preventDefault(); keyboardZoom(0.9); }
-  else if (k==='n') { state.autoNumbering=!state.autoNumbering; updateStatus(); }
-  else if (k==='k') { state.textLabelOpt.enabled=!state.textLabelOpt.enabled; updateStatus(); drawAll(); }
-  else if (k==='h') { state.penExt.enabled=!state.penExt.enabled; penMode=null; updateStatus(); }
+  else if (k==='n') { state.autoNumbering=!state.autoNumbering; updateStatus(); draftChanged(true); }
+  else if (k==='k') { state.textLabelOpt.enabled=!state.textLabelOpt.enabled; updateStatus(); drawAll(); draftChanged(true); }
+  else if (k==='h') { state.penExt.enabled=!state.penExt.enabled; penMode=null; updateStatus(); draftChanged(true); }
   else if (k==='escape') { e.preventDefault(); cancelCurrentAction(); }
   else if (k==='delete'||k==='backspace') { if (state.selected.item){ e.preventDefault(); deleteSelected(); } }
 });
@@ -327,6 +338,7 @@ fgCanvas.addEventListener('pointerdown',(e)=>{ try{
   } else if (state.currentTool==='line' || state.currentTool==='arrow' || state.currentTool==='rect' || state.currentTool==='ellipse'){
     tempStart=p; drawing=true; previewShape=null; state.selected.item=null;
   } else if (state.currentTool==='text'){
+    e.preventDefault(); // Keep focus on the number input instead of the canvas default action.
     showTextInputAt(p);
   }
   drawAll();
@@ -372,7 +384,8 @@ fgCanvas.addEventListener('pointerup',(e)=>{ try{
   }
   }catch(err){ console.error('[pointerup]', err); }
 });
-fgCanvas.addEventListener('pointercancel',cancelCurrentAction);
+fgCanvas.addEventListener('pointerup',()=>draftChanged(true));
+fgCanvas.addEventListener('pointercancel',()=>{cancelCurrentAction();draftChanged(true)});
 fgCanvas.addEventListener('contextmenu',(e)=>{ e.preventDefault(); });
 
 // ペン拡張
@@ -400,6 +413,7 @@ function closeTextInput(shouldCommit){
   state.redoStack.length=0;
   state.selected.item=item;
   if (state.autoNumbering) state.nextNumber+=1;
+  draftChanged(true);
   drawAll();
   updateStatus();
 }
@@ -440,8 +454,8 @@ function segDistance(a,b,p){ const vx=b.x-a.x, vy=b.y-a.y; const wx=p.x-a.x, wy=
 
 function hitTestAt(worldP){ for (let i=state.history.length-1;i>=0;i--){ const item=state.history[i]; if (!item || item.type==='image' || item.type==='delete' || item.type==='move' || item.type==='edit') continue; const thr=Math.max(item.sizePx? item.sizePx/2 : 4, 4); if (item.type==='stroke'){ const pts=item.points||[]; for (let j=0;j<pts.length-1;j++){ if (segDistance(pts[j],pts[j+1],worldP) <= thr) return item; } } else if (item.type==='shape'){ if (item.tool==='line' || item.tool==='arrow'){ if (segDistance(item.p1,item.p2,worldP) <= thr) return item; } else if (item.tool==='rect' || item.tool==='ellipse'){ const bb=getItemAABB(item); if (!bb) continue; if (worldP.x>=bb.minx-6 && worldP.x<=bb.maxx+6 && worldP.y>=bb.miny-6 && worldP.y<=bb.maxy+6) return item; } } else if (item.type==='text'){ const b=item.box||{x:item.x,y:item.y,w:18,h:18}; if (worldP.x>=b.x && worldP.x<=b.x+b.w && worldP.y>=b.y && worldP.y<=b.y+b.h) return item; } } return null; }
 
-function undo(){ if (!state.history.length) return; const last=state.history.pop(); state.redoStack.push(last); if (last && last.type==='delete'){ for (const it of last.removed||[]) state.history.push(it); } else if (last && last.type==='move'){ applyTranslateTemp(last.itemRef, -(last.to?.dx||0), -(last.to?.dy||0)); } else if (last && last.type==='edit'){ Object.assign(last.itemRef, last.before); } drawAll(); updateStatus(); }
-function redo(){ if (!state.redoStack.length) return; const item=state.redoStack.pop(); if (item && item.type==='delete'){ const removed=[]; for (const it of item.removed||[]){ const idx=state.history.indexOf(it); if (idx>=0){ removed.push(it); state.history.splice(idx,1); } } state.history.push({ type:'delete', removed }); } else if (item && item.type==='move'){ applyTranslateTemp(item.itemRef, item.to.dx, item.to.dy); state.history.push(item); } else if (item && item.type==='edit'){ Object.assign(item.itemRef, item.after); state.history.push(item); } else { state.history.push(item); } drawAll(); updateStatus(); }
+function undo(){ if (!state.history.length) return; const last=state.history.pop(); state.redoStack.push(last); if (last && last.type==='delete'){ for (const it of last.removed||[]) state.history.push(it); } else if (last && last.type==='move'){ applyTranslateTemp(last.itemRef, -(last.to?.dx||0), -(last.to?.dy||0)); } else if (last && last.type==='edit'){ Object.assign(last.itemRef, last.before); } drawAll(); updateStatus(); draftChanged(true); }
+function redo(){ if (!state.redoStack.length) return; const item=state.redoStack.pop(); if (item && item.type==='delete'){ const removed=[]; for (const it of item.removed||[]){ const idx=state.history.indexOf(it); if (idx>=0){ removed.push(it); state.history.splice(idx,1); } } state.history.push({ type:'delete', removed }); } else if (item && item.type==='move'){ applyTranslateTemp(item.itemRef, item.to.dx, item.to.dy); state.history.push(item); } else if (item && item.type==='edit'){ Object.assign(item.itemRef, item.after); state.history.push(item); } else { state.history.push(item); } drawAll(); updateStatus(); draftChanged(true); }
 
 async function decodeImageFile(file){
   if (!file||!/^image\/(png|jpeg)$/.test(file.type)) throw new Error('PNGまたはJPEG画像を選択してください。');
@@ -465,23 +479,29 @@ async function decodeImageFile(file){
   }
 }
 async function loadImageFile(file){
+  if (restoring) return;
+  const serial=++imageLoadSerial;
   try{
     const bitmap=await decodeImageFile(file);
+    if (serial!==imageLoadSerial){ bitmap.close?.(); return; }
     const width=bitmap.width||bitmap.naturalWidth;
     const height=bitmap.height||bitmap.naturalHeight;
     if (!width||!height||width*height>MAX_IMAGE_PIXELS){
       if (typeof bitmap.close==='function') bitmap.close();
       throw new Error('画像は合計2,400万画素以下にしてください。');
     }
+    cancelCurrentAction();
     const previous=state.history.find(item=>item&&item.type==='image');
     if (previous&&previous.bitmap&&typeof previous.bitmap.close==='function') previous.bitmap.close();
     state.history.length=0;
     state.redoStack.length=0;
-    state.history.push({type:'image',bitmap,imgW:width,imgH:height});
+    state.history.push({type:'image',bitmap,blob:file,imgW:width,imgH:height});
     state.frame={width,height};
     applyLayout();
+    draftChanged(true);
     requestAnimationFrame(()=>{ resetView(true); showMessage('画像を読み込みました。描画を始められます。'); });
   }catch(error){
+    if (serial!==imageLoadSerial) return;
     console.error('[loadImageFile]',error);
     showMessage(error.message||'画像の読み込みに失敗しました。',true);
   }
@@ -578,9 +598,158 @@ function syncDpr(){
 }
 
 function applyTranslateTemp(item,dx,dy){ if (!item) return; if (item.type==='stroke'){ for (const pt of item.points||[]){ pt.x+=dx; pt.y+=dy; } } else if (item.type==='shape'){ if (item.tool==='line'||item.tool==='arrow'){ item.p1.x+=dx; item.p1.y+=dy; item.p2.x+=dx; item.p2.y+=dy; } else if (item.tool==='rect'){ item.rect.x+=dx; item.rect.y+=dy; } else if (item.tool==='ellipse'){ item.ellipse.cx+=dx; item.ellipse.cy+=dy; } } else if (item.type==='text'){ item.x+=dx; item.y+=dy; if (item.box){ item.box.x+=dx; item.box.y+=dy; } } }
-function deleteSelected(){ const it=state.selected.item; if (!it) return; const idx=state.history.indexOf(it); if (idx>=0){ state.history.splice(idx,1); state.history.push({ type:'delete', removed:[it] }); state.selected.item=null; state.redoStack.length=0; drawAll(); updateStatus(); } }
+function deleteSelected(){ const it=state.selected.item; if (!it) return; const idx=state.history.indexOf(it); if (idx>=0){ state.history.splice(idx,1); state.history.push({ type:'delete', removed:[it] }); state.selected.item=null; state.redoStack.length=0; drawAll(); updateStatus(); draftChanged(true); } }
 
-function init(){ try{
+// IndexedDB stores the source image Blob and editable annotations, never a flattened PNG.
+function setEditorBusy(busy){
+  for (const el of [toolbarEl,hudEl,scrollEl]) el.inert=busy;
+  document.body.setAttribute('aria-busy',String(busy));
+}
+function draftError(message, blocked=false){
+  draftBlocked=blocked;
+  draftStatus.textContent='未保存';
+  draftWarning.querySelector('span').textContent=message;
+  draftWarning.hidden=false;
+  retryDraft.hidden=blocked;
+}
+function openDraftDB(){
+  if (draftDB) return draftDB;
+  draftDB=new Promise((resolve,reject)=>{
+    let finished=false;
+    const timer=setTimeout(()=>fail(new Error('保存領域を開けませんでした。')),10000);
+    function fail(error){if(finished)return;finished=true;clearTimeout(timer);reject(error)}
+    let request;
+    try { request=indexedDB.open(DRAFT_DB,1); } catch(error){fail(error);return}
+    request.onupgradeneeded=()=>request.result.createObjectStore('drafts');
+    request.onblocked=()=>fail(new Error('保存領域が別のタブで使用中です。'));
+    request.onerror=()=>fail(request.error);
+    request.onsuccess=()=>{
+      if(finished){request.result.close();return}
+      finished=true;clearTimeout(timer);
+      request.result.onversionchange=()=>{request.result.close();draftDB=null};
+      resolve(request.result);
+    };
+  }).catch(error=>{draftDB=null;throw error});
+  return draftDB;
+}
+function readDraft(db){return new Promise((resolve,reject)=>{
+  const tx=db.transaction('drafts','readonly'),request=tx.objectStore('drafts').get('current');
+  tx.oncomplete=()=>resolve(request.result);tx.onabort=()=>reject(tx.error||new Error('読み込み失敗'));
+})}
+function draftSnapshot(){
+  const image=state.history.find(item=>item.type==='image');
+  return {
+    version:1, revision:draftRevision+1, savedAt:Date.now(), frame:{...state.frame},
+    image:image?{blob:image.blob,width:image.imgW,height:image.imgH}:null,
+    // Move/edit/delete records already modify the visible items. Save those final geometries.
+    items:state.history.filter(item=>['stroke','shape','text'].includes(item.type)).map(deepCopyItem),
+    settings:{tool:state.currentTool,color:state.currentColor,size:state.currentSizeId,
+      autoNumbering:state.autoNumbering,nextNumber:state.nextNumber,
+      label:state.textLabelOpt.enabled,pen:state.penExt.enabled}
+  };
+}
+function validateDraft(doc){
+  const number=(n,limit=1e8)=>typeof n==='number'&&Number.isFinite(n)&&Math.abs(n)<=limit;
+  const point=p=>p&&number(p.x)&&number(p.y);
+  if(!doc||doc.version!==1||!Number.isSafeInteger(doc.revision)||doc.revision<1||
+    !doc.frame||!Number.isInteger(doc.frame.width)||!Number.isInteger(doc.frame.height)||
+    doc.frame.width<1||doc.frame.height<1||doc.frame.width*doc.frame.height>MAX_IMAGE_PIXELS||
+    !Array.isArray(doc.items)||doc.items.length>100000)throw new Error('保存形式が不正です。');
+  const opt=doc.settings;
+  if(!opt||!TOOLS.includes(opt.tool)||!Object.hasOwn(COLOR_MAP,opt.color)||![0,1].includes(opt.size)||
+    !['autoNumbering','label','pen'].every(k=>typeof opt[k]==='boolean')||
+    !Number.isSafeInteger(opt.nextNumber)||opt.nextNumber<1)throw new Error('保存設定が不正です。');
+  if(doc.image&&(!(doc.image.blob instanceof Blob)||!/^image\/(png|jpeg)$/.test(doc.image.blob.type)||
+    doc.image.blob.size>MAX_FILE_BYTES||doc.image.width!==doc.frame.width||doc.image.height!==doc.frame.height))throw new Error('保存画像が不正です。');
+  let points=0;
+  for(const item of doc.items){
+    if(!item||!Object.hasOwn(COLOR_MAP,item.color))throw new Error('注釈が不正です。');
+    if(item.type==='stroke'){
+      if(!Array.isArray(item.points)||!item.points.length||!item.points.every(point))throw new Error('線が不正です。');
+      points+=item.points.length;
+    }else if(item.type==='shape'){
+      if(['line','arrow'].includes(item.tool)){
+        if(!point(item.p1)||!point(item.p2))throw new Error('端点が不正です。');
+        if(item.tool==='arrow'&&item.arrowHead&&(!number(item.arrowHead.length,100000)||item.arrowHead.length<0||!number(item.arrowHead.angleDeg,360)))throw new Error('矢印が不正です。');
+      }else if(item.tool==='rect'){
+        const r=item.rect;if(!point(r)||!number(r.w)||!number(r.h)||r.w<0||r.h<0)throw new Error('四角が不正です。');
+      }else if(item.tool==='ellipse'){
+        const e=item.ellipse;if(!e||!['cx','cy','rx','ry'].every(k=>number(e[k]))||e.rx<0||e.ry<0)throw new Error('楕円が不正です。');
+      }else throw new Error('図形が不正です。');
+    }else if(item.type==='text'){
+      if(!point(item)||typeof item.text!=='string'||!/^\d+$/.test(item.text)||item.text.length>10000||!number(item.fontPx,100000)||item.fontPx<=0)throw new Error('番号が不正です。');
+    }else throw new Error('注釈形式が不正です。');
+    if(item.type!=='text'&&(!number(item.sizePx,100000)||item.sizePx<=0))throw new Error('太さが不正です。');
+    if(points>2000000)throw new Error('注釈が多すぎます。');
+  }
+  return doc;
+}
+async function restoreDraft(){
+  let found=false;
+  try{
+    const doc=await readDraft(await openDraftDB());
+    if(doc===undefined)return false;
+    found=true;validateDraft(doc);
+    let bitmap=null;
+    if(doc.image){
+      bitmap=await decodeImageFile(doc.image.blob);
+      if((bitmap.width||bitmap.naturalWidth)!==doc.frame.width||(bitmap.height||bitmap.naturalHeight)!==doc.frame.height){bitmap.close?.();throw new Error('画像サイズが一致しません。')}
+    }
+    state.frame={...doc.frame};
+    state.history=bitmap?[{type:'image',bitmap,blob:doc.image.blob,imgW:doc.frame.width,imgH:doc.frame.height},...doc.items]:doc.items;
+    state.redoStack=[];state.selected.item=null;
+    state.autoNumbering=doc.settings.autoNumbering;state.nextNumber=doc.settings.nextNumber;
+    state.textLabelOpt.enabled=doc.settings.label;state.penExt.enabled=doc.settings.pen;
+    setTool(doc.settings.tool);setColor(doc.settings.color);setSizeId(doc.settings.size);
+    draftRevision=doc.revision;draftStatus.textContent='前回の内容を復元済み';
+    return true;
+  }catch(error){
+    draftError(found?'前回の保存内容を復元できません。元のデータは上書きしません。今の作業はPNG保存をご利用ください。':'端末の保存領域を開けません。作業は画面に残ります。PNG保存をご利用ください。',found);
+    return false;
+  }
+}
+function draftChanged(immediate=false){
+  if(restoring||draftBlocked)return;
+  draftDirty=true;draftGeneration++;
+  clearTimeout(draftTimer);
+  if(immediate)saveDraft();else draftTimer=setTimeout(saveDraft,300);
+}
+async function saveDraft(){
+  clearTimeout(draftTimer);
+  if(restoring||draftBlocked||draftWriting||!draftDirty||drawing||dragTarget||handleDrag)return;
+  draftWriting=true;
+  let saved=false;
+  try{
+    const db=await openDraftDB();
+    if(drawing||dragTarget||handleDrag)return;
+    const generation=draftGeneration,doc=draftSnapshot();
+    validateDraft(doc);
+    await new Promise((resolve,reject)=>{
+      const tx=db.transaction('drafts','readwrite'),store=tx.objectStore('drafts');
+      const request=store.get('current');let conflict=false;
+      request.onsuccess=()=>{
+        const previous=request.result;
+        if((previous===undefined?0:previous.revision)!==draftRevision){conflict=true;tx.abort();return}
+        try { store.put(doc,'current'); } catch(error){ tx.abort(); }
+      };
+      tx.oncomplete=resolve;
+      tx.onabort=()=>{if(conflict){draftBlocked=true;reject(new Error('conflict'))}else reject(tx.error||new Error('保存失敗'))};
+    });
+    draftRevision=doc.revision;draftDirty=generation!==draftGeneration;saved=true;
+    draftStatus.textContent='端末に保存済み';draftWarning.hidden=true;
+  }catch(error){
+    draftError(draftBlocked?'別のタブで保存内容が変わりました。このタブの自動保存を停止しました。PNG保存してから再読み込みしてください。':'端末に保存できません。作業は画面に残っています。PNG保存するか、空き容量などを確認して再保存してください。',draftBlocked);
+  }finally{
+    draftWriting=false;
+    if(saved&&draftDirty)saveDraft();
+  }
+}
+retryDraft.addEventListener('click',()=>{draftDirty=true;saveDraft()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)saveDraft()});
+window.addEventListener('pagehide',saveDraft);
+
+async function init(){ try{
+  setEditorBusy(true);
   syncChromeSize();
   applyLayout();
   setTool('pen');
@@ -597,12 +766,19 @@ function init(){ try{
     if (scrollFrame) return;
     scrollFrame=requestAnimationFrame(()=>{ scrollFrame=0; updateStatus(); });
   },{passive:true});
-  requestAnimationFrame(()=>resetView(true));
-  showMessage('「画像を開く」からPNG/JPEGを選ぶか、画像を貼り付けてください。');
+  const restored=await restoreDraft();
+  resetView(true);
+  restoring=false;
+  setEditorBusy(false);
+  if (restored) showMessage('前回の図面と注釈を復元しました。');
+  else if (!draftWarning.hidden) return;
+  else { draftStatus.textContent='この端末に自動保存'; showMessage('「画像を開く」からPNG/JPEGを選ぶか、画像を貼り付けてください。'); }
   }catch(err){
+    restoring=false;setEditorBusy(false);
     console.error('[init]',err);
     showMessage('初期化に失敗しました。ページを再読み込みしてください。',true);
   }
 }
 document.addEventListener('DOMContentLoaded',init);
 })();
+
