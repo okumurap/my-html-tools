@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="射出成形機のスクリュ径A/Bについて、射出速度、回転数、概算移動量、射出体積を比較・換算するツールです。">
+  <meta name="description" content="射出成形機のスクリュ径A/Bについて、射出速度、回転数、概算移動量、射出体積を比較・換算し、クッション10mm・95％充填時の想定V-P切替位置も表示するツールです。">
   <title>射出成形機｜スクリュ径 A/B比較</title>
   <link rel="stylesheet" href="./style.css">
 </head>
@@ -12,7 +12,7 @@
     <div class="header-inner">
       <a class="back-link" href="../../index.html">← ツール一覧</a>
       <h1>射出成形機｜スクリュ径 A/B比較</h1>
-      <p>スライダー入力・整数表示・概算移動量と射出体積を双方向連動</p>
+      <p>概算移動量と射出体積を双方向連動・95％充填時の想定V-P切替位置を比較</p>
     </div>
   </header>
 
@@ -53,6 +53,14 @@
       <p class="note">射出体積を変更するとA・B両側の概算移動量を更新します。概算移動量を変更すると、射出体積と反対側の移動量を更新します。</p>
     </section>
 
+    <section class="card vp-basis" aria-labelledby="vp-basis-title">
+      <h2 id="vp-basis-title">V-P位置の計算条件</h2>
+      <p>クッションは<strong>10 mm固定</strong>。共通の射出体積を100％充填分（クッション分を除く）として、体積の<strong>95％を充填した時点</strong>で切り替える想定です。</p>
+      <p>位置は<strong>スクリュ前進端を0 mm</strong>とした残り位置です。射出で位置が小さくなり、クッション10 mmに到達します。</p>
+      <p class="vp-formula">想定V-P位置 ＝ 10 mm ＋（射出体積 ÷ 断面積）× 5％</p>
+      <p class="note">計量完位置＝10 mm＋射出体積÷断面積。切替までの前進量＝射出体積÷断面積×95％。位置は丸め前の体積・断面積から計算し、小数2桁で表示します。</p>
+    </section>
+
     <section class="card driver-card" aria-label="現在の換算基準">
       <div class="status" aria-live="polite">
         <div>射出速度の基準：<b id="speedDriver">A側</b></div>
@@ -62,7 +70,7 @@
     </section>
 
     <aside class="warning">
-      <b>注意：</b>概算移動量は幾何学的な理論値です。樹脂の圧縮、逆流、防止リングの挙動、速度応答、保圧切替位置、材料密度などは含みません。
+      <b>注意：</b>概算移動量・想定V-P切替位置は幾何学的な理論値です。樹脂の圧縮、逆流、防止リングの挙動、速度応答、材料密度などによる補正は含みません。
     </aside>
 
     <footer class="footer">ブラウザー単体で動作します。入力値は外部へ送信されません。</footer>
@@ -71,3 +79,4 @@
   <script src="./script.js"></script>
 </body>
 </html>
+

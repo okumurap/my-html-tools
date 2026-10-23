@@ -99,3 +99,9 @@ PlaywrightとChromiumを用意し、HTTPサーバー起動後に `TEST_BASE_URL=
 ## 図面注釈ツール
 
 `TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/drawing-annotation.cjs`。Playwright/Chromiumを使い、`TEST_PLAYWRIGHT_MODULE` と `TEST_SCREENSHOT_DIR` に対応します。元画像・各注釈・設定の再読み込み復元、移動・変形・消去・削除とUndo/Redo、実PNGダウンロードと復元・テーマ変更前後の一致、明暗の端末設定で320・375・768・1024・1280・1920px、PCの2段配置と全操作の到達性・ヘルプ表示、タッチ番号入力、画像読込失敗と非同期競合、保存失敗と再保存、別タブ競合、破損データ保護、保存禁止、Pagesのサブパスを確認します。旧版では画像を開いて再読み込みすると1280×720の白紙に戻ることを再現済みです。実機とネイティブペン入力は未確認です。
+
+
+
+## スクリュ径A/B比較
+
+`TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/screw-diameter-comparator.cjs`。Playwright/Chromiumを用意し、`TEST_PLAYWRIGHT_MODULE` と `TEST_SCREENSHOT_DIR` に対応します。独立した3ケースの想定V-P位置・計量完位置・前進量、丸め前の移動量を使うこと、共通体積・両側の径と移動量の連動、既存の速度・回転数換算、0・空欄・負値・非数値・上限、4画面幅、タッチ、Pagesサブパスを確認します。実機確認は未実施です。

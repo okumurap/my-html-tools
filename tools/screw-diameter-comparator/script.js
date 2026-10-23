@@ -5,6 +5,8 @@
   const CONTROL_MIN = 0;
   const CONTROL_MAX = 200;
   const SIDES = ["A", "B"];
+  const CUSHION_MM = 10;
+  const VP_FILL_RATIO = 0.95;
   const LINKED_KEYS = ["speed", "rpm", "stroke"];
 
   const getElement = (id) => document.getElementById(id);
@@ -87,6 +89,15 @@
       ${rangeField("射出速度（整数）", "speed", side, "mm/s")}
       ${rangeField("回転数（整数）", "rpm", side, "rpm")}
       ${rangeField("計量完からクッションまでの概算移動量（整数）", "stroke", side, "mm")}
+      <section class="vp-card" aria-labelledby="vpTitle${side}">
+        <h3 id="vpTitle${side}">想定V-P切替位置</h3>
+        <output id="vpPosition${side}" class="vp-position">―</output>
+        <p>95％充填・クッション10 mm</p>
+        <dl>
+          <div><dt>計量完位置</dt><dd><output id="meteringPosition${side}">―</output></dd></div>
+          <div><dt>切替までの前進量</dt><dd><output id="vpTravel${side}">―</output></dd></div>
+        </dl>
+      </section>
       <div class="metrics">
         <div class="metric"><span>体積流量</span><output id="flow${side}">―</output></div>
         <div class="metric"><span>スクリュ周速</span><output id="surface${side}">―</output></div>
@@ -123,6 +134,15 @@
     setInputPair("speed", side, values.speed);
     setInputPair("rpm", side, values.rpm);
     setInputPair("stroke", side, values.stroke);
+    // Position decreases toward the forward end (0 mm). The common volume excludes cushion.
+    // Keep full precision here; the existing stroke controls display rounded integers.
+    const exactStroke = state.volume / values.area;
+    const meteringPosition = CUSHION_MM + exactStroke;
+    const vpTravel = exactStroke * VP_FILL_RATIO;
+    const vpPosition = CUSHION_MM + exactStroke * (1 - VP_FILL_RATIO);
+    getElement(`vpPosition${side}`).textContent = `${formatTwoDecimals(vpPosition)} mm`;
+    getElement(`meteringPosition${side}`).textContent = `${formatTwoDecimals(meteringPosition)} mm`;
+    getElement(`vpTravel${side}`).textContent = `${formatTwoDecimals(vpTravel)} mm`;
     getElement(`flow${side}`).textContent = `${formatInteger(values.area * values.speed)} mm³/s`;
     getElement(`surface${side}`).textContent = `${formatInteger(Math.PI * values.diameter * values.rpm)} mm/min`;
     getElement(`time${side}`).textContent = values.speed > 0
@@ -232,3 +252,4 @@
 
   render();
 })();
+
