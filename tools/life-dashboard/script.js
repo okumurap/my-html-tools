@@ -11,24 +11,59 @@
   const uid=()=>Math.random().toString(36).slice(2,9);
   const STORAGE="life-dashboard:data:v1";
 
+  let storageBlocked=false,reflectionTimer;
+  const calendarDay=d=>Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/DAY;
+
   function defaults(){
-    return {birthDate:"",lifeYears:90,unitLabel:"目安の年齢",members:[],events:[],heatmaps:{}};
+    return {birthDate:"",lifeYears:90,unitLabel:"目安の年齢",members:[],events:[],heatmaps:{},reflections:{}};
   }
   function load(){
     try{
       const s=JSON.parse(localStorage.getItem(STORAGE)||"null");
-      if(!s)return defaults();
+      if(s===null)return defaults();
       if(typeof s!=="object"||!Array.isArray(s.members)||!Array.isArray(s.events))throw Error();
-      return {...defaults(),birthDate:parseDate(s.birthDate)&&parseDate(s.birthDate)<=today()?s.birthDate:"",
+      if(s.heatmaps!=null&&(typeof s.heatmaps!=="object"||Array.isArray(s.heatmaps)))throw Error();
+      if(s.reflections!==undefined){if(!s.reflections||typeof s.reflections!=="object"||Array.isArray(s.reflections))throw Error();for(const [key,v] of Object.entries(s.reflections)){if(!/^\d{4}-(?:[1-9]|[1-4]\d|5[0-3])$/.test(key)||!v||typeof v.note!=="string"||v.note.length>2000||typeof v.next!=="string"||v.next.length>1000)throw Error()}}
+      return {...defaults(),reflections:s.reflections||{},birthDate:parseDate(s.birthDate)&&parseDate(s.birthDate)<=today()?s.birthDate:"",
         lifeYears:[80,90,100].includes(s.lifeYears)?s.lifeYears:90,
         members:s.members.filter(m=>m&&typeof m.id==="string").map(m=>({...m,id:uid(),name:String(m.name||"").slice(0,80),birthDate:parseDate(m.birthDate)&&parseDate(m.birthDate)<=today()?m.birthDate:""})),
         events:s.events.filter(e=>e&&typeof e.id==="string").map(e=>({...e,id:uid(),name:String(e.name||"").slice(0,120),start:parseDate(e.start)?e.start:"",end:parseDate(e.end)?e.end:"",color:/^#[0-9a-f]{6}$/i.test(e.color)?e.color:"#8b5cf6"})),
         heatmaps:s.heatmaps&&typeof s.heatmaps==="object"?s.heatmaps:{}};
-    }catch(_){queueMicrotask(()=>{$("saveStatus").textContent="保存データを読み込めませんでした。ブラウザの保存設定を確認してください。"});return defaults()}
+    }catch(_){storageBlocked=true;queueMicrotask(()=>{$("saveStatus").textContent="保存データを読み込めません。元のデータは上書きしません。「編集」の保存データ削除で明示的に初期化できます。"});return defaults()}
   }
 
-  let state=load(),calendarMeta=null,timelineFilter="all",heatYear=new Date().getFullYear();
-  function save(){try{localStorage.setItem(STORAGE,JSON.stringify(state));$("saveStatus").textContent="このブラウザに保存しました。別の端末とは同期されません。"}catch(_){$("saveStatus").textContent="保存できませんでした。ブラウザの保存設定や空き容量を確認してください。この画面を閉じると変更が失われます。"}}
+  let state=load(),calendarMeta=null,timelineFilter="all",heatYear=new Date().getFullYear(),selectedWeek=weekNumber(today())-1;
+  function save(){
+    let message;
+    if(storageBlocked)message='元の保存データを保護するため保存を止めています。「編集」の保存データ削除で初期化できます。';
+    else try{localStorage.setItem(STORAGE,JSON.stringify(state));message='このブラウザに保存しました。別の端末とは同期されません。'}catch{message='保存できませんでした。この画面の入力は残っています。保存設定や空き容量を確認してください。'}
+    $('saveStatus').textContent=message;$('reflectionStatus').textContent=message;
+  }
+
+  function weekRange(year,index){const start=new Date(year,0,1+index*7,12),last=new Date(year,11,31,12),end=new Date(year,0,7+index*7,12);return {start,end:end>last?last:end}}
+
+  function rangeText(range){return `${iso(range.start)} 〜 ${iso(range.end)}`}
+  function renderNow(){
+    const now=today(),year=now.getFullYear(),elapsed=calendarDay(now)-calendarDay(new Date(year,0,1,12))+1,days=calendarDay(new Date(year+1,0,1,12))-calendarDay(new Date(year,0,1,12));
+    const week=weekNumber(now),percent=elapsed/days*100;
+    $('nowDate').textContent=iso(now);$('nowWeek').textContent=`${year}年・第${week}週`;$('nowRange').textContent=rangeText(weekRange(year,week-1));
+    $('yearPosition').textContent=`今年 ${elapsed} / ${days}日目 · ${percent.toFixed(1)}％ · 残り${days-elapsed+1}日（今日を含む）`;
+    $('yearProgress').setAttribute('aria-valuenow',percent.toFixed(1));$('yearProgress').firstElementChild.style.width=percent+'%';
+    const reflection=state.reflections[year+'-'+week];$('nowReflection').textContent=reflection?.note?'今週のメモ：'+reflection.note:'今週の振り返りは、まだ書かれていません。';
+    const events=state.events.map(e=>({...e,startDate:parseDate(e.start),endDate:parseDate(e.end)})).filter(e=>e.name&&e.startDate&&(e.type==='period'?(!e.endDate||e.endDate>=e.startDate)&&(!e.endDate||e.endDate>=now):e.startDate>=now)).sort((a,b)=>a.startDate-b.startDate).slice(0,4);
+    $('upcomingEvents').textContent='';for(const e of events){const item=document.createElement('li'),name=document.createElement('strong'),when=document.createElement('span');name.textContent=e.name;const diff=calendarDay(e.startDate)-calendarDay(now);when.textContent=diff<0?'継続中 · '+iso(e.startDate)+'〜':diff===0?'今日 · '+iso(e.startDate):'あと'+diff+'日 · '+iso(e.startDate);item.append(name,when);$('upcomingEvents').append(item)}
+    if(!events.length){const item=document.createElement('li');item.textContent='これからの予定はまだありません。「予定を編集」から追加できます。';$('upcomingEvents').append(item)}
+  }
+  function reflectionKey(){return heatYear+'-'+(selectedWeek+1)}
+  function renderReflection(){
+    const key=reflectionKey(),value=state.reflections[key]||{note:'',next:''};$('reflectionTitle').textContent=`${heatYear}年 第${selectedWeek+1}週の振り返り`;$('reflectionRange').textContent=rangeText(weekRange(heatYear,selectedWeek));
+    if($('reflectionNote').value!==value.note)$('reflectionNote').value=value.note;if($('reflectionNext').value!==value.next)$('reflectionNext').value=value.next;
+    const score=state.heatmaps[heatYear]?.[selectedWeek]||0;$('ratingButtons').textContent='';for(let i=0;i<=4;i++){const button=document.createElement('button');button.type='button';button.textContent=i===0?'未記録':String(i);button.setAttribute('aria-label',i===0?'充実度を未記録にする':'充実度'+i);button.setAttribute('aria-pressed',String(score===i));button.addEventListener('click',()=>{state.heatmaps[heatYear][selectedWeek]=i;clearTimeout(reflectionTimer);reflectionTimer=null;save();renderHeatmap();renderNow()});$('ratingButtons').append(button)}
+    if(storageBlocked)$('reflectionStatus').textContent='元の保存データを保護するため自動保存を止めています。';
+  }
+  function updateReflection(){const value={note:$('reflectionNote').value,next:$('reflectionNext').value};if(value.note||value.next)state.reflections[reflectionKey()]=value;else delete state.reflections[reflectionKey()];clearTimeout(reflectionTimer);reflectionTimer=null;reflectionTimer=setTimeout(()=>{reflectionTimer=null;save();renderNow()},350)}
+  function openCurrentWeek(){heatYear=today().getFullYear();selectedWeek=weekNumber(today())-1;renderHeatmap();activatePanel('year');$('reflectionForm').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'})}
+
 
   function ageExact(birth,at=today()){return birth?Math.max(0,(at-birth)/DAY/YEAR_DAYS):0}
   function yearsUntil(date){return Math.max(0,(date-today())/DAY/YEAR_DAYS)}
@@ -240,23 +275,24 @@
 
   function weekNumber(d){
     const first=new Date(d.getFullYear(),0,1,12);
-    return Math.max(1,Math.floor((d-first)/WEEK)+1)
+    return Math.max(1,Math.floor((calendarDay(d)-calendarDay(first))/7)+1)
   }
 
   function renderHeatmap(){
     const y=heatYear;
-    const days=Math.round((new Date(y+1,0,1,12)-new Date(y,0,1,12))/DAY),length=Math.ceil(days/7);
+    const days=calendarDay(new Date(y+1,0,1,12))-calendarDay(new Date(y,0,1,12)),length=Math.ceil(days/7);
+    selectedWeek=Math.min(length-1,Math.max(0,selectedWeek));
     const saved=state.heatmaps[y];
     const values=Array.from({length},(_,i)=>Array.isArray(saved)&&Number.isInteger(saved[i])&&saved[i]>=0&&saved[i]<=4?saved[i]:0);
     state.heatmaps[y]=values;
-    $("heatYear").textContent=y;$("nextYear").disabled=y>=today().getFullYear();
+    $("heatYear").textContent=y;$("prevYear").disabled=y<=1900;$("nextYear").disabled=y>=today().getFullYear();
     const current=y===today().getFullYear()?weekNumber(today()):0;
-    $("heatmap").innerHTML=values.map((level,i)=>`<button class="heat-week ${i+1===current?"current":""}" data-index="${i}" data-level="${level}" aria-label="${i+1}週目 充実度${level}" title="${i+1}週目：${level===0?'未記録':'充実度'+level}"><span>${i+1}</span></button>`).join("");
+    $("heatmap").innerHTML=values.map((level,i)=>`<button class="heat-week ${i+1===current?"current":""} ${i===selectedWeek?"selected":""}" aria-pressed="${i===selectedWeek}" data-index="${i}" data-level="${level}" aria-label="${i+1}週目 充実度${level}${i+1===current?" 今週":""}" title="${i+1}週目：${level===0?'未記録':'充実度'+level}"><span>${i+1}</span></button>`).join("");
     const total=values.reduce((a,b)=>a+b,0);
     $("heatTotal").textContent=`記録 ${values.filter(v=>v>0).length}/${length}週・合計${total}`;
     $("heatmap").querySelectorAll(".heat-week").forEach(btn=>btn.addEventListener("click",()=>{
-      const i=Number(btn.dataset.index);values[i]=(values[i]+1)%5;save();renderHeatmap()
-    }))
+      selectedWeek=Number(btn.dataset.index);renderHeatmap()
+    }));renderReflection()
   }
 
   function renderEditors(){
@@ -304,15 +340,20 @@
   }
 
   function renderAll(editors=true){
-    syncInputs();renderCore();renderFamily();renderLife();renderHeatmap();if(editors)renderEditors()
+    syncInputs();renderNow();renderCore();renderFamily();renderLife();renderHeatmap();if(editors)renderEditors()
   }
 
-  document.querySelectorAll(".nav-btn").forEach(b=>b.addEventListener("click",()=>{
-    document.querySelectorAll(".nav-btn").forEach(x=>x.classList.toggle("active",x===b));
-    document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",p.id===`panel-${b.dataset.panel}`));
-    document.querySelector(".start-card").hidden=b.dataset.panel!=="weeks";document.querySelectorAll(".nav-btn").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));tooltip.style.display="none";window.scrollTo({top:0,behavior:"smooth"});
-    if(b.dataset.panel==="weeks")setTimeout(renderCore,60)
-  }));
+  function activatePanel(panel){
+    document.querySelectorAll('.nav-btn').forEach(b=>{const active=b.dataset.panel===panel;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
+    document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+panel));
+    document.querySelector('.start-card').hidden=panel!=='weeks';tooltip.style.display='none';window.scrollTo({top:0,behavior:'instant'});if(panel==='weeks')setTimeout(renderCore,60)
+  }
+  document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>activatePanel(b.dataset.panel)));
+  $('openThisWeek').addEventListener('click',openCurrentWeek);$('todayWeek').addEventListener('click',openCurrentWeek);$('openPlans').addEventListener('click',()=>activatePanel('edit'));
+  $('reflectionNote').addEventListener('input',updateReflection);$('reflectionNext').addEventListener('input',updateReflection);
+  $('reflectionForm').addEventListener('submit',e=>{e.preventDefault();updateReflection();clearTimeout(reflectionTimer);reflectionTimer=null;save();renderNow()});
+  window.addEventListener('pagehide',()=>{if(reflectionTimer){clearTimeout(reflectionTimer);reflectionTimer=null;save()}});
+
 
   document.querySelectorAll(".timeline-filter").forEach(btn=>btn.addEventListener("click",()=>{
     timelineFilter=btn.dataset.filter;
@@ -330,7 +371,7 @@
   }));
   $("addMember").addEventListener("click",()=>{state.members.push({id:uid(),name:"",birthDate:"",relation:"その他"});save();renderEditors();$("memberEditor").lastElementChild.querySelector("input").focus()});
   $("addEvent").addEventListener("click",()=>{state.events.push({id:uid(),name:"",type:"point",start:iso(today()),end:"",color:"#8b5cf6"});save();renderAll();$("eventEditor").lastElementChild.querySelector("input").focus()});
-  $("resetData").addEventListener("click",()=>{if(confirm("このブラウザに保存した生年月日・家族・イベント・週の記録をすべて削除しますか？")){state=defaults();heatYear=today().getFullYear();save();renderAll()}});
+  $("resetData").addEventListener("click",()=>{if(confirm("このブラウザに保存した生年月日・家族・イベント・週の記録をすべて削除しますか？")){clearTimeout(reflectionTimer);reflectionTimer=null;storageBlocked=false;state=defaults();heatYear=today().getFullYear();selectedWeek=weekNumber(today())-1;save();renderAll()}});
   let resizeTimer;
   window.addEventListener("resize",()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(renderCore,100)});
 
@@ -348,7 +389,7 @@
     tooltip.style.display="block";tooltip.style.left=`${Math.min(innerWidth-150,p.clientX+10)}px`;tooltip.style.top=`${Math.max(6,p.clientY-50)}px`
   }
 
-  $("prevYear").addEventListener("click",()=>{heatYear--;renderHeatmap()});
+  $("prevYear").addEventListener("click",()=>{heatYear=Math.max(1900,heatYear-1);renderHeatmap()});
   $("nextYear").addEventListener("click",()=>{heatYear=Math.min(today().getFullYear(),heatYear+1);renderHeatmap()});
   $("birthDate").max=iso(today());$("birthDate").min="1900-01-01";
   document.addEventListener("visibilitychange",()=>{if(!document.hidden)renderAll(false)});
