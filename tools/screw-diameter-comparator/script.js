@@ -119,6 +119,34 @@
     getElement(`${key}Max${side}`).textContent = formatInteger(inputMax);
   }
 
+  function positions(area) {
+    const stroke = state.volume / area;
+    return { metering: CUSHION_MM + stroke, vp: CUSHION_MM + stroke * (1 - VP_FILL_RATIO), travel: stroke * VP_FILL_RATIO };
+  }
+
+  function renderPositionDiagram(areaA, areaB) {
+    const values = [positions(areaA), positions(areaB)];
+    const limit = Math.max(20, Math.ceil(Math.max(...values.map(v => v.metering)) / 10) * 10);
+    const x = value => 24 + value / limit * 472;
+    const axis = `<svg class="position-axis" viewBox="0 0 520 28" aria-hidden="true"><path d="M24 8H496" stroke="currentColor"/>${[0, limit / 2, limit].map(v => `<path d="M${x(v)} 4v8" stroke="currentColor"/><text x="${x(v)}" y="26" text-anchor="middle">${v} mm</text>`).join('')}</svg>`;
+    getElement('positionDiagram').innerHTML = axis + values.map((v, i) => {
+      const side = SIDES[i], diameter = state['d' + side];
+      return `<div class="position-lane position-${side.toLowerCase()}"><h3>条件${side} · φ${diameter} mm</h3>
+        <svg viewBox="0 0 520 55" role="img" aria-label="条件${side}：計量完${formatTwoDecimals(v.metering)} mmからV-P切替${formatTwoDecimals(v.vp)} mm、クッション10 mmへ前進">
+          <path d="M24 26H496" class="position-track"/>
+          <path d="M${x(v.metering)} 26H${x(v.vp)}" class="position-travel"/>
+          <path d="M${x(v.vp)} 26H${x(CUSHION_MM)}" class="position-remaining"/>
+          ${v.travel > 0 ? `<path d="M${x((v.metering + v.vp)/2)+8} 18l-12 8 12 8" class="position-arrow"/>` : ''}
+          <rect x="${x(v.metering)-6}" y="20" width="12" height="12" class="position-meter"/>
+          <circle cx="${x(CUSHION_MM)}" cy="26" r="7" class="position-cushion"/>
+          <path d="M${x(v.vp)} 16l10 10-10 10-10-10Z" class="position-vp"/>
+        </svg>
+        <dl class="position-values"><div><dt>■ 計量完</dt><dd>${formatTwoDecimals(v.metering)} mm</dd></div><div><dt>◆ V-P切替</dt><dd>${formatTwoDecimals(v.vp)} mm</dd></div><div><dt>● クッション</dt><dd>10.00 mm</dd></div></dl>
+      </div>`;
+    }).join('');
+    getElement('positionSummary').textContent = state.volume === 0 ? '体積0：3つの位置はすべて10 mmで重なります。' : '同じ体積では、径が大きいほど移動量が短くなります。実際の位置差を同じ縮尺で表示しています。';
+  }
+
   function renderSide(side, values) {
     getElement(`d${side}`).value = DIAMETERS.indexOf(values.diameter);
     getElement(`dValue${side}`).textContent = `Φ${values.diameter} mm`;
@@ -136,10 +164,7 @@
     setInputPair("stroke", side, values.stroke);
     // Position decreases toward the forward end (0 mm). The common volume excludes cushion.
     // Keep full precision here; the existing stroke controls display rounded integers.
-    const exactStroke = state.volume / values.area;
-    const meteringPosition = CUSHION_MM + exactStroke;
-    const vpTravel = exactStroke * VP_FILL_RATIO;
-    const vpPosition = CUSHION_MM + exactStroke * (1 - VP_FILL_RATIO);
+    const { metering: meteringPosition, travel: vpTravel, vp: vpPosition } = positions(values.area);
     getElement(`vpPosition${side}`).textContent = `${formatTwoDecimals(vpPosition)} mm`;
     getElement(`meteringPosition${side}`).textContent = `${formatTwoDecimals(meteringPosition)} mm`;
     getElement(`vpTravel${side}`).textContent = `${formatTwoDecimals(vpTravel)} mm`;
@@ -185,6 +210,8 @@
       rpm: state.rpmB,
       stroke: strokeB,
     });
+
+    renderPositionDiagram(areaA, areaB);
 
     getElement("volumeNumber").max = volumeMax;
     getElement("volumeRange").max = volumeMax;

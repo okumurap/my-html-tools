@@ -119,3 +119,6 @@ CSVの該当箇所表示：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/csv-i
 
 
 図面PDFの一覧操作：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/drawing-pdf-dimension-quality.cjs`。Playwright/Chromiumを利用し、`TEST_BROWSER_PATH`、`TEST_PLAYWRIGHT_MODULE`、`TEST_SCREENSHOT_DIR`に対応します。内蔵PDFライブラリで生成した架空の2ページPDFを使い、片側空欄・0公差・確認方法の未設定抽出、検索との併用、図面／編集への移動、Undo/Redo、実JSON・PDFダウンロード、自動保存復旧と320/375/768/1280pxを確認します。旧版ではPDF読込・図面移動・0公差のJSON保存を確認済み。新しいUIの専用テストは旧版未実行、実機未確認です。
+
+
+スクリュ位置図も `tests/screw-diameter-comparator.cjs` で確認します。独立した3ケースの位置と図の数値の一致、位置の向き、A/Bの共通縮尺、体積0の重なり、入力連動・既存換算、4画面幅・タッチ・公開サブパスに合格。実機未確認。
