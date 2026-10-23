@@ -109,3 +109,5 @@ PlaywrightとChromiumを用意し、HTTPサーバー起動後に `TEST_BASE_URL=
 
 
 表編集の操作改善：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/table-editor-quality.cjs`。実クリップボードからの読込・TSVコピー、番地と列名、タッチ改行編集、Undo/Redo・列移動・保存復元、クリップボード拒否と4画面幅を確認。共通回帰は `tests/tools-regression.cjs --browser`。実機未確認。
+
+CSVの該当箇所表示：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/csv-inspector-quality.cjs`。数値異常・行異常・ヘッダー・列数不一致、引用符内改行のレコード番号、前後と戻る、結果の無効化、320/375/768/1280pxを確認します。実機未確認。

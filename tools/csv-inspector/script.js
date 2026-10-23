@@ -312,6 +312,7 @@
       : `重大候補 ${dangerCount}件、注意候補 ${warnCount}件${blanks ? `、空欄 ${blanks}セル` : ''}を検出しました。`;
 
     return {
+      sourceRows: rows,
       ruleViolations,
       keyDuplicates,
       delimiter,
@@ -361,6 +362,7 @@
   const fileInput = $('file-input');
   const fileMeta = $('file-meta');
   let lastReport = null;
+  let selectedIssue = -1;
   let sourceText='', sourceFile=null, fileGeneration=0;
   let activeRules=[];
   const PRESET_KEY='csv-inspector:presets:v1';
@@ -392,7 +394,7 @@
       list.append(empty);
       return;
     }
-    report.issues.slice(0, DISPLAY_ISSUE_LIMIT).forEach(issue => {
+    report.issues.slice(0, DISPLAY_ISSUE_LIMIT).forEach((issue, index) => {
       const item = document.createElement('article');
       item.className = `issue issue--${issue.level}`;
       const top = document.createElement('div');
@@ -411,7 +413,9 @@
       detail.className = 'issue__detail';
       detail.textContent = issue.detail || '';
       top.append(type, where);
-      item.append(top, detail);
+      const guidance=document.createElement('p');guidance.className='issue__guidance';guidance.textContent=issueGuidance(issue);
+      item.append(top, detail, guidance);
+      if(issue.row){const button=document.createElement('button');button.type='button';button.className='button button--subtle issue-open';button.dataset.issueIndex=index;button.textContent='該当箇所を見る';button.addEventListener('click',()=>showIssue(index));item.append(button)}
       list.append(item);
     });
     if (report.issues.length > DISPLAY_ISSUE_LIMIT) {
@@ -421,6 +425,60 @@
       list.append(more);
     }
   }
+
+  function issueGuidance(issue){
+    const messages={
+      '空の列名':'列の用途が分かる名前を付け、検査条件と一致するか確認してください。',
+      '列名の重複':'同じ名前の列を区別できるよう、列名を整理してください。',
+      '列数不一致':'区切り文字・引用符・不足した値を確認し、ヘッダーと列数を揃えてください。',
+      '数値列の文字':'単位・記号・入力ミスと、列の型指定が適切かを確認してください。',
+      '日付形式不一致':'日付の意味と表記を確認し、同じ列では形式を揃えてください。',
+      '前後空白':'空白が意図した内容か確認してください。IDなどは削除前に元の定義を確認します。',
+      '重複行':'同一データの二重登録か、必要な繰り返し記録かを元データで確認してください。',
+      'キー重複':'表示された先行行とキーを照合し、重複登録かキー条件の不足かを確認してください。',
+      'キー空欄':'一意キーに指定した列の空欄を確認してください。',
+      '列ルール違反':'対象値と、必須・型・許容範囲の設定を照合してください。',
+      '外れ値候補':'元の測定・記録を確認してください。IQRの外側という理由だけで削除しないでください。',
+      '必須列なし':'元CSVに列があるか、検査条件の列名と一致しているか確認してください。',
+      '文字コード注意':'ファイルの文字コードを選び直して再検査してください。'
+    };
+    return '確認ポイント：'+(messages[issue.type]||'元データと検査条件を確認してから再検査してください。');
+  }
+  function showIssue(index){
+    const report=lastReport,issue=report?.issues[index];if(!issue?.row||!report.sourceRows)return;
+    selectedIssue=index;
+    const navigable=report.issues.map((x,i)=>x.row?i:-1).filter(i=>i>=0),position=navigable.indexOf(index);
+    $('previous-issue').disabled=position<=0;$('next-issue').disabled=position>=navigable.length-1;
+    $('issue-navigation-status').textContent=`${position+1} / ${navigable.length}`;
+    $('issue-preview-title').textContent=issue.type;
+    $('issue-preview-location').textContent=`${issue.row}行目`+(issue.column?`・${issue.column}列目（${issue.columnName||''}）`:'・行全体')+'：'+issue.detail;
+    $('issue-guidance').textContent=issueGuidance(issue);
+    const table=$('source-preview');table.replaceChildren();
+    const start=Math.max(2,issue.row-3),end=Math.min(report.sourceRows.length,issue.row+3);
+    const width=Math.max(report.columns,...report.sourceRows.slice(start-1,end).map(row=>row.length));
+    const firstColumn=Math.max(0,Math.min(width-25,(issue.column||1)-13)),lastColumn=Math.min(width,firstColumn+25);
+    const head=document.createElement('thead'),hr=document.createElement('tr'),corner=document.createElement('th');corner.textContent='行';hr.append(corner);
+    for(let col=firstColumn;col<lastColumn;col++){
+      const th=document.createElement('th');th.textContent=`${col+1}. ${report.sourceRows[0][col]||'列名なし'}`;
+      if(issue.row===1&&issue.column===col+1){th.className='source-target';th.setAttribute('aria-label','対象セル '+th.textContent)}hr.append(th);
+    }
+    head.append(hr);table.append(head);const body=document.createElement('tbody');
+    for(let row=start;row<=end;row++){
+      const tr=document.createElement('tr');tr.dataset.row=row;if(row===issue.row)tr.className='source-row';
+      const number=document.createElement('th');number.scope='row';number.textContent=row;tr.append(number);
+      for(let col=firstColumn;col<lastColumn;col++){
+        const td=document.createElement('td'),value=report.sourceRows[row-1][col];td.dataset.column=col+1;
+        td.textContent=value===undefined?'（列なし）':value===''?'（空欄）':String(value).slice(0,1000);
+        if(row===issue.row&&(!issue.column||col+1===issue.column)){td.className='source-target';td.setAttribute('aria-label','対象 '+row+'行 '+(col+1)+'列 '+td.textContent)}tr.append(td);
+      }body.append(tr);
+    }
+    table.append(body);$('issue-preview').hidden=false;$('issue-preview').focus({preventScroll:true});$('issue-preview').scrollIntoView({block:'start'});
+    table.querySelector('.source-target')?.scrollIntoView({block:'nearest',inline:'center'});
+  }
+  for(const [id,delta]of [['previous-issue',-1],['next-issue',1]])$(id).addEventListener('click',()=>{
+    const ids=lastReport?.issues.map((issue,i)=>issue.row?i:-1).filter(i=>i>=0)||[],index=ids.indexOf(selectedIssue);if(ids[index+delta]!==undefined)showIssue(ids[index+delta]);
+  });
+  $('back-to-issues').addEventListener('click',()=>{const target=document.querySelector(`[data-issue-index="${selectedIssue}"]`);if(target){target.focus();target.scrollIntoView({block:'center'})}else $('issues-title').scrollIntoView()});
 
   function renderColumns(report) {
     const body = $('column-body');
@@ -447,6 +505,7 @@
 
   function render(report) {
     lastReport = report;
+    selectedIssue=-1;$('issue-preview').hidden=true;
     const verdict = $('verdict');
     verdict.dataset.level = report.level;
     $('verdict-title').textContent = report.verdictTitle;
@@ -628,4 +687,5 @@
     }
   });
 })();
+
 

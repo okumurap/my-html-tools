@@ -159,3 +159,15 @@ select {font:inherit;background:var(--surface);color:var(--text);border:1px soli
 @media(max-width:760px){.rule-card{grid-template-columns:repeat(2,minmax(0,1fr));}.rule-card label:first-of-type{grid-column:1/-1;}}
 @media(max-width:480px){.preset-fields{display:grid;grid-template-columns:minmax(0,1fr);}.rule-actions .button{width:100%;}}
 [hidden]{display:none!important;}
+
+
+.issue__guidance { color: var(--muted); font-size: 12px; line-height: 1.7; margin: 8px 0; }
+.issue-open { margin-top: 4px; min-height: 44px; }
+.issue-navigation { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 14px 0; }
+.issue-preview { scroll-margin-top: 16px; }
+.issue-preview:focus { outline: 3px solid var(--accent); outline-offset: 3px; }
+.issue-guidance { background: var(--accent-soft); padding: 12px; border-radius: 8px; line-height: 1.7; }
+#source-preview td { white-space: pre-wrap; min-width: 110px; max-width: 320px; overflow-wrap: anywhere; }
+#source-preview .source-row > * { background: var(--accent-soft); }
+#source-preview .source-target { box-shadow: inset 0 0 0 3px var(--danger); font-weight: 700; }
+#issue-preview-location { overflow-wrap: anywhere; }

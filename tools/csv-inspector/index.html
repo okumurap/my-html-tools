@@ -89,6 +89,14 @@
         <div id="issue-list" class="issue-list"></div>
       </section>
 
+      <section id="issue-preview" class="panel issue-preview" aria-labelledby="issue-preview-title" tabindex="-1" hidden>
+        <div class="section-heading"><div><h2 id="issue-preview-title">該当箇所</h2><p id="issue-preview-location"></p></div><button id="back-to-issues" class="button button--subtle" type="button">異常一覧へ戻る</button></div>
+        <p id="issue-guidance" class="issue-guidance"></p>
+        <div class="issue-navigation"><button id="previous-issue" class="button button--subtle" type="button">前の異常</button><span id="issue-navigation-status" role="status"></span><button id="next-issue" class="button button--subtle" type="button">次の異常</button></div>
+        <div class="table-scroll"><table id="source-preview" aria-label="元CSVの周辺行"></table></div>
+        <p class="muted">対象セルを枠で強調しています。列指定のない異常は行全体が対象です。行番号はヘッダーを1とするCSVレコード番号で、引用符内の改行は1レコードに含みます。表示は前後3行・最大25列、各セル先頭1,000文字まで。元データは変更しません。</p>
+      </section>
+
       <section class="panel" aria-labelledby="columns-title">
         <div class="section-heading">
           <div>
@@ -122,4 +130,5 @@
   <script src="./script.js"></script>
 </body>
 </html>
+
 
