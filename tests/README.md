@@ -113,3 +113,5 @@ PlaywrightとChromiumを用意し、HTTPサーバー起動後に `TEST_BASE_URL=
 CSVの該当箇所表示：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/csv-inspector-quality.cjs`。数値異常・行異常・ヘッダー・列数不一致、引用符内改行のレコード番号、前後と戻る、結果の無効化、320/375/768/1280pxを確認します。実機未確認。
 
 工程能力の説明表示：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/offset-capability-quality.cjs`。独立した4ケースのCp/Cpk・図の幾何、同一標本での比較と再抽選、エラー時の無効化、4画面幅を確認します。実機未確認。
+
+型締力の図と根拠：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/clamp-force-quality.cjs`。独立した6形状の面積・3ケースの型締力、寸法図と穴径比、面積内訳・数値式、入力無効化・複合・直接入力、保存復元、印刷生成と4画面幅。印刷呼出はモック、実機未確認。
