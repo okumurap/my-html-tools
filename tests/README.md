@@ -98,4 +98,4 @@ PlaywrightとChromiumを用意し、HTTPサーバー起動後に `TEST_BASE_URL=
 
 ## 図面注釈ツール
 
-`TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/drawing-annotation.cjs`。Playwright/Chromiumを使い、`TEST_PLAYWRIGHT_MODULE` と `TEST_SCREENSHOT_DIR` に対応します。元画像・各注釈・設定の再読み込み復元、移動・変形・消去・削除とUndo/Redo、実PNGダウンロードと復元・テーマ変更前後の一致、明暗各320・375・768・1280px、タッチ番号入力、画像読込失敗と非同期競合、保存失敗と再保存、別タブ競合、破損データ保護、保存禁止、Pagesのサブパスを確認します。旧版では画像を開いて再読み込みすると1280×720の白紙に戻ることを再現済みです。実機とネイティブペン入力は未確認です。
+`TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/drawing-annotation.cjs`。Playwright/Chromiumを使い、`TEST_PLAYWRIGHT_MODULE` と `TEST_SCREENSHOT_DIR` に対応します。元画像・各注釈・設定の再読み込み復元、移動・変形・消去・削除とUndo/Redo、実PNGダウンロードと復元・テーマ変更前後の一致、明暗の端末設定で320・375・768・1024・1280・1920px、PCの2段配置と全操作の到達性・ヘルプ表示、タッチ番号入力、画像読込失敗と非同期競合、保存失敗と再保存、別タブ競合、破損データ保護、保存禁止、Pagesのサブパスを確認します。旧版では画像を開いて再読み込みすると1280×720の白紙に戻ることを再現済みです。実機とネイティブペン入力は未確認です。

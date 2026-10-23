@@ -38,13 +38,26 @@ const DB='drawing-annotation:v1';
     await page.locator('#btn-undo').click();await saved();assert.equal((await doc()).items.length,6);await page.locator('#btn-redo').click();await saved();assert.equal((await doc()).items.length,5);await page.reload();await ready();assert.equal((await doc()).items.length,5);
     // Eraser removes a crossing line, Undo restores it; no deleted items reappear after reload.
     await page.locator('[data-tool=eraser]').click();await drag(440,190,440,270);await saved();assert.equal((await doc()).items.length,4);await page.locator('#btn-undo').click();await saved();assert.equal((await doc()).items.length,5);
-    // OS theme changes all chrome but must not change source or exported pixels.
+    // Chrome stays dark in either OS theme; source and exported pixels remain unchanged.
     const lightPNG=await png();await page.emulateMedia({colorScheme:'dark'});assert.equal(await page.locator('html').evaluate(e=>getComputedStyle(e).colorScheme),'dark');assert.deepEqual(await png(),lightPNG);
-    for(const scheme of ['light','dark'])for(const [width,height]of [[320,568],[375,812],[768,1024],[1280,900]]){
+    for(const scheme of ['light','dark'])for(const [width,height]of [[320,568],[375,812],[768,1024],[1024,768],[1280,900],[1920,1080]]){
       await page.emulateMedia({colorScheme:scheme});await page.setViewportSize({width,height});await page.locator('#btn-reset').click();await page.waitForTimeout(100);
+      assert.equal(await page.locator('html').evaluate(e=>getComputedStyle(e).colorScheme),'dark');
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth&&document.documentElement.scrollHeight<=innerHeight));
       const r=await page.locator('#scroll').boundingBox();assert.ok(r.height>150&&r.y>0&&r.y+r.height<=height);
       for(const selector of ['#btn-open','#btn-zoom-in','#hudAuto','[data-tool=pen]']){await page.locator(selector).scrollIntoViewIfNeeded();const b=await page.locator(selector).boundingBox();assert.ok(b.height>=44&&b.width>=44,selector)}
+      if(width>=1024){
+        const boxes=await page.locator('#btn-open,#btn-undo,#btn-redo,#btn-copy,#btn-save,.help summary').evaluateAll(els=>els.map(e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom}}));
+        boxes.sort((a,b)=>a.x-b.x);
+        assert.ok(Math.max(...boxes.map(r=>r.y))-Math.min(...boxes.map(r=>r.y))<2,'file/history actions share the top row');
+        for(let i=1;i<boxes.length;i++)assert.ok(boxes[i-1].right<=boxes[i].x,'commands do not overlap');
+        const tools=await page.locator('#tool-select button,#color-select button,#size-select button').evaluateAll(els=>els.map(e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom}}));
+        assert.ok(Math.max(...tools.map(r=>r.y))-Math.min(...tools.map(r=>r.y))<2,'all drawing controls share a row');
+        for(const r of tools)assert.ok(r.x>=0&&r.right<=width,'no hidden desktop controls');
+        assert.ok(await page.locator('#tool-select button').evaluateAll(els=>els.every(e=>e.scrollWidth<=e.clientWidth)),'tool labels fit within their buttons');
+        assert.ok((await page.locator('#toolbar').boundingBox()).height<170,'compact desktop toolbar');
+      }
+      await page.locator('.help summary').click();assert.ok(await page.locator('.help-panel').isVisible());assert.ok(await page.locator('.help-panel').evaluate(e=>{const r=e.getBoundingClientRect();return r.x>=0&&r.right<=innerWidth&&r.bottom<=innerHeight}));await page.locator('.help summary').click();
       await page.locator('.toolbar-controls').evaluate(e=>e.scrollLeft=0);await page.locator('#hud').evaluate(e=>e.scrollLeft=0);await shot(scheme+'-'+width);
     }
     await page.setViewportSize({width:1280,height:900});await page.emulateMedia({colorScheme:'light'});await saved();
@@ -64,6 +77,6 @@ const DB='drawing-annotation:v1';
     const denied=await browser.newContext();await denied.addInitScript(()=>{IDBFactory.prototype.open=function(){throw new DOMException('Denied','SecurityError')}});const dp=await denied.newPage();dp.on('pageerror',e=>errors.push(e.message));await go(dp);assert.ok(await dp.locator('#draftWarning').isVisible());await dp.locator('#fgCanvas').click({position:{x:80,y:80}});assert.ok(await dp.locator('#btn-undo').isEnabled());await denied.close();
     // Pages subdirectory resolves the same app and stylesheet.
     const prefix=await context.newPage();await prefix.route('**/my-html-tools/**',async route=>{const response=await route.fetch({url:route.request().url().replace('/my-html-tools/','/')});await route.fulfill({response})});await prefix.goto(base+'/my-html-tools/tools/drawing-annotation/');await ready(prefix);assert.ok(await prefix.locator('#fgCanvas').isVisible());await prefix.close();
-    assert.deepEqual(errors,[]);console.log('OK: source image + editable pen/shapes/labels restore; move/resize/delete/eraser/Undo/Redo; settings; unchanged PNG in dark mode; 8 layouts; import failure/race; quota/retry; conflicting tabs; corrupt draft; denied storage; Pages prefix.');
+    assert.deepEqual(errors,[]);console.log('OK: source image + editable pen/shapes/labels restore; move/resize/delete/eraser/Undo/Redo; settings; unchanged PNG in dark mode; 12 layouts; import failure/race; quota/retry; conflicting tabs; corrupt draft; denied storage; Pages prefix.');
   }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});

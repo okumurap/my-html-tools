@@ -1,24 +1,24 @@
 :root {
-  color-scheme: light;
+  color-scheme: dark;
+  --workspace: #171d24;
+  --panel: #222b35;
+  --panel-soft: #1c242e;
+  --border: #3a4655;
+  --border-strong: #66788b;
+  --text: #edf2f8;
+  --muted: #b5c1ce;
+  --accent: #7ab8ff;
+  --accent-soft: #233f5e;
+  --accent-text: #b8d9ff;
+  --danger: #ffb5bc;
+  --focus: #9ecbff;
+  --notice-bg: #24364a;
+  --notice-border: #729bc5;
+  --error-bg: #432a32;
+  --error-border: #be7b87;
   --toolbarH: 8.75rem;
   --hudH: 2.75rem;
   --statusH: 2rem;
-  --workspace: #e9edf1;
-  --panel: #ffffff;
-  --panel-soft: #f7f9fb;
-  --border: #d9e0e6;
-  --border-strong: #bcc7d1;
-  --text: #20252b;
-  --muted: #66707b;
-  --accent: #2563a9;
-  --accent-soft: #eef5fc;
-  --accent-text: #174f87;
-  --notice-bg: #f4f8fc;
-  --notice-border: #9ab7d2;
-  --error-bg: #fff3f4;
-  --error-border: #e2a5ac;
-  --danger: #b4232f;
-  --focus: #2563a9;
   --radius: 0.55rem;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", Meiryo, sans-serif;
 }
@@ -93,6 +93,15 @@ input:focus-visible {
   color: var(--text);
 }
 
+.toolbar-brand {
+  display: flex;
+  min-width: 0;
+  gap: 0.7rem;
+  align-items: center;
+}
+
+.drawing-palette { display: contents; }
+
 .app-name {
   display: flex;
   min-width: 0;
@@ -126,6 +135,8 @@ input:focus-visible {
 }
 
 .help summary {
+  display: inline-flex;
+  align-items: center;
   list-style: none;
 }
 
@@ -134,7 +145,13 @@ input:focus-visible {
 }
 
 .help-panel {
-  width: min(34rem, calc(100vw - 1.1rem));
+  position: fixed;
+  z-index: 60;
+  top: 3.75rem;
+  right: 0.75rem;
+  max-height: calc(100dvh - 5rem);
+  overflow-y: auto;
+  width: min(34rem, calc(100vw - 1.5rem));
   margin-top: 0.4rem;
   margin-left: auto;
   padding: 0.8rem 0.9rem;
@@ -222,12 +239,12 @@ input:focus-visible {
 
 .btn--primary {
   border-color: var(--accent);
-  background: var(--accent);
+  background: #285f99;
   color: #ffffff;
 }
 
 .btn--primary:hover {
-  background: #1f578f;
+  background: #326fae;
 }
 
 .btn:disabled {
@@ -306,8 +323,8 @@ input:focus-visible {
   overflow: auto;
   overscroll-behavior: contain;
   background:
-    linear-gradient(rgb(80 96 112 / 8%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(80 96 112 / 8%) 1px, transparent 1px),
+    linear-gradient(#b8cce50d 1px, transparent 1px),
+    linear-gradient(90deg, #b8cce50d 1px, transparent 1px),
     var(--workspace);
   background-size: 1.25rem 1.25rem;
 }
@@ -327,7 +344,7 @@ input:focus-visible {
   width: 1280px;
   height: 720px;
   overflow: hidden;
-  border: 1px solid #cbd3da;
+  border: 1px solid #718096;
   background: #ffffff;
 }
 
@@ -353,7 +370,7 @@ canvas {
   outline: none;
   background: var(--panel);
   color: var(--text);
-  color-scheme: light dark;
+  color-scheme: dark;
   font: 1.1rem Meiryo, "Noto Sans JP", sans-serif;
 }
 
@@ -431,14 +448,42 @@ canvas {
 }
 
 @media (min-width: 64rem) {
-  .toolbar-controls {
-    flex-wrap: wrap;
-    overflow-x: visible;
+  .toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+    gap: 0.65rem 0.75rem;
+    padding-block: 0.65rem;
+    align-items: center;
   }
-
-  .action-group {
-    flex-basis: 100%;
+  .toolbar-heading,
+  .toolbar-controls { display: contents; }
+  .toolbar-brand { grid-area: 1 / 1; }
+  .toolbar-heading > #btn-open { grid-area: 1 / 2; margin: 0; }
+  .action-group { grid-area: 1 / 3; }
+  .help { grid-area: 1 / 4; }
+  .action-group legend {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    clip-path: inset(50%);
+    overflow: hidden;
   }
+  .drawing-palette {
+    grid-area: 2 / 1 / 3 / -1;
+    width: 100%;
+    max-width: 80rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 1.25rem;
+    padding-top: 0.55rem;
+    border-top: 1px solid var(--border);
+    align-items: end;
+  }
+  #tool-select .control-group__items {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+  #tool-select .btn { padding-inline: 0.35rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -468,28 +513,7 @@ canvas {
 .draft-warning .btn { flex: none; }
 [hidden] { display: none !important; }
 #st-save { color: var(--accent-text); }
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --workspace: #171d24;
-    --panel: #222b35;
-    --panel-soft: #1c242e;
-    --border: #3a4655;
-    --border-strong: #66788b;
-    --text: #edf2f8;
-    --muted: #b5c1ce;
-    --accent: #7ab8ff;
-    --accent-soft: #233f5e;
-    --accent-text: #b8d9ff;
-    --danger: #ffb5bc;
-    --focus: #9ecbff;
-    --notice-bg: #24364a;
-    --notice-border: #729bc5;
-    --error-bg: #432a32;
-    --error-border: #be7b87;
-  }
-  .btn--primary { background: #285f99; border-color: #7ab8ff; }
-  .btn--primary:hover { background: #326fae; }
-  #scroll { background-image: linear-gradient(#b8cce50d 1px,transparent 1px),linear-gradient(90deg,#b8cce50d 1px,transparent 1px); }
-  #stage { border-color: #718096; }
+
+@media (min-width: 64rem) and (max-width: 74.99rem) {
+  #tool-select .shortcut { display: none; }
 }

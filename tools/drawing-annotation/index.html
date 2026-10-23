@@ -3,20 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="画像や図面にペン、矢印、図形、連番ラベルを書き込み、PNGで保存できるブラウザツールです。前回の作業を端末内に自動保存し、ダークモードにも対応。">
+  <meta name="description" content="画像や図面にペン、矢印、図形、連番ラベルを書き込み、PNGで保存できるブラウザツールです。前回の作業を端末内に自動保存し、操作画面はダークモード固定です。">
   <title>図面注釈ツール | My HTML Tools</title>
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
   <header id="toolbar" class="toolbar">
     <div class="toolbar-heading">
+      <div class="toolbar-brand">
       <a class="back-link" href="../../index.html" aria-label="ツール一覧へ戻る">
         <span aria-hidden="true">←</span>
         <span class="back-link__label">ツール一覧</span>
       </a>
       <div class="app-name">
         <strong>図面注釈ツール</strong>
-        <span>MY HTML TOOLS / 002</span>
+      </div>
       </div>
       <button class="btn btn--primary" type="button" id="btn-open">画像を開く</button>
       <details class="help">
@@ -27,7 +28,7 @@
             <li>選択ツールで注釈を移動・変形。Delete / Backspaceで削除</li>
             <li>画像の貼り付け、PCでのドラッグ＆ドロップにも対応</li>
             <li>図面と注釈をこの端末に自動保存し、次回復元します。新しい画像を開くと保存内容も置き換わります。</li>
-            <li>端末のダークモードに連動します。図面とPNGの色は変わりません。</li>
+            <li>操作画面はダークモード固定です。図面とPNGの色は変わりません。</li>
             <li>0〜9、Q〜T、N・K・H、Esc、Ctrl/⌘+Zがショートカット</li>
           </ul>
         </div>
@@ -35,17 +36,18 @@
     </div>
 
     <div class="toolbar-controls" aria-label="描画操作">
+      <div class="drawing-palette">
       <fieldset class="control-group" id="tool-select">
         <legend>ツール</legend>
         <div class="control-group__items">
-          <button class="btn" type="button" data-tool="select">選択 (0)</button>
-          <button class="btn" type="button" data-tool="pen">ペン (1)</button>
-          <button class="btn" type="button" data-tool="eraser">消しゴム (2)</button>
-          <button class="btn" type="button" data-tool="line">直線 (3)</button>
-          <button class="btn" type="button" data-tool="arrow">矢印 (4)</button>
-          <button class="btn" type="button" data-tool="rect">四角 (5)</button>
-          <button class="btn" type="button" data-tool="ellipse">楕円 (6)</button>
-          <button class="btn" type="button" data-tool="text">番号 (7)</button>
+          <button class="btn" type="button" data-tool="select">選択 <span class="shortcut">(0)</span></button>
+          <button class="btn" type="button" data-tool="pen">ペン <span class="shortcut">(1)</span></button>
+          <button class="btn" type="button" data-tool="eraser">消しゴム <span class="shortcut">(2)</span></button>
+          <button class="btn" type="button" data-tool="line">直線 <span class="shortcut">(3)</span></button>
+          <button class="btn" type="button" data-tool="arrow">矢印 <span class="shortcut">(4)</span></button>
+          <button class="btn" type="button" data-tool="rect">四角 <span class="shortcut">(5)</span></button>
+          <button class="btn" type="button" data-tool="ellipse">楕円 <span class="shortcut">(6)</span></button>
+          <button class="btn" type="button" data-tool="text">番号 <span class="shortcut">(7)</span></button>
         </div>
       </fieldset>
 
@@ -68,6 +70,7 @@
         </div>
       </fieldset>
 
+      </div>
       <fieldset class="control-group action-group">
         <legend>ファイル・履歴</legend>
         <div class="control-group__items">
@@ -76,7 +79,6 @@
           <button class="btn" type="button" id="btn-redo">やり直す</button>
           <button class="btn" type="button" id="btn-copy">PNGコピー</button>
           <button class="btn" type="button" id="btn-save">PNG保存</button>
-          <button class="btn" type="button" id="btn-reset">全体表示</button>
         </div>
       </fieldset>
     </div>
@@ -85,6 +87,7 @@
   <nav id="hud" class="hud" aria-label="表示と補助設定">
     <button class="pill" type="button" id="btn-zoom-out" aria-label="縮小">−</button>
     <button class="pill" type="button" id="btn-zoom-in" aria-label="拡大">＋</button>
+    <button class="pill" type="button" id="btn-reset">全体表示</button>
     <button class="pill" type="button" id="hudAuto">自動番号: ON（N）</button>
     <button class="pill" type="button" id="hudLabel">ラベル枠: ON（K）</button>
     <button class="pill" type="button" id="hudPen">ペン拡張: ON（H）</button>
