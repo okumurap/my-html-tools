@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="射出成形機のスクリュ径A/Bについて、射出速度、回転数、概算移動量、射出体積を比較・換算し、クッション10mm・95％充填時の想定V-P切替位置も表示するツールです。">
+  <meta name="description" content="射出成形機のスクリュ径A/Bについて、射出速度、回転数、概算移動量、射出体積を比較・換算し、クッション位置・計量完・V-P切替を図のドラッグと数値で調整するツールです。">
   <title>射出成形機｜スクリュ径 A/B比較</title>
-  <link rel="stylesheet" href="./style.css?v=d8a488b0f261">
+  <link rel="stylesheet" href="./style.css?v=bde5389b487c">
 </head>
 <body>
   <header class="site-header">
     <div class="header-inner">
       <a class="back-link" href="../../index.html">← ツール一覧</a>
       <h1>射出成形機｜スクリュ径 A/B比較</h1>
-      <p>概算移動量と射出体積を双方向連動・95％充填時の想定V-P切替位置を比較</p>
+      <p>帯のドラッグでクッションを移動・計量完とV-P切替も調整してA/B比較</p>
     </div>
   </header>
 
@@ -20,9 +20,12 @@
     <section class="card position-card" aria-labelledby="position-title">
       <h2 id="position-title">計量完 → V-P切替 → クッション</h2>
       <p class="note">A/B共通の目盛り（mm）。左が前進端0 mm、射出は右から左へ進みます。</p>
+      <p id="positionHelp" class="note">青・オレンジの帯を左右にドラッグすると、クッションを含む位置全体を移動できます。■計量完・帯の上の◆V-P・●クッションも調整できます。数値欄でも入力可能です。</p>
+      <button id="resetPositions" type="button" class="position-reset">クッション10 mm・充填率95％に戻す</button>
       <div id="positionDiagram"></div>
-      <p class="position-legend"><span>■ 計量完</span><span>◆ V-P切替（95％充填）</span><span>● クッション10 mm</span></p>
-      <p id="positionSummary" class="note" role="status"></p>
+      <p class="position-legend"><span>■ 計量完</span><span>◆ V-P切替</span><span>● クッション</span></p>
+      <p id="positionSummary" class="note"></p>
+      <p id="positionNotice" class="note" role="status">位置の初期設定：A/Bともクッション10 mm・充填率95％。</p>
     </section>
     <section class="compare" aria-label="条件Aと条件Bの比較">
       <article class="side side-a" id="sideA">
@@ -62,10 +65,10 @@
 
     <section class="card vp-basis" aria-labelledby="vp-basis-title">
       <h2 id="vp-basis-title">V-P位置の計算条件</h2>
-      <p>クッションは<strong>10 mm固定</strong>。共通の射出体積を100％充填分（クッション分を除く）として、体積の<strong>95％を充填した時点</strong>で切り替える想定です。</p>
-      <p>位置は<strong>スクリュ前進端を0 mm</strong>とした残り位置です。射出で位置が小さくなり、クッション10 mmに到達します。</p>
-      <p class="vp-formula">想定V-P位置 ＝ 10 mm ＋（射出体積 ÷ 断面積）× 5％</p>
-      <p class="note">計量完位置＝10 mm＋射出体積÷断面積。切替までの前進量＝射出体積÷断面積×95％。位置は丸め前の体積・断面積から計算し、小数2桁で表示します。</p>
+      <p>初期値は<strong>クッション10 mm・95％充填</strong>。A/Bそれぞれのクッション位置と切替時の充填率を変更できます。共通の射出体積を100％充填分（クッション分を除く）とします。</p>
+      <p>位置は<strong>スクリュ前進端を0 mm</strong>とした残り位置です。射出で位置が小さくなり、設定したクッション位置に到達します。</p>
+      <p class="vp-formula">想定V-P位置 ＝ クッション位置 ＋（射出体積 ÷ 断面積）×（1 − 充填率 ÷ 100）</p>
+      <p class="note">計量完位置＝クッション位置＋射出体積÷断面積。切替までの前進量＝射出体積÷断面積×充填率÷100。位置は丸め前の体積・断面積から計算し、小数2桁で表示します。</p>
     </section>
 
     <section class="card driver-card" aria-label="現在の換算基準">
@@ -83,7 +86,7 @@
     <footer class="footer">ブラウザー単体で動作します。入力値は外部へ送信されません。</footer>
   </main>
 
-  <script src="./script.js?v=525e392b20ab"></script>
+  <script src="./script.js?v=cc5982b92420"></script>
 </body>
 </html>
 

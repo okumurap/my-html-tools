@@ -134,3 +134,6 @@ CSVの該当箇所表示：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/csv-i
 
 
 スクリュ位置図の旧CSS再現は `SIMULATE_STALE_CSS=1 TEST_BASE_URL=http://127.0.0.1:8000 node tests/screw-position-alignment.cjs`。旧CSSの高さ上限を後から重ね、目盛りとマーカーが同一SVGにあること、5画面幅の表示座標、内容ハッシュ付きのCSS/JS読込を確認します。前回修正版では約137pxずれて失敗、新構造で合格。実機のキャッシュ状態は未確認です。
+
+
+スクリュ位置調整：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/screw-position-drag.cjs`。帯のドラッグ、A/B個別のクッション、計量完と共通体積、V-Pと充填率、独立した3計算例、軸の固定、マウス・実タッチイベント・Esc・キャンセル・キーボード、入力フォーカス中の同期、0・上限・不正値、4画面幅を確認します。`TEST_BROWSER_PATH`、`TEST_PLAYWRIGHT_MODULE`、`TEST_SCREENSHOT_DIR`対応。既存の換算・目盛り・公開サブパスも回帰確認します。実機未確認。

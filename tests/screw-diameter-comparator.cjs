@@ -29,12 +29,12 @@ const base=process.env.TEST_BASE_URL||'http://127.0.0.1:8000',shots=process.env.
   await page.locator('#speedNumberB').fill('100');assert.equal(await page.locator('#speedNumberA').inputValue(),'178');await page.locator('#rpmNumberB').fill('100');assert.equal(await page.locator('#rpmNumberA').inputValue(),'133');const vpBefore=await text('vpPositionA');await page.locator('#speedNumberA').fill('0');assert.equal(await text('timeA'),'―');assert.equal(await text('vpPositionA'),vpBefore);
   for(const input of ['', '-1', '0', 'not-a-number']){
     if(input==='not-a-number')await page.locator('#volumeNumber').evaluate(e=>{e.value='bad';e.dispatchEvent(new Event('input',{bubbles:true}))});else await volume(input);
-    await check('A','10.00','10.00','0.00');await check('B','10.00','10.00','0.00');assert.match(await text('positionSummary'),/すべて10 mm/);
+    await check('A','10.00','10.00','0.00');await check('B','10.00','10.00','0.00');assert.match(await text('positionSummary'),/クッション位置で重なります/);
   }
   // Upper bounds and diameter changes clamp the common volume and recalculate positions.
   await diameter('B',0);await volume(999999);assert.equal(await page.locator('#volumeNumber').inputValue(),'90477');await check('A','20.00','210.00','190.00');await diameter('A',4);await diameter('B',4);await volume(200000);await diameter('A',0);assert.equal(await page.locator('#volumeNumber').inputValue(),'90477');assert.equal(await text('vpPositionA'),'20.00 mm');
   await diameter('A',1);await diameter('B',2);await volume(30788);await page.locator('#speedNumberA').fill('50');
-  assert.match(await page.locator('.vp-basis').textContent(),/10 mm固定/);assert.match(await page.locator('.vp-basis').textContent(),/0 mm/);
+  assert.match(await page.locator('.vp-basis').textContent(),/クッション10 mm・95％充填/);assert.match(await page.locator('.vp-basis').textContent(),/0 mm/);
   for(const [width,height] of [[320,568],[375,812],[768,1024],[1280,900]]){
     await page.setViewportSize({width,height});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     for(const side of ['A','B']){await page.locator('#vpPosition'+side).scrollIntoViewIfNeeded();assert.ok(await page.locator('#vpPosition'+side).isVisible());assert.ok(await page.locator('#vpPosition'+side).evaluate(e=>e.scrollWidth<=e.clientWidth));}
