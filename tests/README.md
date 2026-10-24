@@ -137,3 +137,6 @@ CSVの該当箇所表示：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/csv-i
 
 
 スクリュ位置調整：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/screw-position-drag.cjs`。帯のドラッグ、A/B個別のクッション、計量完と共通体積、V-Pと充填率、独立した3計算例、軸の固定、マウス・実タッチイベント・Esc・キャンセル・キーボード、入力フォーカス中の同期、0・上限・不正値、4画面幅を確認します。`TEST_BROWSER_PATH`、`TEST_PLAYWRIGHT_MODULE`、`TEST_SCREENSHOT_DIR`対応。既存の換算・目盛り・公開サブパスも回帰確認します。実機未確認。
+
+
+レールタウン3D：`node tests/plarail-3d.cjs` で独立した投影・逆投影・手前の面の切り取りを確認。`TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/plarail-3d.cjs --browser` で周回4辺の可視性、2D/3Dの状態継続、実タッチの回転・ピンチ・中断、移動・追従・ポイントとロック・倍率上下限・キーボード・保存形式、320/375/768/1280pxと横向き、最大96マス・9両、空の配置を検証します。既存 `tests/plarail-layout.cjs --browser` も回帰確認。`TEST_PLAYWRIGHT_MODULE`、`TEST_SCREENSHOT_DIR`に対応。テスト観測口は本番に含めず、実機・実機FPSは未確認です。
