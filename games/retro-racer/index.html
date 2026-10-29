@@ -1,53 +1,66 @@
 <!doctype html>
 <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>PIXEL HIGHWAY | レトロレース</title>
+<meta name="theme-color" content="#142c38"><title>MINI KART PARK | 箱庭カート</title>
 <style>
-:root{color-scheme:dark;--bg:#111626;--card:#1f2941;--line:#485675;--gold:#ffe18b}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f3f4ff;font-family:system-ui,-apple-system,sans-serif;text-align:center}
-main{max-width:530px;margin:auto;padding:12px 12px 25px}header{display:flex;align-items:center;justify-content:space-between;gap:8px}h1{font-size:1.25rem;letter-spacing:.08em;margin:10px 0}a{color:#c1d7ff;font-size:.8rem}
-.hud{display:flex;justify-content:space-between;gap:6px;margin:9px 0;font-size:.85rem;font-weight:700}.hud span{background:var(--card);border-radius:9px;padding:9px;flex:1}
-canvas{display:block;width:100%;max-width:420px;aspect-ratio:3/4;max-height:65svh;margin:auto;background:#80bcbe;border:4px solid #526487;border-radius:12px;image-rendering:pixelated}
-.controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;max-width:420px;margin:12px auto}
-button{font:inherit;color:white;min-height:58px;background:#334867;border:2px solid #7489ae;border-radius:12px;touch-action:none;user-select:none;font-size:1.05rem;font-weight:700}
-button:active,.pressed{background:#6b86b4}#start{background:#a75357;border-color:#ec999b}p{font-size:.81rem;color:#c3ccdf;margin:8px 0}#message{color:var(--gold);min-height:1.5em;font-weight:700}footer{margin-top:10px}
-</style></head><body><main><header><h1>PIXEL HIGHWAY</h1><a href="../../index.html">ツール一覧へ戻る</a></header>
-<div class="hud"><span>距離 <b id="distance">0</b>m</span><span>速度 <b id="speed">0</b>km/h</span><span>BEST <b id="best">0</b>m</span></div>
-<canvas id="game" width="300" height="400" aria-label="左右に避けて車を追い越すレースゲーム"></canvas>
-<div class="controls"><button id="left" aria-label="左へ">◀ 左</button><button id="start">スタート</button><button id="right" aria-label="右へ">右 ▶</button></div>
-<div id="message" role="status" aria-live="polite">スタートで走行開始</div>
-<p>左右ボタンを長押しして車線変更。PCは ← → または A D。障害車を避けて距離を伸ばそう。</p>
-<footer><p>単体HTML / オフライン動作 / 記録はこの端末に保存</p></footer>
-</main><script>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,sans-serif}*{box-sizing:border-box}body{margin:0;background:linear-gradient(155deg,#152f3a,#111a2c);color:#effbf8;text-align:center}
+main{max-width:640px;margin:auto;padding:10px 10px 24px}header{display:flex;align-items:center;justify-content:space-between;gap:10px}h1{font-size:1.25rem;margin:10px 0;letter-spacing:.04em}a{color:#b7e4ed;font-size:.8rem}.hud{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:6px 0 10px}.hud span{padding:8px 2px;background:#254451;border:1px solid #50707c;border-radius:10px;font-weight:750;font-size:.86rem}
+canvas{width:100%;max-width:600px;aspect-ratio:1/1;display:block;margin:auto;background:#9bd8de;border-radius:15px;border:3px solid #597e89;touch-action:none}
+.controls{display:grid;grid-template-columns:1fr 1.1fr 1fr;gap:10px;max-width:520px;margin:10px auto}button{min-height:62px;border:2px solid #96b6c5;border-radius:14px;background:#365b76;color:white;font-size:1.05rem;font-weight:800;touch-action:none;user-select:none}button:active,.active{background:#6595b0}#start{background:#d07848;border-color:#ffc38c}#status{min-height:1.5em;color:#fff0b4;font-weight:700;margin:9px 0}p{font-size:.82rem;line-height:1.55;color:#b6d5d7;margin:8px auto;max-width:520px}
+</style></head><body><main><header><h1>MINI KART PARK</h1><a href="../../index.html">ツール一覧へ</a></header>
+<div class="hud"><span>周回 <b id="lap">1 / 3</b></span><span>TIME <b id="time">0.0</b>s</span><span>BEST <b id="best">--</b></span></div>
+<canvas id="scene" width="600" height="600" aria-label="斜め見下ろしの箱庭カートレース。左右でハンドルを操作"></canvas>
+<div class="controls"><button id="left" aria-label="左に曲がる">◀ LEFT</button><button id="start">スタート</button><button id="right" aria-label="右に曲がる">RIGHT ▶</button></div>
+<div id="status" role="status" aria-live="polite">スタートして3周レース！</div>
+<p>自動アクセル。左右長押しでハンドル操作。カーブでは内側・外側に寄りすぎないように走ろう。PCは ← → / A D、Spaceで一時停止。</p>
+<script>
 (()=>{'use strict';
-const canvas=document.querySelector('#game'),ctx=canvas.getContext('2d'),el=id=>document.getElementById(id);
-const W=300,H=400,KEY='pixel-highway:best-v1';let best=0,saveWarning=false;
-try{const v=Number(localStorage.getItem(KEY));if(Number.isFinite(v)&&v>=0)best=Math.floor(v)}catch{}
-el('best').textContent=best;
-let state='ready',lane=1,target=1,carX=150,traffic=[],distance=0,speed=0,spawn=0,road=0,last=0,raf=0;
-const held={left:false,right:false};let pressCooldown=0;
-const lanes=[102,150,198];
-function text(t){el('message').textContent=t}
-function reset(){state='playing';lane=1;target=1;carX=150;traffic=[];distance=0;speed=70;spawn=0;road=0;pressCooldown=0;text('追い越して距離を伸ばそう');el('start').textContent='一時停止';last=performance.now();if(!raf)raf=requestAnimationFrame(loop)}
-function finish(){state='over';speed=0;el('start').textContent='もう一度';const d=Math.floor(distance);if(d>best){best=d;try{localStorage.setItem(KEY,String(best))}catch{saveWarning=true}el('best').textContent=best}text('クラッシュ！ '+d+'m'+(saveWarning?'（記録を保存できません）':''))}
-function action(){if(state==='playing'){state='paused';el('start').textContent='再開';text('一時停止')}else if(state==='paused'){state='playing';el('start').textContent='一時停止';text('走行中');last=performance.now();if(!raf)raf=requestAnimationFrame(loop)}else reset()}
-el('start').addEventListener('click',action);
-function move(dir){if(state!=='playing')return;target=Math.max(0,Math.min(2,target+dir))}
-for(const [id,dir] of [['left',-1],['right',1]]){const b=el(id);b.addEventListener('pointerdown',e=>{e.preventDefault();held[id]=true;b.classList.add('pressed');move(dir);pressCooldown=.22;try{b.setPointerCapture(e.pointerId)}catch{}});const release=()=>{held[id]=false;b.classList.remove('pressed')};for(const name of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(name,release)}
-document.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','KeyA','KeyD','Space'].includes(e.code))e.preventDefault();if(e.repeat)return;if(e.code==='Space')action();if(['ArrowLeft','KeyA'].includes(e.code)){held.left=true;move(-1)}if(['ArrowRight','KeyD'].includes(e.code)){held.right=true;move(1)}});
-document.addEventListener('keyup',e=>{if(['ArrowLeft','KeyA'].includes(e.code))held.left=false;if(['ArrowRight','KeyD'].includes(e.code))held.right=false});
-window.addEventListener('blur',()=>{held.left=false;held.right=false;if(state==='playing'){state='paused';el('start').textContent='再開';text('一時停止')}});
-function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h))}
-function car(x,y,c,player=false){rect(x-15,y-24,30,47,'#101724');rect(x-12,y-20,24,38,c);rect(x-9,y-12,18,10,'#b9e4ed');rect(x-9,y+5,18,10,'#263e60');rect(x-13,y-18,4,7,'#f8ead0');rect(x+9,y-18,4,7,'#f8ead0');rect(x-13,y+14,5,6,player?'#ff504e':'#f6c47e');rect(x+8,y+14,5,6,player?'#ff504e':'#f6c47e')}
-function draw(){rect(0,0,W,H,'#83c6bf');for(let i=0;i<12;i++){const y=(i*46+road*.45)%460-45;rect(0,y,55,22,i%2?'#4e9f73':'#6dab6e');rect(245,y+18,55,25,i%2?'#4e9f73':'#6dab6e')}
-rect(62,0,176,H,'#414756');rect(62,0,5,H,'#f9d5b5');rect(233,0,5,H,'#f9d5b5');for(let i=0;i<13;i++){const y=((i*46+road)%598)-46;rect(125,y,4,25,'#f8f1df');rect(172,y,4,25,'#f8f1df')}
-for(const t of traffic)car(lanes[t.l],t.y,t.color);car(carX,336,'#f4b741',true);if(state!=='playing'){rect(23,145,254,90,'#142037');ctx.fillStyle='#fff4d9';ctx.font='bold 18px monospace';ctx.textAlign='center';ctx.fillText(state==='ready'?'PIXEL HIGHWAY':state==='paused'?'PAUSE':'GAME OVER',150,178);ctx.font='12px monospace';ctx.fillText(state==='ready'?'PRESS START':state==='paused'?'PRESS RESUME':'TRY AGAIN',150,205)}}
-function loop(now){raf=0;if(state!=='playing'){draw();return}const dt=Math.min(.04,Math.max(0,(now-last)/1000));last=now;distance+=speed*dt/3.6;speed=Math.min(150,70+distance*.06);road+=speed*dt*.65;
-pressCooldown-=dt;if(pressCooldown<=0){if(held.left&&!held.right){move(-1);pressCooldown=.22}else if(held.right&&!held.left){move(1);pressCooldown=.22}}
-carX+=(lanes[target]-carX)*Math.min(1,dt*11);spawn-=dt;
-if(spawn<=0){const blocked=new Set(traffic.filter(t=>t.y<105).map(t=>t.l));const choices=[0,1,2].filter(l=>!blocked.has(l));if(choices.length){const l=choices[Math.floor(Math.random()*choices.length)];traffic.push({l,y:-40,color:['#e6697c','#789ef3','#e8e2aa','#a99aec'][Math.floor(Math.random()*4)]})}spawn=Math.max(.48,1.35-distance/2600)}
-for(const t of traffic)t.y+=(speed*.6+40)*dt;traffic=traffic.filter(t=>t.y<440);
-for(const t of traffic){if(Math.abs(carX-lanes[t.l])<26&&Math.abs(336-t.y)<38){finish();break}}
-el('distance').textContent=Math.floor(distance);el('speed').textContent=Math.round(speed);draw();if(state==='playing')raf=requestAnimationFrame(loop)}
-draw();
+const cv=document.querySelector('#scene'),g=cv.getContext('2d'),$=id=>document.getElementById(id);
+const TAU=Math.PI*2,store='mini-kart-park:best-v1';let best=null;
+try{const n=Number(localStorage.getItem(store));if(Number.isFinite(n)&&n>0)best=n}catch{}
+$('best').textContent=best===null?'--':best.toFixed(1)+'s';
+let state='ready',angle=-Math.PI/2,offset=0,speed=0,elapsed=0,prev=0,raf=0,lap=1,lapProgress=0,shake=0,particles=[],rivals=[];
+const keys={left:false,right:false};
+const scene=(x,z,y=0)=>({x:300+(x-z*.23)*.56,y:275+(x*.15+z*.65)*.56-y*.56});
+const pos=(theta,off=0)=>({x:Math.cos(theta)*(342+off),z:Math.sin(theta)*(245+off*.68)});
+function quad(points,color){g.fillStyle=color;g.beginPath();g.moveTo(points[0].x,points[0].y);for(let i=1;i<points.length;i++)g.lineTo(points[i].x,points[i].y);g.closePath();g.fill()}
+function oval(rx,rz,y,fill){g.beginPath();for(let i=0;i<=128;i++){const a=i*TAU/128,p=scene(Math.cos(a)*rx,Math.sin(a)*rz,y);if(i===0)g.moveTo(p.x,p.y);else g.lineTo(p.x,p.y)}g.closePath();g.fillStyle=fill;g.fill()}
+function line(x1,z1,x2,z2,y,color,w){const a=scene(x1,z1,y),b=scene(x2,z2,y);g.strokeStyle=color;g.lineWidth=w;g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.stroke()}
+function box(x,z,w,d,h,color,top='#ffffff'){const b=[scene(x-w/2,z-d/2),scene(x+w/2,z-d/2),scene(x+w/2,z+d/2),scene(x-w/2,z+d/2)],t=[scene(x-w/2,z-d/2,h),scene(x+w/2,z-d/2,h),scene(x+w/2,z+d/2,h),scene(x-w/2,z+d/2,h)];quad([b[1],b[2],t[2],t[1]],color);quad([b[2],b[3],t[3],t[2]],color);quad(t,top)}
+function tree(x,z,s=1){const a=scene(x,z),b=scene(x,z,38*s);g.strokeStyle='#815935';g.lineWidth=6*s;g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.stroke();const p=scene(x,z,48*s);g.fillStyle='#1d815b';g.beginPath();g.ellipse(p.x+3,p.y+6,18*s,13*s,0,0,TAU);g.fill();g.fillStyle='#4eb579';g.beginPath();g.ellipse(p.x-3,p.y-1,16*s,12*s,0,0,TAU);g.fill()}
+function kart(theta,off,color,player=false){const p=pos(theta,off),tangent={x:-Math.sin(theta),z:Math.cos(theta)*.72},a=scene(p.x,p.z,8),shadow=scene(p.x+9,p.z+12,0);g.fillStyle='#23423177';g.beginPath();g.ellipse(shadow.x,shadow.y,17,7,0,0,TAU);g.fill();
+const rr=player?1.15:1,dir=Math.atan2(tangent.z,tangent.x);
+const fx={x:Math.cos(dir),z:Math.sin(dir)},side={x:-fx.z,z:fx.x};
+function at(f,l,h){return scene(p.x+fx.x*f+side.x*l,p.z+fx.z*f+side.z*l,h)}
+quad([at(-18*rr,-12*rr,8),at(18*rr,-12*rr,8),at(18*rr,12*rr,8),at(-18*rr,12*rr,8)],'#202e3a');
+quad([at(-14*rr,-10*rr,14),at(14*rr,-10*rr,14),at(14*rr,10*rr,14),at(-14*rr,10*rr,14)],color);
+quad([at(1,-8,23),at(11,-8,23),at(11,8,23),at(1,8,23)],'#b1edf8');
+const helmet=at(-5,0,26);g.fillStyle=player?'#ffea94':'#ffffff';g.beginPath();g.arc(helmet.x,helmet.y,7*rr,0,TAU);g.fill();
+const nose=at(16,0,17);g.fillStyle='#fff3aa';g.beginPath();g.arc(nose.x,nose.y,3,0,TAU);g.fill();
+if(player){g.fillStyle='#fff';g.font='bold 13px system-ui';g.textAlign='center';g.fillText('YOU',a.x,a.y-37)}
+}
+function world(){g.fillStyle='#9bd9e5';g.fillRect(0,0,600,600);quad([scene(-545,-450),scene(545,-450),scene(545,450),scene(-545,450)],'#77c68d');
+for(let i=0;i<28;i++){const x=-500+(i*173)%1000,z=-410+(i*131)%810;if((x*x)/(430*430)+(z*z)/(325*325)>1.25)tree(x,z,.65+(i%4)*.14)}
+oval(420,317,0,'#f5dfaa');oval(406,303,2,'#fdf8e8');oval(389,285,3,'#565c66');oval(293,206,3,'#626873');oval(281,194,4,'#fef0b7');oval(269,183,4,'#70bf78');
+for(let i=0;i<48;i++){const a=i*TAU/48,p1=pos(a,-0),p2=pos(a,-0);const c=scene(Math.cos(a)*342,Math.sin(a)*245,5),d=scene(Math.cos(a)*342,Math.sin(a)*245,5);g.fillStyle='#f8e5a2';g.beginPath();g.arc(c.x,c.y,1.8,0,TAU);g.fill()}
+for(let i=0;i<12;i++){const a=i*TAU/12;const p1=pos(a,94),p2=pos(a+.045,94);line(p1.x,p1.z,p2.x,p2.z,7,i%2?'#fefefe':'#ed8c73',7)}
+for(let i=0;i<9;i++){const a=-Math.PI/2+i*.013,p=pos(a,-93),q=pos(a,93);line(p.x,p.z,q.x,q.z,5,i%2?'#fff':'#252f37',5)}
+box(-28,0,38,28,33,'#996e51','#ffc973');box(21,-10,27,38,26,'#68829f','#a6dbfc');tree(0,105,1.25);tree(-70,-80,.85);tree(86,-65,.8);
+const banner=scene(0,-334,0);g.fillStyle='#f26c58';g.font='bold 16px system-ui';g.textAlign='center';g.fillText('MINI KART',banner.x,banner.y-30);
+}
+function start(){state='playing';angle=-Math.PI/2;offset=0;speed=0;elapsed=0;lap=1;lapProgress=0;shake=0;particles=[];rivals=[{angle:-1.85,offset:-35,rate:.205,color:'#ef6b79'},{angle:-2.2,offset:36,rate:.22,color:'#6095ed'},{angle:-2.5,offset:6,rate:.19,color:'#d1a7e9'}];$('start').textContent='一時停止';$('status').textContent='GO! 3周を走り切ろう';prev=performance.now();if(!raf)raf=requestAnimationFrame(loop)}
+function action(){if(state==='playing'){state='paused';$('start').textContent='再開';$('status').textContent='一時停止'}else if(state==='paused'){state='playing';$('start').textContent='一時停止';$('status').textContent='走行中';prev=performance.now();if(!raf)raf=requestAnimationFrame(loop)}else start()}
+function finish(){state='finished';$('start').textContent='もう一度';$('status').textContent='FINISH! '+elapsed.toFixed(1)+'秒';if(best===null||elapsed<best){best=elapsed;$('best').textContent=best.toFixed(1)+'s';try{localStorage.setItem(store,String(best))}catch{$('status').textContent+='（記録保存不可）'}}}
+$('start').addEventListener('click',action);
+for(const id of ['left','right']){const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();keys[id]=true;b.classList.add('active');try{b.setPointerCapture(e.pointerId)}catch{}});const end=()=>{keys[id]=false;b.classList.remove('active')};['pointerup','pointercancel','lostpointercapture'].forEach(t=>b.addEventListener(t,end))}
+document.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','KeyA','KeyD','Space'].includes(e.code))e.preventDefault();if(e.code==='Space'&&!e.repeat)action();if(['ArrowLeft','KeyA'].includes(e.code))keys.left=true;if(['ArrowRight','KeyD'].includes(e.code))keys.right=true});
+document.addEventListener('keyup',e=>{if(['ArrowLeft','KeyA'].includes(e.code))keys.left=false;if(['ArrowRight','KeyD'].includes(e.code))keys.right=false});
+function pauseOnBlur(){keys.left=false;keys.right=false;if(state==='playing'){state='paused';$('start').textContent='再開';$('status').textContent='一時停止'}}window.addEventListener('blur',pauseOnBlur);document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseOnBlur()});
+function render(){world();const actors=rivals.map(r=>({a:r.angle,off:r.offset,color:r.color,player:false}));actors.push({a:angle,off:offset,color:'#ffb342',player:true});actors.sort((a,b)=>pos(a.a,a.off).z-pos(b.a,b.off).z);for(const v of actors)kart(v.a,v.off,v.color,v.player);
+if(state!=='playing'){g.fillStyle='#12232cdd';g.fillRect(150,235,300,115);g.fillStyle='#fff5d6';g.textAlign='center';g.font='bold 27px system-ui';g.fillText(state==='ready'?'MINI KART PARK':state==='paused'?'PAUSE':'FINISH!',300,276);g.font='bold 15px system-ui';g.fillText(state==='ready'?'START TO RACE':state==='paused'?'RESUME':'3 LAPS COMPLETE',300,310)}}
+function loop(now){raf=0;if(state!=='playing'){render();return}const dt=Math.min(.04,Math.max(0,(now-prev)/1000));prev=now;elapsed+=dt;const steer=(keys.right?1:0)-(keys.left?1:0);offset+=steer*dt*105;offset*=Math.pow(.998,dt*60);const out=Math.abs(offset)>80;if(out){offset=Math.max(-108,Math.min(108,offset));shake+=dt;speed=Math.max(.3,speed-dt*1.25)}else speed=Math.min(1,speed+dt*.45);
+angle+=dt*(.16+speed*.17);if(angle>=Math.PI*1.5){angle-=TAU;lap++;if(lap>3){finish();render();return}$('status').textContent='LAP '+lap+' / 3'}
+for(const r of rivals){r.angle+=dt*r.rate;if(r.angle>=Math.PI*1.5)r.angle-=TAU;const delta=Math.atan2(Math.sin(angle-r.angle),Math.cos(angle-r.angle));if(Math.abs(delta)<.072&&Math.abs(offset-r.offset)<30){speed=Math.max(.2,speed-dt*2.5);$('status').textContent='接触！ スピードダウン'}}
+$('time').textContent=elapsed.toFixed(1);$('lap').textContent=Math.min(lap,3)+' / 3';render();raf=requestAnimationFrame(loop)}
+render();
 })();
-</script></body></html>
+</script></main></body></html>
