@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PIXEL HIGHWAY | レトロレース</title>
+<style>
+:root{color-scheme:dark;--bg:#111626;--card:#1f2941;--line:#485675;--gold:#ffe18b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f3f4ff;font-family:system-ui,-apple-system,sans-serif;text-align:center}
+main{max-width:530px;margin:auto;padding:12px 12px 25px}header{display:flex;align-items:center;justify-content:space-between;gap:8px}h1{font-size:1.25rem;letter-spacing:.08em;margin:10px 0}a{color:#c1d7ff;font-size:.8rem}
+.hud{display:flex;justify-content:space-between;gap:6px;margin:9px 0;font-size:.85rem;font-weight:700}.hud span{background:var(--card);border-radius:9px;padding:9px;flex:1}
+canvas{display:block;width:100%;max-width:420px;aspect-ratio:3/4;max-height:65svh;margin:auto;background:#80bcbe;border:4px solid #526487;border-radius:12px;image-rendering:pixelated}
+.controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;max-width:420px;margin:12px auto}
+button{font:inherit;color:white;min-height:58px;background:#334867;border:2px solid #7489ae;border-radius:12px;touch-action:none;user-select:none;font-size:1.05rem;font-weight:700}
+button:active,.pressed{background:#6b86b4}#start{background:#a75357;border-color:#ec999b}p{font-size:.81rem;color:#c3ccdf;margin:8px 0}#message{color:var(--gold);min-height:1.5em;font-weight:700}footer{margin-top:10px}
+</style></head><body><main><header><h1>PIXEL HIGHWAY</h1><a href="../../index.html">ツール一覧へ戻る</a></header>
+<div class="hud"><span>距離 <b id="distance">0</b>m</span><span>速度 <b id="speed">0</b>km/h</span><span>BEST <b id="best">0</b>m</span></div>
+<canvas id="game" width="300" height="400" aria-label="左右に避けて車を追い越すレースゲーム"></canvas>
+<div class="controls"><button id="left" aria-label="左へ">◀ 左</button><button id="start">スタート</button><button id="right" aria-label="右へ">右 ▶</button></div>
+<div id="message" role="status" aria-live="polite">スタートで走行開始</div>
+<p>左右ボタンを長押しして車線変更。PCは ← → または A D。障害車を避けて距離を伸ばそう。</p>
+<footer><p>単体HTML / オフライン動作 / 記録はこの端末に保存</p></footer>
+</main><script>
+(()=>{'use strict';
+const canvas=document.querySelector('#game'),ctx=canvas.getContext('2d'),el=id=>document.getElementById(id);
+const W=300,H=400,KEY='pixel-highway:best-v1';let best=0,saveWarning=false;
+try{const v=Number(localStorage.getItem(KEY));if(Number.isFinite(v)&&v>=0)best=Math.floor(v)}catch{}
+el('best').textContent=best;
+let state='ready',lane=1,target=1,carX=150,traffic=[],distance=0,speed=0,spawn=0,road=0,last=0,raf=0;
+const held={left:false,right:false};let pressCooldown=0;
+const lanes=[102,150,198];
+function text(t){el('message').textContent=t}
+function reset(){state='playing';lane=1;target=1;carX=150;traffic=[];distance=0;speed=70;spawn=0;road=0;pressCooldown=0;text('追い越して距離を伸ばそう');el('start').textContent='一時停止';last=performance.now();if(!raf)raf=requestAnimationFrame(loop)}
+function finish(){state='over';speed=0;el('start').textContent='もう一度';const d=Math.floor(distance);if(d>best){best=d;try{localStorage.setItem(KEY,String(best))}catch{saveWarning=true}el('best').textContent=best}text('クラッシュ！ '+d+'m'+(saveWarning?'（記録を保存できません）':''))}
+function action(){if(state==='playing'){state='paused';el('start').textContent='再開';text('一時停止')}else if(state==='paused'){state='playing';el('start').textContent='一時停止';text('走行中');last=performance.now();if(!raf)raf=requestAnimationFrame(loop)}else reset()}
+el('start').addEventListener('click',action);
+function move(dir){if(state!=='playing')return;target=Math.max(0,Math.min(2,target+dir))}
+for(const [id,dir] of [['left',-1],['right',1]]){const b=el(id);b.addEventListener('pointerdown',e=>{e.preventDefault();held[id]=true;b.classList.add('pressed');move(dir);pressCooldown=.22;try{b.setPointerCapture(e.pointerId)}catch{}});const release=()=>{held[id]=false;b.classList.remove('pressed')};for(const name of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(name,release)}
+document.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','KeyA','KeyD','Space'].includes(e.code))e.preventDefault();if(e.repeat)return;if(e.code==='Space')action();if(['ArrowLeft','KeyA'].includes(e.code)){held.left=true;move(-1)}if(['ArrowRight','KeyD'].includes(e.code)){held.right=true;move(1)}});
+document.addEventListener('keyup',e=>{if(['ArrowLeft','KeyA'].includes(e.code))held.left=false;if(['ArrowRight','KeyD'].includes(e.code))held.right=false});
+window.addEventListener('blur',()=>{held.left=false;held.right=false;if(state==='playing'){state='paused';el('start').textContent='再開';text('一時停止')}});
+function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h))}
+function car(x,y,c,player=false){rect(x-15,y-24,30,47,'#101724');rect(x-12,y-20,24,38,c);rect(x-9,y-12,18,10,'#b9e4ed');rect(x-9,y+5,18,10,'#263e60');rect(x-13,y-18,4,7,'#f8ead0');rect(x+9,y-18,4,7,'#f8ead0');rect(x-13,y+14,5,6,player?'#ff504e':'#f6c47e');rect(x+8,y+14,5,6,player?'#ff504e':'#f6c47e')}
+function draw(){rect(0,0,W,H,'#83c6bf');for(let i=0;i<12;i++){const y=(i*46+road*.45)%460-45;rect(0,y,55,22,i%2?'#4e9f73':'#6dab6e');rect(245,y+18,55,25,i%2?'#4e9f73':'#6dab6e')}
+rect(62,0,176,H,'#414756');rect(62,0,5,H,'#f9d5b5');rect(233,0,5,H,'#f9d5b5');for(let i=0;i<13;i++){const y=((i*46+road)%598)-46;rect(125,y,4,25,'#f8f1df');rect(172,y,4,25,'#f8f1df')}
+for(const t of traffic)car(lanes[t.l],t.y,t.color);car(carX,336,'#f4b741',true);if(state!=='playing'){rect(23,145,254,90,'#142037');ctx.fillStyle='#fff4d9';ctx.font='bold 18px monospace';ctx.textAlign='center';ctx.fillText(state==='ready'?'PIXEL HIGHWAY':state==='paused'?'PAUSE':'GAME OVER',150,178);ctx.font='12px monospace';ctx.fillText(state==='ready'?'PRESS START':state==='paused'?'PRESS RESUME':'TRY AGAIN',150,205)}}
+function loop(now){raf=0;if(state!=='playing'){draw();return}const dt=Math.min(.04,Math.max(0,(now-last)/1000));last=now;distance+=speed*dt/3.6;speed=Math.min(150,70+distance*.06);road+=speed*dt*.65;
+pressCooldown-=dt;if(pressCooldown<=0){if(held.left&&!held.right){move(-1);pressCooldown=.22}else if(held.right&&!held.left){move(1);pressCooldown=.22}}
+carX+=(lanes[target]-carX)*Math.min(1,dt*11);spawn-=dt;
+if(spawn<=0){const blocked=new Set(traffic.filter(t=>t.y<105).map(t=>t.l));const choices=[0,1,2].filter(l=>!blocked.has(l));if(choices.length){const l=choices[Math.floor(Math.random()*choices.length)];traffic.push({l,y:-40,color:['#e6697c','#789ef3','#e8e2aa','#a99aec'][Math.floor(Math.random()*4)]})}spawn=Math.max(.48,1.35-distance/2600)}
+for(const t of traffic)t.y+=(speed*.6+40)*dt;traffic=traffic.filter(t=>t.y<440);
+for(const t of traffic){if(Math.abs(carX-lanes[t.l])<26&&Math.abs(336-t.y)<38){finish();break}}
+el('distance').textContent=Math.floor(distance);el('speed').textContent=Math.round(speed);draw();if(state==='playing')raf=requestAnimationFrame(loop)}
+draw();
+})();
+</script></body></html>
