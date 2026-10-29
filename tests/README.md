@@ -143,3 +143,5 @@ CSVの該当箇所表示：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/csv-i
 
 
 MINI KART PARK：`node tests/mini-kart-park.cjs` で独立した4方向の操舵基準、楕円周長、4コースの道幅・曲率半径・境界交差を照合。`TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/mini-kart-park.cjs --browser` でCPの左右移動と前走車回避、全コース完走、周回・ゴール時刻・順位、接触・路外、実タッチ・2本指・キー併用・キャンセル・フォーカス喪失・停止、コース選択、コース別保存と旧記録・容量不足・破損保護、5画面サイズとPagesサブパスを確認します。`TEST_PLAYWRIGHT_MODULE`、`TEST_SCREENSHOT_DIR`対応。完走などの状態進行はテスト側で挿入し、本番に観測口はありません。旧版では右入力が外側へ移る点とCP横位置の固定を確認。実機未確認。
+
+MINI KART PARKの箱庭編集・荷物集め：`node tests/mini-kart-builder.cjs` で曲線の座標・接線・二階微分を独立照合し、保存値を検証。`TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/mini-kart-builder.cjs --browser` でタップ選択・スライダー・Undo・タッチ中断、仕掛け配置・削除と保存復元、ジャンプ・コーン減速、CPと自作コース完走、荷物の回収とゴール、5画面サイズ、破損保護・保存禁止を確認。既存 `mini-kart-park.cjs --browser` も併用。Pagesサブパス、`TEST_PLAYWRIGHT_MODULE`、`TEST_SCREENSHOT_DIR` 対応。状態設定はテスト側のみの観測口で行います。実機未確認。
