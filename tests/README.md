@@ -140,3 +140,6 @@ CSVの該当箇所表示：`TEST_BASE_URL=http://127.0.0.1:8000 node tests/csv-i
 
 
 レールタウン3D：`node tests/plarail-3d.cjs` で独立した投影・逆投影・手前の面の切り取りを確認。`TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/plarail-3d.cjs --browser` で周回4辺の可視性、2D/3Dの状態継続、実タッチの回転・ピンチ・中断、移動・追従・ポイントとロック・倍率上下限・キーボード・保存形式、320/375/768/1280pxと横向き、最大96マス・9両、空の配置を検証します。既存 `tests/plarail-layout.cjs --browser` も回帰確認。`TEST_PLAYWRIGHT_MODULE`、`TEST_SCREENSHOT_DIR`に対応。テスト観測口は本番に含めず、実機・実機FPSは未確認です。
+
+
+MINI KART PARK：`node tests/mini-kart-park.cjs` で独立した4方向の操舵基準、楕円周長、4コースの道幅・曲率半径・境界交差を照合。`TEST_BASE_URL=http://127.0.0.1:8000 TEST_BROWSER_PATH=/usr/bin/chromium node tests/mini-kart-park.cjs --browser` でCPの左右移動と前走車回避、全コース完走、周回・ゴール時刻・順位、接触・路外、実タッチ・2本指・キー併用・キャンセル・フォーカス喪失・停止、コース選択、コース別保存と旧記録・容量不足・破損保護、5画面サイズとPagesサブパスを確認します。`TEST_PLAYWRIGHT_MODULE`、`TEST_SCREENSHOT_DIR`対応。完走などの状態進行はテスト側で挿入し、本番に観測口はありません。旧版では右入力が外側へ移る点とCP横位置の固定を確認。実機未確認。
