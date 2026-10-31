@@ -10,6 +10,15 @@ GitHubリポジトリの **Settings → Pages → Source** は、`GitHub Actions
 
 ## アプリ一覧
 
+### ギターチューナー
+
+標準6弦をマイクで調律するミニマルな針式チューナー。音声は端末内で処理します。
+
+- [アプリを開く](./tools/guitar-tuner/)
+- HTTPS・マイク必須。iPhone Safariを想定した構成（実機未検証）。
+- [仕様・検証結果](./tools/guitar-tuner/README.md)
+
+
 ### 001 Offset Capability Lab
 
 オフセットと標準偏差を調整し、2つの分布のヒストグラムと工程能力指数（Cp・Cpk）を比較するシミュレーターです。
