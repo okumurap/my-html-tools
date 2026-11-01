@@ -227,6 +227,24 @@
     };
   }
 
+  // Use 1/2/5 × powers of ten, with bounds rounded out to whole ticks.
+  function niceAxis(minimum, maximum, targetIntervals) {
+    const rawStep = (maximum - minimum) / targetIntervals;
+    const magnitude = 10 ** Math.floor(Math.log10(rawStep));
+    const fraction = rawStep / magnitude;
+    const step = (fraction < 1.5 ? 1 : fraction < 3.5 ? 2 : fraction < 7.5 ? 5 : 10) * magnitude;
+    const first = Math.floor(minimum / step);
+    const last = Math.ceil(maximum / step);
+    const ticks = Array.from({ length: last - first + 1 }, (_, index) => (first + index) * step);
+    return { minimum: first * step, maximum: last * step, step, ticks };
+  }
+
+  function formatTick(value, step) {
+    const decimals = Math.max(0, -Math.floor(Math.log10(step)));
+    if (decimals > 8 || Math.abs(value) >= 1e8) return value === 0 ? "0" : value.toExponential(1);
+    return (Object.is(value, -0) ? 0 : value).toFixed(decimals);
+  }
+
   function resizeCanvas() {
     const rectangle = ui.canvas.getBoundingClientRect();
     const ratio = Math.min(window.devicePixelRatio || 1, 2);
@@ -263,11 +281,12 @@
       top: compact ? 26 : 32,
       right: compact ? 14 : 24,
       bottom: compact ? 42 : 52,
-      left: compact ? 44 : 58,
+      left: compact ? 50 : 58,
     };
     const plotWidth = Math.max(1, width - margin.left - margin.right);
     const plotHeight = Math.max(1, height - margin.top - margin.bottom);
-    const bounds = dataBounds(result);
+    const rawBounds = dataBounds(result);
+    const bounds = niceAxis(rawBounds.minimum, rawBounds.maximum, compact ? 5 : 10);
     const plusHistogram = computeHistogram(result.plus, bounds.minimum, bounds.maximum);
     const minusHistogram = computeHistogram(result.minus, bounds.minimum, bounds.maximum);
     let maximumDensity = 0;
@@ -275,7 +294,8 @@
     for (let index = 0; index < BIN_COUNT; index += 1) {
       maximumDensity = Math.max(maximumDensity, plusHistogram[index], minusHistogram[index]);
     }
-    maximumDensity = Math.max(maximumDensity * 1.16, Number.EPSILON);
+    const densityAxis = niceAxis(0, Math.max(maximumDensity * 1.16, Number.EPSILON), 4);
+    maximumDensity = densityAxis.maximum;
 
     const xToPixel = (value) => margin.left
       + ((value - bounds.minimum) / (bounds.maximum - bounds.minimum)) * plotWidth;
@@ -287,31 +307,24 @@
 
     context.strokeStyle = "#e3e7eb";
     context.fillStyle = "#66707b";
-    const horizontalLines = 4;
-    for (let index = 0; index <= horizontalLines; index += 1) {
-      const ratio = index / horizontalLines;
-      const y = margin.top + plotHeight - ratio * plotHeight;
+    context.textAlign = "right";
+    for (const value of densityAxis.ticks) {
+      const y = yToPixel(value);
       context.beginPath();
       context.moveTo(margin.left, y);
       context.lineTo(margin.left + plotWidth, y);
       context.stroke();
-
-      if (index > 0) {
-        context.fillText((maximumDensity * ratio).toFixed(3), 5, y + 3);
-      }
+      if (value > 0) context.fillText(formatTick(value, densityAxis.step), margin.left - 6, y + 3);
     }
 
-    const tickCount = compact ? 4 : 6;
     context.textAlign = "center";
-    for (let index = 0; index <= tickCount; index += 1) {
-      const ratio = index / tickCount;
-      const value = bounds.minimum + (bounds.maximum - bounds.minimum) * ratio;
-      const x = margin.left + plotWidth * ratio;
+    for (const value of bounds.ticks) {
+      const x = xToPixel(value);
       context.beginPath();
       context.moveTo(x, margin.top);
       context.lineTo(x, margin.top + plotHeight);
       context.stroke();
-      context.fillText(value.toFixed(compact ? 0 : 1), x, height - 18);
+      context.fillText(formatTick(value, bounds.step), x, height - 18);
     }
     context.textAlign = "left";
 
