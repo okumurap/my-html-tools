@@ -12,7 +12,7 @@ GitHubリポジトリの **Settings → Pages → Source** は、`GitHub Actions
 
 ### ギターチューナー
 
-標準6弦をマイクで調律するミニマルな針式チューナー。音声は端末内で処理します。
+標準6弦をマイクで調律するミニマルなブロック式チューナー。音声は端末内で処理します。
 
 - [アプリを開く](./tools/guitar-tuner/)
 - HTTPS・マイク必須。iPhone Safariを想定した構成（実機未検証）。

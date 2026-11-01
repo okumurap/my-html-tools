@@ -6,7 +6,7 @@ HTTPSでindex.htmlを開きSTART。初回はマイクを許可します。STOP�
 
 A4=440 Hz、標準6弦の平均律周波数を使用。Workletは1024入力サンプル単位でPCMを転送し、Workerが12 kHzへ積分間引きしてYIN（累積平均正規化差分）を実行します。1024サンプル（85.3 ms）観測、192サンプル（16 ms）ホップ。FFT最大ピークは使用しません。低い差分値を持つ倍周期を検査して倍音によるオクターブ誤判定を抑制します。基音が完全に欠け、偶数倍音しかない音など物理的に曖昧な信号には限界があります。
 
-RMS・信頼度フィルター、大きな孤立変化の確認、20/65 msの適応平滑化、自動弦選択35 centsのヒステリシスを併用。最後の有効値から240 msで表示を解除。±5 centsで緑、表示範囲±50 cents。解析パラメーターはpitch-detector.jsのCONFIGとTrackerで調整可能。上記は処理設定であり実機の入力から表示までの遅延保証ではありません。
+RMS・信頼度フィルター、大きな孤立変化の確認、20/65 msの適応平滑化、自動弦選択35 centsのヒステリシスを併用。最後の有効値から240 msで表示を解除。±5 centsで中央ブロックが緑、ずれは左右のオレンジのブロックで表示（21ブロック、表示範囲±50 cents）。cents値は画面には表示せず、読み上げ向けに保持。無音時は消灯。解析パラメーターはpitch-detector.jsのCONFIGとTrackerで調整可能。上記は処理設定であり実機の入力から表示までの遅延保証ではありません。
 
 Worklet非対応時はScriptProcessor、module Worker生成非対応時はメインスレッド解析へフォールバックします（この場合は性能が劣る可能性があります）。Workerロード失敗時はエラーを表示し停止。音声補正無効の制約は要求値であり、端末側で無視される場合があります。Safariはユーザーのタップ内でAudioContextを作成・再開します。
 
@@ -16,6 +16,7 @@ Worklet非対応時はScriptProcessor、module Worker生成非対応時はメイ
 
 ```
 node tools/guitar-tuner/pitch.test.mjs
+node tools/guitar-tuner/meter.test.mjs
 python3 -m http.server 8000
 # 別ターミナル。Playwrightは検証専用で別途用意
 node tools/guitar-tuner/browser.test.cjs
@@ -33,3 +34,5 @@ node tools/guitar-tuner/browser.test.cjs
 未検証：iPhone Safari / Android Chrome実機、実マイクとギター、OSスリープ復帰、実際の音響環境での精度・遅延・長時間性能。ブラウザーの模擬音源確認は実機確認ではありません。Worklet非対応・Worker非対応端末の実機性能も未検証。
 
 GitHub上の最新AGENTS取得は環境の接続エラーで失敗し、ローカルのAGENTSに従って実装しました。
+
+2026-11-01：針と数値の表示をブロックメーターへ変更。方向・±5 cents境界・±50 cents範囲外・無音の単体テスト成功。Chromiumで解析結果を注入し、左右・中央緑・範囲外・停止時消灯を確認。音声解析324ケースと4画面幅・模擬マイク操作の回帰成功。実機未検証は継続。

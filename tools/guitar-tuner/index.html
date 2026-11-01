@@ -5,8 +5,8 @@
 <header><a href="../../index.html" aria-label="ツール一覧へ">一覧</a><h1>ギターチューナー</h1><span>440</span></header>
 <section class="display" aria-label="音程">
 <div id="string-label">自動</div><div id="note">—<small id="octave"></small></div>
-<div class="meter" id="meter"><div class="center-zone"></div><div class="ticks"></div><div class="center"></div><div id="needle"></div><div class="signs"><span>♭</span><span>♯</span></div></div>
-<div id="deviation" aria-label="音程差">— <small>cents</small></div><div id="range">&nbsp;</div>
+<div class="meter" id="meter" role="img" aria-label="入力待ち"><div class="blocks"></div><div class="signs" aria-hidden="true"><span>♭</span><span>♯</span></div></div>
+<div id="deviation" class="sr-only" aria-label="音程差">入力待ち</div><div id="range" aria-hidden="true">&nbsp;</div>
 </section>
 <footer><div class="strings" aria-label="弦の選択"></div><button id="auto" aria-pressed="true">自動</button><p id="status" role="status"></p><button id="power">START</button></footer>
 </main><script type="module" src="./app.js"></script></body></html>

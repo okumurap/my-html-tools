@@ -1,3 +1,4 @@
+import {createMeter} from './meter.js';
 import {STRINGS,Tracker,Sampler} from './pitch-detector.js';
 const $=id=>document.getElementById(id), tracker=new Tracker();
 const buttons=STRINGS.map((s,i)=>{const b=document.createElement('button');b.innerHTML=`${s.name}<small>${s.number}弦</small>`;b.setAttribute('aria-label',`${s.number}弦 ${s.name}${s.octave}`);b.onclick=()=>select(i);return b;});
@@ -34,11 +35,20 @@ async function start(){
 $('power').onclick=()=>running?stop().then(()=>status('')):start();
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&(running||starting)){stop();status('一時停止中 · STARTで再開');}});
 window.addEventListener('pagehide',()=>stop());
-let previous='',needlePrevious='';
-let meterWidth=$('meter').clientWidth;
-new ResizeObserver(()=>{meterWidth=$('meter').clientWidth;}).observe($('meter'));
-function draw(time){const {index,value}=tracker.snapshot(time),s=index===null?null:STRINGS[index];const tuned=value!==null&&Math.abs(value)<=5;const key=`${index}/${value===null?'':Math.round(value)}/${tuned}`;
- if(key!==previous){previous=key;$('note').firstChild.textContent=s?s.name:'—';$('octave').textContent=s?s.octave:'';$('string-label').textContent=s?`${s.number}弦${tracker.manual===null?' · 自動':''}`:'自動';$('deviation').innerHTML=`${value===null?'—':`${value>0?'+':''}${Math.round(value)}`} <small>cents</small>`;$('range').textContent=value!==null&&Math.abs(value)>50?(value<0?'‹ −50 cents':'＋50 cents ›'):'\u00a0';$('meter').classList.toggle('in-tune',tuned);}
- const position=value===null?'neutral':String((Math.max(-50,Math.min(50,value))*meterWidth/100).toFixed(2));
- if(position!==needlePrevious){needlePrevious=position;$('needle').style.transform=`translateX(${value===null?0:position}px)`;$('needle').style.opacity=value===null?'.25':'1';}requestAnimationFrame(draw);}
+const updateMeter=createMeter($('meter'));
+let previous='';
+function draw(time){
+ const {index,value}=tracker.snapshot(time),s=index===null?null:STRINGS[index];
+ const key=`${index}/${value===null?'':Math.round(value)}/${tracker.manual}`;
+ if(key!==previous){
+  previous=key;
+  $('note').firstChild.textContent=s?s.name:'—';
+  $('octave').textContent=s?s.octave:'';
+  $('string-label').textContent=s?`${s.number}弦${tracker.manual===null?' · 自動':''}`:'自動';
+  $('deviation').textContent=value===null?'入力待ち':`${Math.round(value)} cents`;
+  $('range').textContent=value!==null&&Math.abs(value)>50?(value<0?'‹':'›'):'\u00a0';
+ }
+ updateMeter(value);
+ requestAnimationFrame(draw);
+}
 requestAnimationFrame(draw);
