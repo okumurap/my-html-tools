@@ -154,7 +154,7 @@ MINI KART PARKの箱庭編集・荷物集め：`node tests/mini-kart-builder.cjs
 
 `node tests/mini-kart-elevation.cjs` で立体交差の高さ・連続した高低差と勾配を検証します。HTTPサーバーとPlaywright/Chromiumを用意し `node tests/mini-kart-elevation.cjs --browser` で、新2コースのガイド運転による3周完走、記録保存、上り下りの速度差、交差地点の経路維持と4方向の表示を確認します。ガイド運転はテスト側でハンドルを操作するもので実機プレイではありません。
 
-`node tests/mini-kart-framing.cjs` は6コース×回転16方向×5画面サイズの480通りで、道路・ガードレールとカート上部の表示領域、中央パネルの削除、ボタンの到達性を確認します。HTTPサーバーとPlaywright/Chromiumが必要です。
+`node tests/mini-kart-framing.cjs` は7コース×回転16方向×5画面サイズの560通りで、道路・ガードレールとカート上部の表示領域、中央パネルの削除、ボタンの到達性を確認します。HTTPサーバーとPlaywright/Chromiumが必要です。
 
 `node tests/mini-kart-buttons-weather.cjs` は、4ボタンの2本指タッチ・逆方向同時押し・同時加速旋回・片指解除・後退・中断／blur、天候4種類の描画と進行状態の維持、雨のアニメーション／動きを減らす設定、5画面サイズの操作領域を検証します。HTTPサーバーとPlaywright/Chromiumを使用します。
 
@@ -167,3 +167,5 @@ MINI KART PARKの箱庭編集・荷物集め：`node tests/mini-kart-builder.cjs
 `node tests/mini-kart-drag-view.cjs` はレース画面のマウス／タッチドラッグ、左右の回転、タップとドラッグの区別、自動回転への復帰、アクセルとカメラ操作の独立性、解除・キャンセル・blurを検証します。
 
 長押し対策は `mini-kart-touch-menus.cjs` でブラウザ既定touchstart／touchmoveのキャンセルと、標準選択欄の例外・16px以上の文字サイズを確認します。iOSのシステム拡大鏡自体は実機未確認です。
+
+`node tests/mini-kart-heart.cjs` はハートの左右対称・くぼみと先端の独立した節点平均値・曲率を検証します。`--browser` は実際の4ボタンと同じデジタル入力による3周完走、CPレース結果・荷物集め・ベスト保存・旧記録保持を確認します。ガイド運転はテスト側の自動操作で、実機確認とは区別します。
