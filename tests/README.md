@@ -156,13 +156,13 @@ MINI KART PARKの箱庭編集・荷物集め：`node tests/mini-kart-builder.cjs
 
 `node tests/mini-kart-framing.cjs` は6コース×回転16方向×5画面サイズの480通りで、道路・ガードレールとカート上部の表示領域、中央パネルの削除、ボタンの到達性を確認します。HTTPサーバーとPlaywright/Chromiumが必要です。
 
-`node tests/mini-kart-sticks-weather.cjs` は、左右の2本指タッチ・中間入力・同時加速旋回・片指解除・後退・中断／blur、天候4種類の描画と進行状態の維持、雨のアニメーション／動きを減らす設定、5画面サイズの操作領域を検証します。HTTPサーバーとPlaywright/Chromiumを使用します。
+`node tests/mini-kart-buttons-weather.cjs` は、4ボタンの2本指タッチ・逆方向同時押し・同時加速旋回・片指解除・後退・中断／blur、天候4種類の描画と進行状態の維持、雨のアニメーション／動きを減らす設定、5画面サイズの操作領域を検証します。HTTPサーバーとPlaywright/Chromiumを使用します。
 
 `node tests/mini-kart-countdown.cjs` は旋回率48%の4ケースと、ブラウザ時計による3・2・1・GOの境界、開始前のカート／CP停止・タイム除外、入力準備、連打、再開／再プレイ、blurキャンセルを検証します。
 
 `node tests/mini-kart-results.cjs` は、ゴール通過での結果表示（順位・タイム・ベスト・荷物集め）、5画面サイズの再プレイボタン到達性、再プレイのカウントダウン・コース変更での解除を確認します。修正前に結果非表示で失敗することを確認しています。立体コースの拡張は `mini-kart-elevation.cjs --browser` で、従来のガードレール位置を越えた走行と完走を確認します。
 
-`node tests/mini-kart-touch-menus.cjs` はスマホ相当の環境で、文字選択・長押しメニューの抑止と、標準のコース／天候／遊び方選択・カウントダウン・ジョイスティック長押し／解除を確認します。iPhone Safari実機は未確認です。
+`node tests/mini-kart-touch-menus.cjs` はスマホ相当の環境で、文字選択・長押しメニューの抑止と、標準のコース／天候／遊び方選択・カウントダウン・操作ボタン長押し／解除を確認します。iPhone Safari実機は未確認です。
 
 `node tests/mini-kart-drag-view.cjs` はレース画面のマウス／タッチドラッグ、左右の回転、タップとドラッグの区別、自動回転への復帰、アクセルとカメラ操作の独立性、解除・キャンセル・blurを検証します。
 
