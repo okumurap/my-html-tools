@@ -161,3 +161,7 @@ MINI KART PARKの箱庭編集・荷物集め：`node tests/mini-kart-builder.cjs
 `node tests/mini-kart-countdown.cjs` は旋回率60%の4ケースと、ブラウザ時計による3・2・1・GOの境界、開始前のカート／CP停止・タイム除外、入力準備、連打、再開／再プレイ、blurキャンセルを検証します。
 
 `node tests/mini-kart-results.cjs` は、ゴール通過での結果表示（順位・タイム・ベスト・荷物集め）、5画面サイズの再プレイボタン到達性、再プレイのカウントダウン・コース変更での解除を確認します。修正前に結果非表示で失敗することを確認しています。立体コースの拡張は `mini-kart-elevation.cjs --browser` で、従来のガードレール位置を越えた走行と完走を確認します。
+
+`node tests/mini-kart-touch-menus.cjs` はスマホ相当の環境で、文字選択・長押しメニューの抑止と、標準のコース／天候／遊び方選択・カウントダウン・ジョイスティック長押し／解除を確認します。iPhone Safari実機は未確認です。
+
+`node tests/mini-kart-drag-view.cjs` はレース画面のマウス／タッチドラッグ、左右の回転、タップとドラッグの区別、自動回転への復帰、アクセルとカメラ操作の独立性、解除・キャンセル・blurを検証します。
