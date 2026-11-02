@@ -149,3 +149,7 @@ MINI KART PARKの箱庭編集・荷物集め：`node tests/mini-kart-builder.cjs
 ## MINI KART PARK ラジコン操作
 
 `node tests/mini-kart-rc.cjs`（HTTPサーバーとPlaywright/Chromiumが必要）。無入力停止、手動アクセル、車体の旋回、減速停止、後退、blur一時停止、編集UI削除、4コース、5画面サイズを検証します。旧ブラウザテストは自動アクセル・編集機能時代の仕様用です。
+
+## MINI KART PARK 立体コース
+
+`node tests/mini-kart-elevation.cjs` で立体交差の高さ・連続した高低差と勾配を検証します。HTTPサーバーとPlaywright/Chromiumを用意し `node tests/mini-kart-elevation.cjs --browser` で、新2コースのガイド運転による3周完走、記録保存、上り下りの速度差、交差地点の経路維持と4方向の表示を確認します。ガイド運転はテスト側でハンドルを操作するもので実機プレイではありません。
