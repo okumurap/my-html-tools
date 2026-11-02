@@ -155,3 +155,5 @@ MINI KART PARKの箱庭編集・荷物集め：`node tests/mini-kart-builder.cjs
 `node tests/mini-kart-elevation.cjs` で立体交差の高さ・連続した高低差と勾配を検証します。HTTPサーバーとPlaywright/Chromiumを用意し `node tests/mini-kart-elevation.cjs --browser` で、新2コースのガイド運転による3周完走、記録保存、上り下りの速度差、交差地点の経路維持と4方向の表示を確認します。ガイド運転はテスト側でハンドルを操作するもので実機プレイではありません。
 
 `node tests/mini-kart-framing.cjs` は6コース×回転16方向×5画面サイズの480通りで、道路・ガードレールとカート上部の表示領域、中央パネルの削除、ボタンの到達性を確認します。HTTPサーバーとPlaywright/Chromiumが必要です。
+
+`node tests/mini-kart-sticks-weather.cjs` は、左右の2本指タッチ・中間入力・同時加速旋回・片指解除・後退・中断／blur、天候4種類の描画と進行状態の維持、雨のアニメーション／動きを減らす設定、5画面サイズの操作領域を検証します。HTTPサーバーとPlaywright/Chromiumを使用します。
