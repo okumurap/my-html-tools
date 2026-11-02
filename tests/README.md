@@ -157,3 +157,5 @@ MINI KART PARKの箱庭編集・荷物集め：`node tests/mini-kart-builder.cjs
 `node tests/mini-kart-framing.cjs` は6コース×回転16方向×5画面サイズの480通りで、道路・ガードレールとカート上部の表示領域、中央パネルの削除、ボタンの到達性を確認します。HTTPサーバーとPlaywright/Chromiumが必要です。
 
 `node tests/mini-kart-sticks-weather.cjs` は、左右の2本指タッチ・中間入力・同時加速旋回・片指解除・後退・中断／blur、天候4種類の描画と進行状態の維持、雨のアニメーション／動きを減らす設定、5画面サイズの操作領域を検証します。HTTPサーバーとPlaywright/Chromiumを使用します。
+
+`node tests/mini-kart-countdown.cjs` は旋回率60%の4ケースと、ブラウザ時計による3・2・1・GOの境界、開始前のカート／CP停止・タイム除外、入力準備、連打、再開／再プレイ、blurキャンセルを検証します。
