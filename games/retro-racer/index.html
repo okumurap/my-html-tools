@@ -19,6 +19,8 @@
 @media(max-height:600px) and (orientation:portrait){.results{padding:8px}.results h2{font-size:20px;margin:2px 0 5px}.result-values>div{padding:3px}.result-values dd{font-size:19px}.result-note{margin:4px 0}}
 body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}select,input,textarea{-webkit-user-select:auto;user-select:auto;-webkit-touch-callout:default}
 canvas{touch-action:none;cursor:grab}canvas.dragging{cursor:grabbing}
+html,body{touch-action:manipulation}.stage,.stage *,.controls,.controls *,.hud,.hud *{-webkit-touch-callout:none!important;-webkit-user-select:none!important;user-select:none!important}.stick-title,.stick-pad>*{pointer-events:none}select{font-size:16px!important}
+@media(min-width:700px) and (max-height:500px){.hud{grid-template-columns:repeat(4,minmax(0,1fr))}}
 </style></head><body><main><header><h1>MINI KART PARK</h1><a href="../../index.html">ツール一覧へ</a></header>
 <div class="coursebar"><label for="courseSelect">コース</label><select id="courseSelect" aria-label="コースを選ぶ"></select><select id="weatherSelect" aria-label="天気・時間帯"><option value="day">☀ 昼</option><option value="evening">夕方</option><option value="night">☾ 夜</option><option value="rain">☂ 雨</option></select></div>
 <div class="parkbar"><select id="playMode" aria-label="遊び方"><option value="race">CPと3周レース</option><option value="delivery">荷物3個を集めてゴール</option></select><button id="rotateView" aria-pressed="true">俯瞰回転 ON</button></div>
@@ -138,7 +140,7 @@ const roadFrame=frameAt(course,distance),gradeAlong=roadFrame.grade*(Math.cos(he
 const target=throttle>0?throttle*((offroad?55:160)-gradeAlong*90):throttle<0?throttle*(65+gradeAlong*45):0;
 const acceleration=throttle<0&&speed>0?280:throttle===0?95:120;
 speed+=clamp(target-speed,-acceleration*dt,acceleration*dt);
-heading+=steer*speed/60*dt*.6;
+heading+=steer*speed/60*dt*.48;
 playerX=clamp(playerX+Math.cos(heading)*speed*dt,-510,510);
 playerZ=clamp(playerZ+Math.sin(heading)*speed*dt,-390,390);
 let best=null;for(let i=-40;i<=40;i++){const d=distance+i*2,f=frameAt(course,d),dx=playerX-f.x,dz=playerZ-f.z,error=dx*dx+dz*dz;if(!best||error<best.error)best={d,f,dx,dz,error};}
@@ -166,6 +168,9 @@ $('playMode').addEventListener('change',()=>{if(state==='playing'||state==='coun
 $('start').addEventListener('click',action);for(const c of courses){const o=document.createElement('option');o.value=c.id;o.textContent=c.name+' · '+c.level;$('courseSelect').append(o);}$('courseSelect').addEventListener('change',e=>selectCourse(e.target.value));
 // Keep long presses on the game from opening selection/callout menus; native form controls stay usable.
 function isNativeField(target){return target instanceof Element&&Boolean(target.closest('select,input,textarea'));}
+// Cancel browser long-press/magnifier gestures on game surfaces without blocking native controls or button taps.
+function stopGameTouchDefaults(e){const target=e.target;if(target instanceof Element&&!isNativeField(target)&&!target.closest('button,a'))e.preventDefault();}
+for(const type of ['touchstart','touchmove'])document.addEventListener(type,stopGameTouchDefaults,{passive:false});
 document.addEventListener('selectstart',e=>{if(!isNativeField(e.target))e.preventDefault();});
 document.addEventListener('contextmenu',e=>{if(!isNativeField(e.target)&&(matchMedia('(pointer: coarse)').matches||e.pointerType==='touch'||e.target instanceof Element&&e.target.closest('.controls,.stage')))e.preventDefault();});
 document.addEventListener('keydown',e=>{if(e.target.closest('select,input,textarea'))return;if(e.code==='Space'){if(e.target.closest('button'))return;e.preventDefault();if(!e.repeat)action();return;}if(!Object.values(controlKeys).flat().includes(e.code))return;e.preventDefault();if(state==='playing'||state==='countdown'){heldKeys.add(e.code);syncButtons();}});document.addEventListener('keyup',e=>{heldKeys.delete(e.code);syncButtons();});
